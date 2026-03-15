@@ -25,7 +25,7 @@ function EmptyState() {
       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
         <h3 className="text-xl font-semibold">No testimonials yet</h3>
         <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          Send your first WhatsApp request and customer feedback will appear here.
+          Send your first WhatsApp or Telegram test request and customer feedback will appear here.
         </p>
       </CardContent>
     </Card>
@@ -92,10 +92,10 @@ export default function DashboardPage() {
             </span>
             <div className="space-y-2">
               <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
-                Turn WhatsApp replies into social proof.
+                Turn customer replies into social proof.
               </h2>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                Send a request, capture the reply, and keep every testimonial organized in one calm dashboard.
+                Send a WhatsApp request or a Telegram test request, capture the reply, and keep every testimonial organized in one calm dashboard.
               </p>
             </div>
           </div>

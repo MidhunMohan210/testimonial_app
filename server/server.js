@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import whatsappRoutes from "./routes/whatsapp.js";
 import testimonialRoutes from "./routes/testimonial.js";
 import whatsappWebhookRoutes from "./webhook/whatsappWebhook.js";
+import { startTelegramBot } from "./telegram/telegramBot.js";
 
 dotenv.config();
 
@@ -28,8 +29,14 @@ app.use("/webhook", whatsappWebhookRoutes);
 
 mongoose
   .connect(process.env.MONGODB_URI)
-  .then(() => {
+  .then(async () => {
     console.log("MongoDB connected");
+
+    if (process.env.TELEGRAM_BOT_TOKEN) {
+      startTelegramBot();
+      console.log("Telegram bot started ✅");
+    }
+
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });

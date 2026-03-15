@@ -95,4 +95,31 @@ export const getRequests = async (req, res) => {
   }
 };
 
+export const sendTestRequest = async (req, res) => {
+  try {
+    const { customerName, customerPhone } = req.body;
+
+    if (!customerPhone) {
+      return res.status(400).json({ message: "Customer phone is required" });
+    }
+
+    const normalizedPhone = formatPhone(customerPhone);
+
+    const request = await WhatsappRequest.create({
+      businessId: req.user.businessId,
+      customerName: customerName?.trim(),
+      customerPhone: normalizedPhone,
+      status: "sent",
+      step: 1,
+    });
+
+    return res.status(201).json({
+      message: "Test request created. Open Telegram bot and send your phone number to test.",
+      request,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Unable to create test request", error: error.message });
+  }
+};
+
 export { sendWhatsappMessage, getBusinessCredentials };
