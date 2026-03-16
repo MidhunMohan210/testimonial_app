@@ -5,8 +5,10 @@ import WhatsappRequest from "../models/WhatsappRequest.js";
 const formatPhone = (phone) => String(phone).replace(/\s+/g, "");
 
 const getBusinessCredentials = (business) => ({
-  phoneNumberId: business.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID,
-  accessToken: business.whatsappAccessToken || process.env.WHATSAPP_ACCESS_TOKEN,
+  phoneNumberId:
+    business.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID,
+  accessToken:
+    business.whatsappAccessToken || process.env.WHATSAPP_ACCESS_TOKEN,
 });
 
 const sendWhatsappMessage = async ({ phoneNumberId, accessToken, payload }) => {
@@ -37,7 +39,9 @@ export const sendRequest = async (req, res) => {
     const { phoneNumberId, accessToken } = getBusinessCredentials(business);
 
     if (!phoneNumberId || !accessToken) {
-      return res.status(400).json({ message: "WhatsApp credentials are not configured" });
+      return res
+        .status(400)
+        .json({ message: "WhatsApp credentials are not configured" });
     }
 
     const normalizedPhone = formatPhone(customerPhone);
@@ -59,9 +63,18 @@ export const sendRequest = async (req, res) => {
           to: normalizedPhone,
           type: "template",
           template: {
-            name: "hello_world",
+            name: "testimonial_request",
             language: { code: "en_US" },
-          },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  { type: "text", text: customerName },
+                  { type: "text", text: business.businessName },
+                ],
+              },
+            ],
+          },  
         },
       });
 
@@ -79,19 +92,25 @@ export const sendRequest = async (req, res) => {
       });
     }
   } catch (error) {
-    return res.status(500).json({ message: "Unable to send request", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Unable to send request", error: error.message });
   }
 };
 
 export const getRequests = async (req, res) => {
   try {
-    const requests = await WhatsappRequest.find({ businessId: req.user.businessId }).sort({
+    const requests = await WhatsappRequest.find({
+      businessId: req.user.businessId,
+    }).sort({
       sentAt: -1,
     });
 
     return res.json(requests);
   } catch (error) {
-    return res.status(500).json({ message: "Unable to fetch requests", error: error.message });
+    return res
+      .status(500)
+      .json({ message: "Unable to fetch requests", error: error.message });
   }
 };
 

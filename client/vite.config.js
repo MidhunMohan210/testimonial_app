@@ -6,11 +6,11 @@ export default defineConfig({
   server: {
     proxy: {
       "/api": {
-        target: process.env.VITE_PROXY_TARGET || "http://localhost:4000",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:5001",
         changeOrigin: true,
       },
       "/webhook": {
-        target: process.env.VITE_PROXY_TARGET || "http://localhost:4000",
+        target: process.env.VITE_PROXY_TARGET || "http://localhost:5001",
         changeOrigin: true,
       },
     },
