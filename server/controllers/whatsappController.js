@@ -1,22 +1,32 @@
-import axios from "axios";
+import twilio from "twilio";
 import Business from "../models/Business.js";
 import WhatsappRequest from "../models/WhatsappRequest.js";
 
 const formatPhone = (phone) => String(phone).replace(/\s+/g, "");
+const twilioClient = () => twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+const maskValue = (value, visible = 4) => {
+  if (!value) {
+    return "missing";
+  }
 
-const getBusinessCredentials = (business) => ({
-  phoneNumberId: business.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID,
-  accessToken: business.whatsappAccessToken || process.env.WHATSAPP_ACCESS_TOKEN,
+  if (value.length <= visible) {
+    return "*".repeat(value.length);
+  }
+
+  return `${"*".repeat(Math.max(0, value.length - visible))}${value.slice(-visible)}`;
+};
+
+const getBusinessCredentials = () => ({
+  accountSid: process.env.TWILIO_ACCOUNT_SID,
+  authToken: process.env.TWILIO_AUTH_TOKEN,
+  fromNumber: process.env.TWILIO_WHATSAPP_FROM_NUMBER,
 });
 
-const sendWhatsappMessage = async ({ phoneNumberId, accessToken, payload }) => {
-  const url = `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`;
-
-  return axios.post(url, payload, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      "Content-Type": "application/json",
-    },
+const sendWhatsappMessage = async ({ to, body }) => {
+  return twilioClient().messages.create({
+    from: process.env.TWILIO_WHATSAPP_FROM_NUMBER,
+    to: to.startsWith("whatsapp:") ? to : `whatsapp:${to}`,
+    body,
   });
 };
 
@@ -34,10 +44,16 @@ export const sendRequest = async (req, res) => {
       return res.status(404).json({ message: "Business not found" });
     }
 
-    const { phoneNumberId, accessToken } = getBusinessCredentials(business);
+    const { accountSid, authToken, fromNumber } = getBusinessCredentials();
 
-    if (!phoneNumberId || !accessToken) {
-      return res.status(400).json({ message: "WhatsApp credentials are not configured" });
+    console.log("Twilio config check:", {
+      accountSid: accountSid ? `${accountSid.slice(0, 2)}...${accountSid.slice(-4)}` : "missing",
+      authToken: maskValue(authToken),
+      fromNumber: fromNumber || "missing",
+    });
+
+    if (!accountSid || !authToken || !fromNumber) {
+      return res.status(400).json({ message: "Twilio WhatsApp credentials are not configured" });
     }
 
     const normalizedPhone = formatPhone(customerPhone);
@@ -51,18 +67,15 @@ export const sendRequest = async (req, res) => {
     });
 
     try {
+      console.log("Twilio send attempt:", {
+        from: fromNumber,
+        to: `whatsapp:${normalizedPhone}`,
+        customerName: customerName?.trim() || "there",
+      });
+
       await sendWhatsappMessage({
-        phoneNumberId,
-        accessToken,
-        payload: {
-          messaging_product: "whatsapp",
-          to: normalizedPhone,
-          type: "template",
-          template: {
-            name: "hello_world",
-            language: { code: "en_US" },
-          },
-        },
+        to: normalizedPhone,
+        body: `Hi ${customerName?.trim() || "there"}! Please rate your experience from 1 to 5 by replying with a number.`,
       });
 
       return res.json({
@@ -70,6 +83,13 @@ export const sendRequest = async (req, res) => {
         request,
       });
     } catch (error) {
+      console.error("Twilio send failed:", {
+        message: error.message,
+        code: error.code,
+        status: error.status,
+        moreInfo: error.moreInfo,
+      });
+
       request.status = "failed";
       await request.save();
 

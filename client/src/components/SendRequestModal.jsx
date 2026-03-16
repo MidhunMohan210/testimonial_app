@@ -102,7 +102,7 @@ export default function SendRequestModal({ open, onOpenChange }) {
             <p className="text-xs text-muted-foreground">
               {channel === "telegram"
                 ? "This creates a test request in TestiFlow. Complete the conversation in your Telegram bot."
-                : "This sends the actual WhatsApp template message using your Meta credentials."}
+                : "This sends the actual WhatsApp message using your Twilio sandbox or WhatsApp sender."}
             </p>
           </div>
 

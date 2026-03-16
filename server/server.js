@@ -12,10 +12,19 @@ import { startTelegramBot } from "./telegram/telegramBot.js";
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
+
+console.log("Twilio env loaded:", {
+  accountSid: process.env.TWILIO_ACCOUNT_SID
+    ? `${process.env.TWILIO_ACCOUNT_SID.slice(0, 2)}...${process.env.TWILIO_ACCOUNT_SID.slice(-4)}`
+    : "missing",
+  authTokenPresent: Boolean(process.env.TWILIO_AUTH_TOKEN),
+  fromNumber: process.env.TWILIO_WHATSAPP_FROM_NUMBER || "missing",
+});
 
 app.use(cors());
 app.options("*", cors());
+app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
