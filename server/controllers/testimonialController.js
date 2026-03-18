@@ -5,16 +5,46 @@ export const getTestimonials = async (req, res) => {
   try {
     const { status } = req.query;
     const query = { businessId: req.user.businessId };
+    const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 20, 1), 100);
+    const skip = (page - 1) * limit;
 
     if (status && ["pending", "approved", "hidden"].includes(status)) {
       query.status = status;
     }
 
-    const testimonials = await Testimonial.find(query).sort({ collectedAt: -1 });
+    const [testimonials, total, summary] = await Promise.all([
+      Testimonial.find(query).sort({ collectedAt: -1 }).skip(skip).limit(limit),
+      Testimonial.countDocuments(query),
+      Testimonial.aggregate([
+        { $match: { businessId: req.user.businessId } },
+        { $group: { _id: "$status", count: { $sum: 1 } } },
+      ]),
+    ]);
 
-    return res.json(testimonials);
+    const statusSummary = summary.reduce(
+      (accumulator, item) => {
+        accumulator[item._id] = item.count;
+        return accumulator;
+      },
+      { approved: 0, pending: 0, hidden: 0 }
+    );
+
+    return res.json({
+      data: testimonials,
+      page,
+      limit,
+      total,
+      summary: {
+        total,
+        approved: statusSummary.approved,
+        pending: statusSummary.pending,
+        hidden: statusSummary.hidden,
+      },
+    });
   } catch (error) {
-    return res.status(500).json({ message: "Unable to fetch testimonials", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -43,7 +73,8 @@ export const updateStatus = async (req, res) => {
 
     return res.json(testimonial);
   } catch (error) {
-    return res.status(500).json({ message: "Unable to update testimonial", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -74,6 +105,7 @@ export const addManualTestimonial = async (req, res) => {
 
     return res.status(201).json(testimonial);
   } catch (error) {
-    return res.status(500).json({ message: "Unable to add testimonial", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

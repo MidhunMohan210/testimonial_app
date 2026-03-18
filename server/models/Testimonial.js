@@ -34,6 +34,12 @@ const testimonialSchema = new mongoose.Schema({
     enum: ["whatsapp", "manual"],
     default: "whatsapp",
   },
+  messageId: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+  },
   collectedAt: {
     type: Date,
     default: Date.now,

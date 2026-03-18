@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 import Business from "../models/Business.js";
 
@@ -18,10 +19,7 @@ const sanitizeUser = (user) => ({
 
 const sanitizeBusiness = (business) => ({
   _id: business._id,
-  userId: business.userId,
   businessName: business.businessName,
-  whatsappPhoneNumberId: business.whatsappPhoneNumberId,
-  apiKey: business.apiKey,
   createdAt: business.createdAt,
 });
 
@@ -31,6 +29,8 @@ const signToken = (userId) =>
   });
 
 export const register = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
     const { name, email, mobile, password, businessName } = req.body;
 
@@ -51,7 +51,7 @@ export const register = async (req, res) => {
 
     const existingUser = await User.findOne({
       $or: [{ email: normalizedEmail }, { mobile: normalizedMobile }],
-    });
+    }).session(session);
 
     if (existingUser) {
       return res.status(409).json({ message: "User with this email or mobile already exists" });
@@ -59,22 +59,37 @@ export const register = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await User.create({
-      name: name.trim(),
-      email: normalizedEmail,
-      mobile: normalizedMobile,
-      password: hashedPassword,
-    });
+    let user;
+    let business;
 
-    const business = await Business.create({
-      userId: user._id,
-      businessName: businessName.trim(),
-      whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
-      whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
-    });
+    await session.withTransaction(async () => {
+      [user] = await User.create(
+        [
+          {
+            name: name.trim(),
+            email: normalizedEmail,
+            mobile: normalizedMobile,
+            password: hashedPassword,
+          },
+        ],
+        { session }
+      );
 
-    user.businessId = business._id;
-    await user.save();
+      [business] = await Business.create(
+        [
+          {
+            userId: user._id,
+            businessName: businessName.trim(),
+            whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+            whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
+          },
+        ],
+        { session }
+      );
+
+      user.businessId = business._id;
+      await user.save({ session });
+    });
 
     return res.status(201).json({
       token: signToken(user._id),
@@ -82,7 +97,14 @@ export const register = async (req, res) => {
       business: sanitizeBusiness(business),
     });
   } catch (error) {
-    return res.status(500).json({ message: "Registration failed", error: error.message });
+    if (error?.code === 11000) {
+      return res.status(409).json({ message: "User with this email or mobile already exists" });
+    }
+
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
+  } finally {
+    await session.endSession();
   }
 };
 
@@ -117,6 +139,7 @@ export const login = async (req, res) => {
       business: business ? sanitizeBusiness(business) : null,
     });
   } catch (error) {
-    return res.status(500).json({ message: "Login failed", error: error.message });
+    console.error(error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 };

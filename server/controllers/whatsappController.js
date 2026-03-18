@@ -22,6 +22,19 @@ const sendWhatsappMessage = async ({ phoneNumberId, accessToken, payload }) => {
   });
 };
 
+const logWhatsappError = (error, context) => {
+  if (axios.isAxiosError(error)) {
+    console.error(context, {
+      status: error.response?.status,
+      data: error.response?.data,
+      message: error.message,
+    });
+    return;
+  }
+
+  console.error(context, error);
+};
+
 export const sendRequest = async (req, res) => {
   try {
     const { customerName, customerPhone } = req.body;
@@ -63,18 +76,9 @@ export const sendRequest = async (req, res) => {
           to: normalizedPhone,
           type: "template",
           template: {
-            name: "testimonial_request",
+            name: "hello_world",
             language: { code: "en_US" },
-            components: [
-              {
-                type: "body",
-                parameters: [
-                  { type: "text", text: customerName },
-                  { type: "text", text: business.businessName },
-                ],
-              },
-            ],
-          },  
+          },
         },
       });
 
@@ -86,15 +90,14 @@ export const sendRequest = async (req, res) => {
       request.status = "failed";
       await request.save();
 
+      logWhatsappError(error, "WhatsApp send request failed");
       return res.status(500).json({
-        message: "Failed to send WhatsApp message",
-        error: error.response?.data || error.message,
+        message: "Internal server error",
       });
     }
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Unable to send request", error: error.message });
+    logWhatsappError(error, "WhatsApp controller failed");
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -108,10 +111,9 @@ export const getRequests = async (req, res) => {
 
     return res.json(requests);
   } catch (error) {
-    return res
-      .status(500)
-      .json({ message: "Unable to fetch requests", error: error.message });
+    logWhatsappError(error, "WhatsApp requests fetch failed");
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
 
-export { sendWhatsappMessage, getBusinessCredentials };
+export { sendWhatsappMessage, getBusinessCredentials, logWhatsappError };

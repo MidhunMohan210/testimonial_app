@@ -12,9 +12,26 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const webhookJsonParser = express.json({
+  verify: (req, res, buf) => {
+    req.rawBody = Buffer.from(buf);
+  },
+});
 
-app.use(cors());
-app.options("*", cors());
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
+app.options(
+  "*",
+  cors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  })
+);
+app.use("/webhook", webhookJsonParser, whatsappWebhookRoutes);
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
@@ -24,7 +41,6 @@ app.get("/api/health", (req, res) => {
 app.use("/api/auth", authRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/testimonials", testimonialRoutes);
-app.use("/webhook", whatsappWebhookRoutes);
 
 mongoose
   .connect(process.env.MONGODB_URI)

@@ -1,10 +1,12 @@
 import express from "express";
+import crypto from "crypto";
 import Business from "../models/Business.js";
 import Testimonial from "../models/Testimonial.js";
 import WhatsappRequest from "../models/WhatsappRequest.js";
 import {
   sendWhatsappMessage,
   getBusinessCredentials,
+  logWhatsappError,
 } from "../controllers/whatsappController.js";
 
 const router = express.Router();
@@ -33,6 +35,55 @@ const resolveBusiness = async (phoneNumberId, customerPhone) => {
   return Business.findById(request.businessId);
 };
 
+
+
+const verifyWebhookSignature = (req) => {
+  // Skip verification in development
+  if (process.env.NODE_ENV !== "production") {
+    console.log("⚠️ Skipping WhatsApp signature verification (dev mode)");
+    return true;
+  }
+
+  const signature = req.headers["x-hub-signature-256"];
+  const appSecret = process.env.WHATSAPP_APP_SECRET;
+
+  if (!signature) {
+    console.warn("Missing WhatsApp signature header");
+    return false;
+  }
+
+  if (!appSecret) {
+    console.error("WHATSAPP_APP_SECRET not configured");
+    return false;
+  }
+
+  if (!req.rawBody) {
+    console.error("Raw body missing for signature verification");
+    return false;
+  }
+
+  const expectedSignature =
+    "sha256=" +
+    crypto
+      .createHmac("sha256", appSecret)
+      .update(req.rawBody)
+      .digest("hex");
+
+  try {
+    const signatureBuffer = Buffer.from(signature);
+    const expectedBuffer = Buffer.from(expectedSignature);
+
+    if (signatureBuffer.length !== expectedBuffer.length) {
+      return false;
+    }
+
+    return crypto.timingSafeEqual(signatureBuffer, expectedBuffer);
+  } catch (error) {
+    console.error("Signature verification failed:", error);
+    return false;
+  }
+};
+
 router.get("/whatsapp", (req, res) => {
   const mode = req.query["hub.mode"];
   const verifyToken = req.query["hub.verify_token"];
@@ -46,7 +97,11 @@ router.get("/whatsapp", (req, res) => {
 });
 
 router.post("/whatsapp", async (req, res) => {
-  console.log("WhatsApp webhook payload:", JSON.stringify(req.body, null, 2));
+  if (!verifyWebhookSignature(req)) {
+    return res.status(403).send("Invalid signature");
+  }
+
+  console.log("WhatsApp webhook event received");
 
   try {
     const message = getNested(req.body, ["entry", 0, "changes", 0, "value", "messages", 0]);
@@ -65,6 +120,7 @@ router.post("/whatsapp", async (req, res) => {
     }
 
     const customerPhone = message.from;
+    const messageId = message.id;
     const messageType = message.type;
     const textBody = getNested(message, ["text", "body"], "").trim();
     const business = await resolveBusiness(phoneNumberId, customerPhone);
@@ -116,6 +172,19 @@ router.post("/whatsapp", async (req, res) => {
     }
 
     if (request.step === 2 && messageType === "text" && textBody) {
+      if (!messageId) {
+        return res.sendStatus(200);
+      }
+
+      const existingTestimonial = await Testimonial.findOne({ messageId });
+
+      if (existingTestimonial) {
+        request.status = "replied";
+        request.step = 3;
+        await request.save();
+        return res.sendStatus(200);
+      }
+
       await Testimonial.create({
         businessId: business._id,
         customerName: request.customerName || "",
@@ -124,6 +193,7 @@ router.post("/whatsapp", async (req, res) => {
         testimonialText: textBody,
         status: "pending",
         source: "whatsapp",
+        messageId,
       });
 
       request.status = "replied";
@@ -144,7 +214,7 @@ router.post("/whatsapp", async (req, res) => {
       });
     }
   } catch (error) {
-    console.error("WhatsApp webhook processing failed:", error.message);
+    logWhatsappError(error, "WhatsApp webhook processing failed");
   }
 
   return res.sendStatus(200);
