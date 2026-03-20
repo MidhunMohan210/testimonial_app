@@ -72,12 +72,11 @@ export default function DashboardPage() {
     },
   });
 
-  const allTestimonials = allTestimonialsQuery.data || [];
-  const summary = {
-    total: allTestimonials.length,
-    approved: allTestimonials.filter((item) => item.status === "approved").length,
-    pending: allTestimonials.filter((item) => item.status === "pending").length,
-    hidden: allTestimonials.filter((item) => item.status === "hidden").length,
+  const summary = allTestimonialsQuery.data?.summary || {
+    total: 0,
+    approved: 0,
+    pending: 0,
+    hidden: 0,
   };
 
   return (
@@ -138,9 +137,9 @@ export default function DashboardPage() {
             <TabsContent value={activeStatus}>
               {testimonialsQuery.isLoading ? (
                 <LoadingState />
-              ) : testimonialsQuery.data?.length ? (
+              ) : testimonialsQuery.data?.data?.length ? (
                 <div className="space-y-4">
-                  {testimonialsQuery.data.map((testimonial) => (
+                  {testimonialsQuery.data.data.map((testimonial) => (
                     <TestimonialCard
                       key={testimonial._id}
                       testimonial={testimonial}

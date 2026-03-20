@@ -30,15 +30,16 @@ export default {
           foreground: "hsl(240 10% 3.9%)",
         },
       },
+
       fontFamily: {
-        sans: ["Manrope", "Avenir Next", "Segoe UI", "sans-serif"],
+        sans: ["saans", "saans Fallback", "Manrope", "sans-serif"],
       },
+
       boxShadow: {
         soft: "0 20px 60px -24px rgba(15, 23, 42, 0.25)",
       },
       backgroundImage: {
-        grid:
-          "linear-gradient(to right, rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.06) 1px, transparent 1px)",
+        grid: "linear-gradient(to right, rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.06) 1px, transparent 1px)",
       },
     },
   },
