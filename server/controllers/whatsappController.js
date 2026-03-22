@@ -7,8 +7,7 @@ const formatPhone = (phone) => String(phone).replace(/\s+/g, "");
 const getBusinessCredentials = (business) => ({
   phoneNumberId:
     business.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID,
-  accessToken:
-    business.whatsappAccessToken || process.env.WHATSAPP_ACCESS_TOKEN,
+  accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
 });
 
 const sendWhatsappMessage = async ({ phoneNumberId, accessToken, payload }) => {
@@ -76,8 +75,17 @@ export const sendRequest = async (req, res) => {
           to: normalizedPhone,
           type: "template",
           template: {
-            name: "hello_world",
+            name: "testimonial_request",
             language: { code: "en_US" },
+            components: [
+              {
+                type: "body",
+                parameters: [
+                  { type: "text", text: customerName },
+                  { type: "text", text: business.businessName },
+                ],
+              },
+            ],
           },
         },
       });

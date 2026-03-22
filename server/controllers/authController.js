@@ -81,7 +81,6 @@ export const register = async (req, res) => {
             userId: user._id,
             businessName: businessName.trim(),
             whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
-            whatsappAccessToken: process.env.WHATSAPP_ACCESS_TOKEN || "",
           },
         ],
         { session }
