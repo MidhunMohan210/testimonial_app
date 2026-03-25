@@ -20,6 +20,8 @@ const webhookJsonParser = express.json({
 
 const allowedOrigins = [
   "https://woice.it.com",
+  "https://www.woice.it.com",
+  "https://testimonial-app-sable.vercel.app",
   "http://localhost:5173"
 ];
 
@@ -28,11 +30,14 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log("Blocked by CORS:", origin);
       callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true
 }));
+
+app.options("*", cors());
 
 app.use("/webhook", webhookJsonParser, whatsappWebhookRoutes);
 app.use(express.json());
