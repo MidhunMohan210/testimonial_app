@@ -18,6 +18,7 @@ const webhookJsonParser = express.json({
   },
 });
 
+
 const allowedOrigins = [
   "https://woice.it.com",
   "https://www.woice.it.com",
