@@ -3,45 +3,55 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../co
 
 const sections = [
   {
-    title: "Operator",
-    content: ["WOICE is owned and operated by Midhun Mohan."],
+    title: "Introduction",
+    content: ["These Terms govern your use of WOICE and apply when you access or use the platform."],
   },
   {
-    title: "Business Address",
+    title: "Service Description",
     content: [
-      "Njaralakuzhiyil (H), Kuravilangad, Kottayam, Kerala - 686633, India",
+      "WOICE is a SaaS platform that helps businesses manage WhatsApp-based interactions and testimonials.",
     ],
   },
   {
-    title: "Information We Collect",
-    content: ["WhatsApp messages", "Media (images, audio, video)", "Contact details", "Usage data"],
+    title: "User Responsibilities",
+    content: ["Provide accurate data", "Do not misuse the platform", "Do not engage in illegal activity"],
     list: true,
   },
   {
-    title: "How We Use Data",
-    content: ["Provide SaaS features", "Store testimonials", "Improve service"],
+    title: "Acceptable Use",
+    content: ["No spam", "No abuse", "No illegal content"],
     list: true,
   },
   {
-    title: "Data Storage",
+    title: "Data Usage",
     content: [
-      "Data is stored securely using MongoDB and cloud-based systems.",
-      "Access is limited to authorized users who need it to operate the service.",
+      "The platform processes WhatsApp data to provide core functionality.",
+      "Users are responsible for obtaining any required consent from their customers.",
     ],
   },
   {
-    title: "Data Sharing",
+    title: "Intellectual Property",
+    content: ["All platform code, UI, and branding belong to WOICE."],
+  },
+  {
+    title: "Limitation of Liability",
     content: [
-      "We do not sell user data.",
-      "Data is only used as needed to provide and support the service functionality.",
+      'The service is provided "as is".',
+      "We do not guarantee uninterrupted uptime.",
+      "We are not liable for data loss or issues caused by third-party services.",
     ],
   },
   {
-    title: "User Rights",
-    content: [
-      "Users can request deletion of their data.",
-      "Users can contact us with privacy or data-related questions.",
-    ],
+    title: "Termination",
+    content: ["We may suspend or terminate accounts that misuse the platform."],
+  },
+  {
+    title: "Payments",
+    content: ["If applicable, WOICE is offered as a subscription-based SaaS service."],
+  },
+  {
+    title: "Governing Law",
+    content: ["These Terms are governed by the laws of India."],
   },
   {
     title: "Contact",
@@ -73,7 +83,7 @@ function LegalSection({ title, content, list = false }) {
   );
 }
 
-export default function PrivacyPage() {
+export default function TermsPage() {
   return (
     <main className="min-h-full bg-white">
       <div className="absolute inset-x-0 top-0 -z-10 h-[28rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.96),rgba(247,247,245,0.52)_58%,transparent_78%)]" />
@@ -83,19 +93,15 @@ export default function PrivacyPage() {
         <div className="mx-auto max-w-4xl">
           <Card className="border-white/80 bg-white/90 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.28)]">
             <CardHeader className="space-y-3">
-              <CardTitle className="text-3xl text-slate-950">Privacy Policy</CardTitle>
+              <CardTitle className="text-3xl text-slate-950">Terms and Conditions</CardTitle>
               <CardDescription className="max-w-3xl text-sm leading-7 text-slate-600">
-                WOICE is operated by Midhun Mohan. This Privacy Policy explains how we collect,
-                use, and protect your information when you use our platform.
+                These Terms explain the basic rules for using WOICE in clear, simple language.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {sections.map((section) => (
                 <LegalSection key={section.title} {...section} />
               ))}
-              <section className="rounded-[1.5rem] border border-slate-200/80 bg-white p-6">
-                <p className="text-sm font-medium text-slate-600">Last updated: March 25, 2026</p>
-              </section>
             </CardContent>
           </Card>
         </div>

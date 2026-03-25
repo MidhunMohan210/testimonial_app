@@ -17,6 +17,9 @@ export default function Footer({ className = "" }) {
           <Link to="/privacy" className="transition hover:text-slate-950">
             Privacy Policy
           </Link>
+          <Link to="/terms" className="transition hover:text-slate-950">
+            Terms & Conditions
+          </Link>
         </div>
       </div>
     </footer>
