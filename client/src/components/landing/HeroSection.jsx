@@ -11,12 +11,12 @@ export default function HeroSection() {
         <HeroBadge />
 
         <div className="mt-10 max-w-5xl space-y-8 ">
-          <h1 className=" font-sans text-5xl font-semibold leading-[0.92] tracking-normal text-slate-950 sm:text-6xl lg:text-[5rem]">
-            Collect testimonials on  WhatsApp.
+          <h1 className=" text-gray-600  font-sans text-3xl font-semibold leading-[0.92] tracking-normal sm:text-5xl lg:text-[5rem]">
+           Stop chasing reviews. Collect them on <span className="text-primary">WhatsApp.</span>
           </h1>
 
           <p className="mx-auto max-w-3xl text-xl font-medium leading-relaxed text-slate-500 sm:text-xl">
-            Reach customers on WhatsApp — and get up to <br /> 3× more responses than email.
+           No follow-ups, no forms , no hassle. just ask once on WhatsApp and start collecting testimonials instantly.
           </p>
         </div>
 

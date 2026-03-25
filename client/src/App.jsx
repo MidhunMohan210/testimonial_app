@@ -31,7 +31,6 @@ export default function App() {
           </ProtectedRoute>
         }
       >
-        <Route index element={<Navigate to="/dashboard" replace />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/send-request" element={<SendRequestPage />} />

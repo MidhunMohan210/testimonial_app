@@ -20,7 +20,7 @@ export default function TrustedBySection() {
   return (
     <div className="mt-20 flex w-full max-w-6xl flex-col items-center">
       <p className="text-sm font-medium text-slate-400 sm:text-base">
-        Built for fast-moving teams in
+        Built for service businesses that rely on trust
       </p>
       <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-3 sm:gap-4">
         {audience.map(({ name, icon: Icon }) => (
