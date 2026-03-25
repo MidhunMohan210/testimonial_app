@@ -5,8 +5,11 @@ import DashboardPage from "./pages/DashboardPage";
 import SendRequestPage from "./pages/SendRequestPage";
 import TestimonialsPage from "./pages/TestimonialsPage";
 import LandingPage from "./pages/LandingPage";
+import ContactPage from "./pages/ContactPage";
+import PrivacyPage from "./pages/PrivacyPage";
 import { useAuth } from "./hooks/useAuth";
 import AppShell from "./components/AppShell";
+import PublicLayout from "./components/PublicLayout";
 
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAuth();
@@ -21,9 +24,13 @@ function ProtectedRoute({ children }) {
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/register" element={<RegisterPage />} />
+      <Route element={<PublicLayout />}>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+      </Route>
       <Route
         element={
           <ProtectedRoute>

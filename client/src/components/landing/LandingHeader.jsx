@@ -41,7 +41,7 @@ export default function LandingHeader() {
         <Link to="/" className="flex items-center gap-3 text-slate-950">
           <img
             src={logo}
-            alt="Testimonial"
+            alt="Woice"
             className={[
               "transition-all duration-300 ease-out",
               isScrolled ? "w-[92px]" : "w-[100px]",

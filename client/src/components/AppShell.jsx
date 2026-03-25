@@ -13,6 +13,7 @@ import logo from "../assets/logo.svg";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
+import Footer from "./Footer";
 
 const navigation = [
   {
@@ -214,6 +215,7 @@ export default function AppShell() {
           <main className="min-w-0 flex-1 px-4 py-8 sm:px-6 lg:px-8">
             <Outlet />
           </main>
+          <Footer className="mt-auto" />
         </div>
       </div>
 

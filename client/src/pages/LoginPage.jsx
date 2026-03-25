@@ -36,7 +36,7 @@ export default function LoginPage() {
     mutationFn: loginRequest,
     onSuccess: (data) => {
       login(data);
-      toast.success("Welcome back to TestiFlow");
+      toast.success("Welcome back to Woice");
       navigate("/dashboard");
     },
     onError: (error) => {
@@ -56,7 +56,7 @@ export default function LoginPage() {
             <MessageSquareQuote className="h-8 w-8" />
           </div>
           <div className="space-y-1">
-            <CardTitle>Welcome to TestiFlow</CardTitle>
+            <CardTitle>Welcome to Woice</CardTitle>
             <CardDescription>Collect customer love directly from WhatsApp.</CardDescription>
           </div>
         </CardHeader>

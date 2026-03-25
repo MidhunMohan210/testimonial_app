@@ -41,7 +41,7 @@ export default function RegisterPage() {
     mutationFn: registerRequest,
     onSuccess: (data) => {
       login(data);
-      toast.success("Your TestiFlow workspace is ready");
+      toast.success("Your Woice workspace is ready");
       navigate("/dashboard");
     },
     onError: (error) => {
@@ -63,7 +63,7 @@ export default function RegisterPage() {
             <MessageSquareQuote className="h-8 w-8" />
           </div>
           <div className="space-y-1">
-            <CardTitle>Create your TestiFlow account</CardTitle>
+            <CardTitle>Create your Woice account</CardTitle>
             <CardDescription>Launch a testimonial pipeline in a few minutes.</CardDescription>
           </div>
         </CardHeader>
