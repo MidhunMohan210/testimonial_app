@@ -20,6 +20,8 @@ const sanitizeUser = (user) => ({
 const sanitizeBusiness = (business) => ({
   _id: business._id,
   businessName: business.businessName,
+  whatsappBusinessAccountId: business.whatsappBusinessAccountId,
+  whatsappPhoneNumberId: business.whatsappPhoneNumberId,
   createdAt: business.createdAt,
 });
 

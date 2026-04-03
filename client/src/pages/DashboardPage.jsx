@@ -14,6 +14,7 @@ import {
 import { getTestimonials } from "../api/testimonialApi";
 import SendRequestModal from "../components/SendRequestModal";
 import TestimonialCard from "../components/TestimonialCard";
+import WhatsAppEmbeddedSignupButton from "../components/WhatsAppEmbeddedSignupButton";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
@@ -255,6 +256,7 @@ export default function DashboardPage() {
                 <Button className="w-full justify-center" onClick={() => setSendOpen(true)}>
                   Send a new request
                 </Button>
+                <WhatsAppEmbeddedSignupButton />
                 <Link to="/testimonials" className="block">
                   <Button variant="outline" className="w-full justify-center">
                     Review testimonials

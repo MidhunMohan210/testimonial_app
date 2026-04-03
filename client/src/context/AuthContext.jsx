@@ -22,6 +22,11 @@ export function AuthProvider({ children }) {
     setBusiness(payload.business);
   };
 
+  const updateBusiness = (nextBusiness) => {
+    localStorage.setItem("testiflow_business", JSON.stringify(nextBusiness));
+    setBusiness(nextBusiness);
+  };
+
   const logout = () => {
     localStorage.removeItem("testiflow_token");
     localStorage.removeItem("testiflow_user");
@@ -38,6 +43,7 @@ export function AuthProvider({ children }) {
     business,
     token,
     login: handleLogin,
+    updateBusiness,
     logout,
     isAuthenticated: Boolean(token),
   };

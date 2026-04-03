@@ -16,6 +16,10 @@ const businessSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  whatsappBusinessAccountId: {
+    type: String,
+    trim: true,
+  },
   apiKey: {
     type: String,
     default: uuidv4,

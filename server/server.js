@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 
 import authRoutes from "./routes/auth.js";
 import whatsappRoutes from "./routes/whatsapp.js";
+import whatsappCallbackRoutes from "./routes/whatsappCallback.js";
 import testimonialRoutes from "./routes/testimonial.js";
 import whatsappWebhookRoutes from "./webhook/whatsappWebhook.js";
 
@@ -47,6 +48,7 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
+app.use("/whatsapp", whatsappCallbackRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/testimonials", testimonialRoutes);

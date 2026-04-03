@@ -1,14 +1,22 @@
 import axios from "axios";
 import Business from "../models/Business.js";
 import WhatsappRequest from "../models/WhatsappRequest.js";
+import WhatsAppAccount from "../models/WhatsAppAccount.js";
 
 const formatPhone = (phone) => String(phone).replace(/\s+/g, "");
 
-const getBusinessCredentials = (business) => ({
-  phoneNumberId:
-    business.whatsappPhoneNumberId || process.env.WHATSAPP_PHONE_NUMBER_ID,
-  accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
-});
+const getBusinessCredentials = async (businessId) => {
+  const account = await WhatsAppAccount.findOne({ business: businessId });
+
+  if (!account) {
+    throw new Error("WhatsApp account not connected for this business");
+  }
+
+  return {
+    phoneNumberId: account.phone_number_id,
+    accessToken: account.access_token,
+  };
+};
 
 const sendWhatsappMessage = async ({ phoneNumberId, accessToken, payload }) => {
   const url = `https://graph.facebook.com/v22.0/${phoneNumberId}/messages`;
@@ -48,7 +56,9 @@ export const sendRequest = async (req, res) => {
       return res.status(404).json({ message: "Business not found" });
     }
 
-    const { phoneNumberId, accessToken } = getBusinessCredentials(business);
+    const { phoneNumberId, accessToken } = await getBusinessCredentials(
+      business._id,
+    );
 
     if (!phoneNumberId || !accessToken) {
       return res
@@ -67,6 +77,9 @@ export const sendRequest = async (req, res) => {
     });
 
     try {
+      const templateName = "woice_review_request_v1"; // later from DB
+      const languageCode = "en_US"; // must match template exactly
+
       await sendWhatsappMessage({
         phoneNumberId,
         accessToken,
@@ -75,14 +88,20 @@ export const sendRequest = async (req, res) => {
           to: normalizedPhone,
           type: "template",
           template: {
-            name: "testimonial_request",
-            language: { code: "en_US" },
+            name: templateName,
+            language: { code: languageCode },
             components: [
               {
                 type: "body",
                 parameters: [
-                  { type: "text", text: customerName },
-                  { type: "text", text: business.businessName },
+                  {
+                    type: "text",
+                    text: customerName || "Customer", // fallback safety
+                  },
+                  {
+                    type: "text",
+                    text: business?.businessName || "Our Business",
+                  },
                 ],
               },
             ],
@@ -121,6 +140,103 @@ export const getRequests = async (req, res) => {
   } catch (error) {
     logWhatsappError(error, "WhatsApp requests fetch failed");
     return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const saveEmbeddedSignupConnection = async (req, res) => {
+  try {
+    const { waba_id: wabaId, phone_number_id: phoneNumberId } = req.body;
+
+    if (!wabaId || !phoneNumberId) {
+      return res.status(400).json({
+        message: "waba_id and phone_number_id are required",
+      });
+    }
+
+    const business = await Business.findById(req.user.businessId);
+
+    if (!business) {
+      return res.status(404).json({ message: "Business not found" });
+    }
+
+    business.whatsappBusinessAccountId = String(wabaId).trim();
+    business.whatsappPhoneNumberId = String(phoneNumberId).trim();
+    await business.save();
+
+    console.log("[WhatsApp Embedded Signup] Connection saved", {
+      businessId: business._id.toString(),
+      waba_id: business.whatsappBusinessAccountId,
+      phone_number_id: business.whatsappPhoneNumberId,
+    });
+
+    return res.json({
+      message: "WhatsApp connection saved successfully",
+      business: {
+        _id: business._id,
+        businessName: business.businessName,
+        whatsappBusinessAccountId: business.whatsappBusinessAccountId,
+        whatsappPhoneNumberId: business.whatsappPhoneNumberId,
+        createdAt: business.createdAt,
+      },
+    });
+  } catch (error) {
+    logWhatsappError(error, "WhatsApp embedded signup save failed");
+    return res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+export const saveWhatsAppAccount = async (req, res) => {
+  try {
+    const {
+      waba_id,
+      phone_number_id,
+      business_id,
+      access_token,
+      business,
+      user,
+    } = req.body;
+
+    // ── Validation ────────────────────────────────────────────────────────────
+    if (!waba_id || !phone_number_id || !access_token) {
+      return res.status(400).json({
+        success: false,
+        message: "waba_id, phone_number_id, and access_token are required",
+      });
+    }
+
+    // ── Save or Update ────────────────────────────────────────────────────────
+    const account = await WhatsAppAccount.findOneAndUpdate(
+      { waba_id },
+      {
+        waba_id,
+        phone_number_id,
+        business_id: business_id ?? null,
+        business: business ?? null,
+        user: user ?? null,
+        access_token,
+
+        connected_at: new Date(),
+      },
+      { upsert: true, new: true },
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "WhatsApp account saved successfully",
+      data: {
+        waba_id: account.waba_id,
+        phone_number_id: account.phone_number_id,
+        business_id: account.business_id,
+        connected_at: account.connected_at,
+        // ⚠️ access_token intentionally NOT returned
+      },
+    });
+  } catch (error) {
+    console.error("[WhatsApp] Failed to save account", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
   }
 };
 
