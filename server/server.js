@@ -28,7 +28,8 @@ const allowedOrigins = [
   "https://woice.it.com",
   "https://www.woice.it.com",
   "https://testimonial-app-sable.vercel.app",
-  "http://localhost:5173"
+  "http://localhost:5173",
+  "http://192.168.20.5:5173/"
 ];
 
 app.use(cors({
