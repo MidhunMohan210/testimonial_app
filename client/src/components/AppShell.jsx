@@ -258,7 +258,7 @@ export default function AppShell() {
                   <Menu className="h-5 w-5" />
                 </Button>
                 <div>
-                  <h1 className="text-[1.1rem] font-bold leading-tight tracking-tight text-slate-950 sm:text-xl">
+                  <h1 className="text-[1.1rem] font-bold leading-tight tracking-wide text-slate-950 sm:text-xl">
                     {meta.title}
                   </h1>
                   <p className="hidden text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400 sm:block">

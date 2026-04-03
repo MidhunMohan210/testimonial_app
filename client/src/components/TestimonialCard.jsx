@@ -17,7 +17,12 @@ function StarRating({ rating }) {
   );
 }
 
-export default function TestimonialCard({ testimonial, onStatusChange, isUpdating }) {
+export default function TestimonialCard({
+  testimonial,
+  onStatusChange,
+  isUpdating,
+  onOpen,
+}) {
   const collectedDate = new Date(testimonial.collectedAt).toLocaleDateString(undefined, {
     day: "numeric",
     month: "short",
@@ -80,9 +85,18 @@ export default function TestimonialCard({ testimonial, onStatusChange, isUpdatin
                   Customer feedback
                 </span>
               </div>
-              <p className="max-w-3xl text-sm leading-7 text-slate-700 sm:text-[15px]">
+              <p className="line-clamp-4 max-w-3xl text-sm leading-7 text-slate-700 sm:text-[15px]">
                 {testimonial.testimonialText || "No testimonial text provided."}
               </p>
+              {typeof onOpen === "function" ? (
+                <Button
+                  variant="outline"
+                  className="mt-4 rounded-lg border-slate-200 bg-white hover:bg-slate-100"
+                  onClick={() => onOpen(testimonial)}
+                >
+                  View full feedback
+                </Button>
+              ) : null}
             </div>
           </div>
 
