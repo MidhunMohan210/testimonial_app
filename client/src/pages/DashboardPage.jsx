@@ -170,11 +170,16 @@ export default function DashboardPage() {
     hidden: 0,
   };
 
-  const businessName = businessQuery.data?.name || "Business";
+  const businessName = businessQuery.data?.businessName || "Business";
+  // console.log(businessQuery.data);
+  
   const reviewLink = businessQuery.data?.slug
     ? `${window.location.origin}/r/${businessQuery.data.slug}`
     : "";
-  const recentTestimonials = (allTestimonialsQuery.data?.data || []).slice(0, 3);
+  const recentTestimonials = (allTestimonialsQuery.data?.data || []).slice(
+    0,
+    3,
+  );
 
   const insights = useMemo(() => {
     const testimonials = allTestimonialsQuery.data?.data || [];
@@ -184,7 +189,7 @@ export default function DashboardPage() {
         ? (
             testimonials.reduce(
               (sum, item) => sum + (Number(item.rating) || 0),
-              0
+              0,
             ) / testimonials.length
           ).toFixed(1)
         : "0.0";
@@ -194,7 +199,7 @@ export default function DashboardPage() {
       : 0;
 
     const whatsappCount = testimonials.filter(
-      (item) => item.source === "whatsapp"
+      (item) => item.source === "whatsapp",
     ).length;
 
     return [
@@ -256,8 +261,8 @@ export default function DashboardPage() {
                   Dashboard Live
                 </div>
 
-                <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                  Welcome back, {businessName}.
+                <h1 className="text-3xl font-bold  text-slate-700 sm:text-4xl">
+                  Welcome back  <span className="text-black">{businessName}</span>
                 </h1>
 
                 <p className="mt-2 max-w-lg text-slate-500">
@@ -276,13 +281,13 @@ export default function DashboardPage() {
                   Settings
                 </Button>
 
-                <Button
+                {/* <Button
                   className="h-10 rounded-xl bg-slate-900 px-5 font-semibold text-white shadow-sm hover:bg-slate-800"
                   onClick={() => setSendOpen(true)}
                 >
                   <Sparkles className="mr-2 h-4 w-4" />
                   Request
-                </Button>
+                </Button> */}
               </div>
             </div>
           </div>
@@ -392,70 +397,32 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          {/* Recent Testimonials */}
-          <div className="rounded-2xl bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)] md:col-span-3">
-            <div className="mb-6 flex items-center justify-between">
-              <h2 className="text-xl font-bold text-slate-900">
-                Recent Activity
-              </h2>
-              <Link to="/testimonials">
-                <Button
-                  variant="ghost"
-                  className="rounded-xl text-slate-500 hover:bg-slate-100 hover:text-slate-900"
-                >
-                  View all
-                </Button>
-              </Link>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-3">
-              {recentTestimonials.length ? (
-                recentTestimonials.map((testimonial) => (
-                  <div
-                    key={testimonial._id}
-                    className="rounded-2xl border border-slate-100 bg-slate-50/50 p-5"
-                  >
-                    <TestimonialCard testimonial={testimonial} />
-                  </div>
-                ))
-              ) : (
-                <div className="col-span-3 flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50 py-12 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-indigo-100">
-                    <Inbox className="h-5 w-5 text-indigo-500" />
-                  </div>
-                  <p className="text-base font-bold text-slate-900">
-                    It&apos;s quiet here
-                  </p>
-                  <p className="mt-1 text-sm text-slate-500">
-                    Start collecting feedback to see it here.
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column */}
-          <div className="flex flex-col gap-5 md:col-span-3 lg:col-span-1">
+          <div className="md:col-span-3 lg:col-span-4 grid grid-cols-1 gap-5 lg:grid-cols-[1.6fr_1fr] items-start">
             {/* Insights */}
-            <div className="flex-1 rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+            <div className="h-fit rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
               <h3 className="mb-5 text-base font-bold text-slate-900">
                 Quick Insights
               </h3>
-              <div className="space-y-4">
+
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                 {insights.map((insight) => {
                   const Icon = insight.icon;
                   return (
-                    <div key={insight.label} className="flex items-center gap-4">
+                    <div
+                      key={insight.label}
+                      className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-5"
+                    >
                       <div
-                        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${insight.bg}`}
+                        className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${insight.bg}`}
                       >
-                        <Icon className={`h-5 w-5 ${insight.color}`} />
+                        <Icon className={`h-6 w-6 ${insight.color}`} />
                       </div>
-                      <div className="flex-1">
-                        <p className="text-xs font-semibold text-slate-500">
+
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-500">
                           {insight.label}
                         </p>
-                        <p className="text-lg font-bold text-slate-900">
+                        <p className="mt-1 text-2xl font-bold tracking-tight text-slate-900">
                           {insight.value}
                         </p>
                       </div>
@@ -466,26 +433,38 @@ export default function DashboardPage() {
             </div>
 
             {/* Navigation */}
-            <div className="rounded-2xl bg-slate-900 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+            <div className="h-fit rounded-2xl bg-slate-900 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+              <h3 className="mb-5 text-base font-bold text-white">
+                Quick Actions
+              </h3>
+
               <div className="flex flex-col gap-3">
                 <Link
                   to="/testimonials"
                   className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
                 >
-                  <span className="text-sm font-bold text-white">
-                    Manage Reviews
-                  </span>
-                  <ArrowUpRight className="h-4 w-4 text-slate-400 transition-colors group-hover:text-white" />
+                  <div>
+                    <p className="text-sm font-bold text-white">
+                      Manage Reviews
+                    </p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Review, approve, and organize testimonials
+                    </p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
                 </Link>
 
                 <Link
                   to="/requests"
                   className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
                 >
-                  <span className="text-sm font-bold text-white">
-                    Send Invites
-                  </span>
-                  <ArrowUpRight className="h-4 w-4 text-slate-400 transition-colors group-hover:text-white" />
+                  <div>
+                    <p className="text-sm font-bold text-white">Send Invites</p>
+                    <p className="mt-1 text-xs text-slate-400">
+                      Request new reviews from customers
+                    </p>
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
                 </Link>
               </div>
             </div>
