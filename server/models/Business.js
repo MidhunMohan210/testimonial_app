@@ -20,6 +20,17 @@ const businessSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  slug: {
+    type: String,
+    unique: true,
+    sparse: true,
+    lowercase: true,
+    trim: true,
+  },
+  googleReviewLink: {
+    type: String,
+    trim: true,
+  },
   apiKey: {
     type: String,
     default: uuidv4,

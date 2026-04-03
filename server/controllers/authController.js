@@ -30,6 +30,24 @@ const signToken = (userId) =>
     expiresIn: "7d",
   });
 
+const createBusinessSlug = async (businessName, session) => {
+  const baseSlug =
+    businessName
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "business";
+
+  let slug;
+  let exists = true;
+
+  while (exists) {
+    slug = `${baseSlug}-${Math.random().toString(36).substr(2, 5)}`;
+    exists = await Business.exists({ slug }).session(session);
+  }
+
+  return slug;
+};
+
 export const register = async (req, res) => {
   const session = await mongoose.startSession();
 
@@ -65,6 +83,8 @@ export const register = async (req, res) => {
     let business;
 
     await session.withTransaction(async () => {
+      const businessSlug = await createBusinessSlug(businessName.trim(), session);
+
       [user] = await User.create(
         [
           {
@@ -82,6 +102,7 @@ export const register = async (req, res) => {
           {
             userId: user._id,
             businessName: businessName.trim(),
+            slug: businessSlug,
             whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
           },
         ],

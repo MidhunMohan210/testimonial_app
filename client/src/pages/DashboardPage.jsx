@@ -1,22 +1,35 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
+  Copy,
   EyeOff,
   Inbox,
   LayoutGrid,
+  Link as LinkIcon,
   MessageCirclePlus,
+  Settings,
   Sparkles,
   Star,
   TrendingUp,
 } from "lucide-react";
+import { toast } from "sonner";
+import { getMyBusiness, updateBusiness } from "../api/businessApi";
 import { getTestimonials } from "../api/testimonialApi";
 import SendRequestModal from "../components/SendRequestModal";
 import TestimonialCard from "../components/TestimonialCard";
-import WhatsAppEmbeddedSignupButton from "../components/WhatsAppEmbeddedSignupButton";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
 
 const summaryConfig = [
   {
@@ -46,11 +59,39 @@ const summaryConfig = [
 ];
 
 export default function DashboardPage() {
+  const queryClient = useQueryClient();
   const [sendOpen, setSendOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [googleReviewLink, setGoogleReviewLink] = useState("");
+  const [copied, setCopied] = useState(false);
 
   const allTestimonialsQuery = useQuery({
     queryKey: ["testimonials"],
     queryFn: () => getTestimonials("all"),
+  });
+
+  const businessQuery = useQuery({
+    queryKey: ["business", "me"],
+    queryFn: getMyBusiness,
+  });
+
+  useEffect(() => {
+    setGoogleReviewLink(businessQuery.data?.googleReviewLink || "");
+  }, [businessQuery.data?.googleReviewLink]);
+
+  const businessMutation = useMutation({
+    mutationFn: updateBusiness,
+    onSuccess: async () => {
+      toast.success("Business settings updated");
+      setSettingsOpen(false);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["business", "me"] }),
+        queryClient.invalidateQueries({ queryKey: ["auth"] }),
+      ]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || "Failed to update business");
+    },
   });
 
   const summary = allTestimonialsQuery.data?.summary || {
@@ -71,7 +112,7 @@ export default function DashboardPage() {
           ).toFixed(1)
         : "0.0";
     const approvalRate = total ? Math.round((summary.approved / total) * 100) : 0;
-    const whatsappCount = testimonials.filter((item) => item.source !== "manual").length;
+    const whatsappCount = testimonials.filter((item) => item.source === "whatsapp").length;
     const latestDate = testimonials[0]?.collectedAt
       ? new Date(testimonials[0].collectedAt).toLocaleDateString(undefined, {
           day: "numeric",
@@ -104,6 +145,29 @@ export default function DashboardPage() {
   }, [allTestimonialsQuery.data, summary]);
 
   const recentTestimonials = (allTestimonialsQuery.data?.data || []).slice(0, 3);
+  const reviewLink = businessQuery.data?.slug
+    ? `${window.location.origin}/r/${businessQuery.data.slug}`
+    : "";
+
+  const handleCopyLink = async () => {
+    if (!reviewLink) {
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(reviewLink);
+      setCopied(true);
+      toast.success("Review link copied");
+      window.setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      toast.error("Failed to copy review link");
+    }
+  };
+
+  const handleSettingsSave = async (event) => {
+    event.preventDefault();
+    await businessMutation.mutateAsync({ googleReviewLink });
+  };
 
   return (
     <>
@@ -125,10 +189,10 @@ export default function DashboardPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Button className="gap-2 bg-white text-slate-950 hover:bg-slate-100" onClick={() => setSendOpen(true)}>
+                {/* <Button className="gap-2 bg-white text-slate-950 hover:bg-slate-100" onClick={() => setSendOpen(true)}>
                   <MessageCirclePlus className="h-4 w-4" />
                   Send request
-                </Button>
+                </Button> */}
                 <Link to="/testimonials">
                   <Button
                     variant="outline"
@@ -249,24 +313,37 @@ export default function DashboardPage() {
             <Card className="border-white/80 bg-white/85">
               <CardHeader className="pb-3">
                 <CardTitle className="text-xl font-bold text-slate-950">
-                  Quick actions
+                  Your Review Link
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
-                <Button className="w-full justify-center" onClick={() => setSendOpen(true)}>
-                  Send a new request
-                </Button>
-                <WhatsAppEmbeddedSignupButton />
-                <Link to="/testimonials" className="block">
-                  <Button variant="outline" className="w-full justify-center">
-                    Review testimonials
+              <CardContent className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-2xl border border-slate-200 bg-white p-3 text-slate-700">
+                      <LinkIcon className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-slate-900">Public review page</p>
+                      <p className="mt-1 break-all text-sm text-slate-600">
+                        {reviewLink || "Generating review link..."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button className="w-full gap-2" onClick={handleCopyLink} disabled={!reviewLink}>
+                    <Copy className="h-4 w-4" />
+                    {copied ? "Copied!" : "Copy Link"}
                   </Button>
-                </Link>
-                <Link to="/send-request" className="block">
-                  <Button variant="ghost" className="w-full justify-center">
-                    Open request tools
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => setSettingsOpen(true)}
+                  >
+                    <Settings className="h-4 w-4" />
+                    Settings
                   </Button>
-                </Link>
+                </div>
               </CardContent>
             </Card>
 
@@ -296,6 +373,31 @@ export default function DashboardPage() {
       </div>
 
       <SendRequestModal open={sendOpen} onOpenChange={setSendOpen} />
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Review Link Settings</DialogTitle>
+            <DialogDescription>
+              Update the optional Google review destination shown after a public review is submitted.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form className="space-y-4" onSubmit={handleSettingsSave}>
+            <div className="space-y-2">
+              <Label htmlFor="googleReviewLink">Google Review Link (optional)</Label>
+              <Input
+                id="googleReviewLink"
+                value={googleReviewLink}
+                onChange={(event) => setGoogleReviewLink(event.target.value)}
+                placeholder="https://g.page/r/..."
+              />
+            </div>
+            <Button className="w-full" type="submit" disabled={businessMutation.isPending}>
+              {businessMutation.isPending ? "Saving..." : "Save"}
+            </Button>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

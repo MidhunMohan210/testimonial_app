@@ -7,7 +7,11 @@ import authRoutes from "./routes/auth.js";
 import whatsappRoutes from "./routes/whatsapp.js";
 import whatsappCallbackRoutes from "./routes/whatsappCallback.js";
 import testimonialRoutes from "./routes/testimonial.js";
+import businessSettingsRouter from "./routes/businessSettings.js";
+import privateFeedbackRouter from "./routes/privateFeedback.js";
+import publicReviewRouter from "./routes/publicReview.js";
 import whatsappWebhookRoutes from "./webhook/whatsappWebhook.js";
+import authMiddleware from "./middleware/authMiddleware.js";
 
 dotenv.config();
 
@@ -49,7 +53,10 @@ app.get("/api/health", (req, res) => {
 });
 
 app.use("/whatsapp", whatsappCallbackRoutes);
+app.use("/api/r", publicReviewRouter);
 app.use("/api/auth", authRoutes);
+app.use("/api/business", authMiddleware, businessSettingsRouter);
+app.use("/api/feedback", authMiddleware, privateFeedbackRouter);
 app.use("/api/whatsapp", whatsappRoutes);
 app.use("/api/testimonials", testimonialRoutes);
 

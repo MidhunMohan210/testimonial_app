@@ -28,12 +28,12 @@ const navigation = [
     description: "Review and moderate",
     icon: MessagesSquare,
   },
-  {
-    to: "/send-request",
-    label: "Requests",
-    description: "Capture more testimonials",
-    icon: MessageCirclePlus,
-  },
+  // {
+  //   to: "/send-request",
+  //   label: "Requests",
+  //   description: "Capture more testimonials",
+  //   icon: MessageCirclePlus,
+  // },
 ];
 
 const pageMeta = {

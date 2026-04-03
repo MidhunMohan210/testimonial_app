@@ -8,6 +8,7 @@ import LandingPage from "./pages/LandingPage";
 import ContactPage from "./pages/ContactPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
+import ReviewFormPage from "./pages/ReviewFormPage";
 import { useAuth } from "./hooks/useAuth";
 import AppShell from "./components/AppShell";
 import PublicLayout from "./components/PublicLayout";
@@ -32,6 +33,7 @@ export default function App() {
         <Route path="/terms" element={<TermsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/r/:slug" element={<ReviewFormPage />} />
       </Route>
       <Route
         element={

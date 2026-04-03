@@ -26,6 +26,12 @@ export default function TestimonialCard({ testimonial, onStatusChange, isUpdatin
   const customerName = testimonial.customerName || "Unnamed customer";
   const customerInitial = customerName.charAt(0).toUpperCase();
   const isReadOnly = typeof onStatusChange !== "function";
+  const sourceLabel =
+    testimonial.source === "manual"
+      ? "Manual"
+      : testimonial.source === "link"
+        ? "Review Link"
+        : "WhatsApp";
 
   return (
     <Card className="border-white/80 bg-white/95 shadow-[0_24px_60px_-38px_rgba(15,23,42,0.45)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-42px_rgba(15,23,42,0.5)]">
@@ -42,14 +48,16 @@ export default function TestimonialCard({ testimonial, onStatusChange, isUpdatin
                     <h3 className="text-lg font-semibold text-slate-950">{customerName}</h3>
                     <StatusBadge status={testimonial.status} />
                     <Badge className="border-slate-200 bg-slate-50 text-slate-700">
-                      {testimonial.source === "manual" ? "Manual" : "WhatsApp"}
+                      {sourceLabel}
                     </Badge>
                   </div>
                   <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1.5">
-                      <Phone className="h-4 w-4" />
-                      {testimonial.customerPhone}
-                    </span>
+                    {testimonial.source !== "link" ? (
+                      <span className="flex items-center gap-1.5">
+                        <Phone className="h-4 w-4" />
+                        {testimonial.customerPhone}
+                      </span>
+                    ) : null}
                     <span className="flex items-center gap-1.5">
                       <Clock3 className="h-4 w-4" />
                       {collectedDate}

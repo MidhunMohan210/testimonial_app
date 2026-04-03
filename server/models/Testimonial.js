@@ -31,7 +31,7 @@ const testimonialSchema = new mongoose.Schema({
   },
   source: {
     type: String,
-    enum: ["whatsapp", "manual"],
+    enum: ["whatsapp", "manual", "link"],
     default: "whatsapp",
   },
   messageId: {
