@@ -9,6 +9,8 @@ import ContactPage from "./pages/ContactPage";
 import PrivacyPage from "./pages/PrivacyPage";
 import TermsPage from "./pages/TermsPage";
 import ReviewFormPage from "./pages/ReviewFormPage";
+import PublicTestimonialsPage from "./pages/PublicTestimonialsPage";
+import SliderWidgetPage from "./pages/SliderWidgetPage";
 import { useAuth } from "./hooks/useAuth";
 import AppShell from "./components/AppShell";
 import PublicLayout from "./components/PublicLayout";
@@ -35,6 +37,8 @@ export default function App() {
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/r/:slug" element={<ReviewFormPage />} />
       </Route>
+      <Route path="/p/:slug" element={<PublicTestimonialsPage />} />
+      <Route path="/widget/slider/:slug" element={<SliderWidgetPage />} />
       <Route
         element={
           <ProtectedRoute>

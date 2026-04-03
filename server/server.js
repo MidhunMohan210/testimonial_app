@@ -10,6 +10,7 @@ import testimonialRoutes from "./routes/testimonial.js";
 import businessSettingsRouter from "./routes/businessSettings.js";
 import privateFeedbackRouter from "./routes/privateFeedback.js";
 import publicReviewRouter from "./routes/publicReview.js";
+import publicTestimonialsRouter from "./routes/publicTestimonials.js";
 import whatsappWebhookRoutes from "./webhook/whatsappWebhook.js";
 import authMiddleware from "./middleware/authMiddleware.js";
 
@@ -55,6 +56,7 @@ app.get("/api/health", (req, res) => {
 
 app.use("/whatsapp", whatsappCallbackRoutes);
 app.use("/api/r", publicReviewRouter);
+app.use("/api/p", publicTestimonialsRouter);
 app.use("/api/auth", authRoutes);
 app.use("/api/business", authMiddleware, businessSettingsRouter);
 app.use("/api/feedback", authMiddleware, privateFeedbackRouter);

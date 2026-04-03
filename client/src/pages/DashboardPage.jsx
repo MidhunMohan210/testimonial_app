@@ -27,6 +27,7 @@ import {
 } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
 
 function WavesDecoration() {
   return (
@@ -133,11 +134,15 @@ export default function DashboardPage() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [googleReviewLink, setGoogleReviewLink] = useState("");
   const [copied, setCopied] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
 
   const allTestimonialsQuery = useQuery({
     queryKey: ["testimonials"],
     queryFn: () => getTestimonials("all"),
   });
+
+  // console.log(business);
+  
 
   const businessQuery = useQuery({
     queryKey: ["business", "me"],
@@ -175,6 +180,15 @@ export default function DashboardPage() {
   
   const reviewLink = businessQuery.data?.slug
     ? `${window.location.origin}/r/${businessQuery.data.slug}`
+    : "";
+  const widgetSlug = businessQuery.data?.slug || "";
+  const iframeCode = widgetSlug
+    ? `<iframe
+  src="${window.location.origin}/widget/slider/${widgetSlug}"
+  width="100%"
+  height="260"
+  frameborder="0">
+</iframe>`
     : "";
   const recentTestimonials = (allTestimonialsQuery.data?.data || []).slice(
     0,
@@ -243,6 +257,19 @@ export default function DashboardPage() {
   const handleSettingsSave = async (event) => {
     event.preventDefault();
     await businessMutation.mutateAsync({ googleReviewLink });
+  };
+
+  const handleCopyEmbedCode = async () => {
+    if (!iframeCode) return;
+
+    try {
+      await navigator.clipboard.writeText(iframeCode);
+      setEmbedCopied(true);
+      toast.success("Embed code copied!");
+      window.setTimeout(() => setEmbedCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy embed code");
+    }
   };
 
   return (
@@ -433,39 +460,63 @@ export default function DashboardPage() {
             </div>
 
             {/* Navigation */}
-            <div className="h-fit rounded-2xl bg-slate-900 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-              <h3 className="mb-5 text-base font-bold text-white">
-                Quick Actions
-              </h3>
+            <div className="space-y-5">
+              <div className="h-fit rounded-2xl bg-slate-900 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
+                <h3 className="mb-5 text-base font-bold text-white">
+                  Quick Actions
+                </h3>
 
-              <div className="flex flex-col gap-3">
-                <Link
-                  to="/testimonials"
-                  className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
-                >
-                  <div>
-                    <p className="text-sm font-bold text-white">
-                      Manage Reviews
-                    </p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Review, approve, and organize testimonials
-                    </p>
-                  </div>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
-                </Link>
+                <div className="flex flex-col gap-3">
+                  <Link
+                    to="/testimonials"
+                    className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-white">
+                        Manage Reviews
+                      </p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Review, approve, and organize testimonials
+                      </p>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
+                  </Link>
 
-                <Link
-                  to="/requests"
-                  className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
+                  <Link
+                    to="/send-request"
+                    className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
+                  >
+                    <div>
+                      <p className="text-sm font-bold text-white">Send Invites</p>
+                      <p className="mt-1 text-xs text-slate-400">
+                        Request new reviews from customers
+                      </p>
+                    </div>
+                    <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
+                  </Link>
+                </div>
+              </div>
+
+              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                <h3 className="text-base font-bold text-slate-900">
+                  Embed on your website
+                </h3>
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  Add this slider to your homepage to showcase your latest reviews.
+                </p>
+                <Textarea
+                  readOnly
+                  value={iframeCode}
+                  className="mt-4 min-h-[140px] rounded-xl border-slate-200 bg-slate-50 font-mono text-xs leading-6 text-slate-700"
+                />
+                <Button
+                  variant="outline"
+                  className="mt-4 rounded-xl"
+                  onClick={handleCopyEmbedCode}
+                  disabled={!iframeCode}
                 >
-                  <div>
-                    <p className="text-sm font-bold text-white">Send Invites</p>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Request new reviews from customers
-                    </p>
-                  </div>
-                  <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
-                </Link>
+                  {embedCopied ? "Copied!" : "Copy code"}
+                </Button>
               </div>
             </div>
           </div>

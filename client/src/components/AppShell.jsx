@@ -236,7 +236,7 @@ export default function AppShell() {
 
   return (
     <div className="min-h-screen bg-transparent text-slate-950">
-      <div className="mx-auto flex min-h-screen max-w-[1600px]">
+      <div className="mx-auto flex min-h-screen ">
         {/* Desktop sidebar */}
         <aside className="hidden h-screen w-[308px] shrink-0 border-r border-white/10 bg-slate-950 lg:sticky lg:top-0 lg:block lg:overflow-y-auto">
           <SidebarContent />
