@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   CheckCircle2,
   Copy,
   Inbox,
   Settings,
-  Sparkles,
   ArrowUpRight,
   TrendingUp,
   Star,
@@ -277,7 +275,7 @@ export default function DashboardPage() {
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-5">
         <div className="grid grid-cols-1 gap-5 md:grid-cols-3 lg:grid-cols-4">
           {/* Welcome Hero */}
-          <div className="md:col-span-3 rounded-2xl bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+          <div className="md:col-span-3 lg:col-span-4 rounded-2xl bg-white p-8 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
@@ -316,40 +314,6 @@ export default function DashboardPage() {
                   Request
                 </Button> */}
               </div>
-            </div>
-          </div>
-
-          {/* Quick Share */}
-          <div className="group relative overflow-hidden rounded-2xl bg-indigo-900 p-8 text-white shadow-[0_8px_30px_rgb(79,70,229,0.2)] md:col-span-3 lg:col-span-1">
-            <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-indigo-500 blur-3xl transition-transform duration-700 group-hover:scale-150" />
-
-            <div className="relative z-10 flex h-full flex-col justify-between">
-              <div>
-                <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
-                  <ArrowUpRight className="h-5 w-5 text-white" />
-                </div>
-                <h3 className="mb-1 text-xl font-bold">Share Link</h3>
-                <p className="mb-6 text-sm text-indigo-100">
-                  Collect new reviews instantly.
-                </p>
-              </div>
-
-              <Button
-                className="h-10 w-full rounded-xl bg-white font-bold text-indigo-600 shadow-sm hover:bg-indigo-50"
-                onClick={handleCopyLink}
-              >
-                {copied ? (
-                  <>
-                    <CheckCircle2 className="mr-2 h-4 w-4" />
-                    Copied!
-                  </>
-                ) : (
-                  <>
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copy URL
-                  </>
-                )}
-              </Button>
             </div>
           </div>
 
@@ -424,7 +388,7 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="md:col-span-3 lg:col-span-4 grid grid-cols-1 gap-5 lg:grid-cols-[1.6fr_1fr] items-start">
+          <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 items-start">
             {/* Insights */}
             <div className="h-fit rounded-2xl bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
               <h3 className="mb-5 text-base font-bold text-slate-900">
@@ -458,46 +422,43 @@ export default function DashboardPage() {
                 })}
               </div>
             </div>
+          </div>
 
-            {/* Navigation */}
-            <div className="space-y-5">
-              <div className="h-fit rounded-2xl bg-slate-900 p-6 shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
-                <h3 className="mb-5 text-base font-bold text-white">
-                  Quick Actions
-                </h3>
+          <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 lg:grid-cols-[1fr_1.4fr] items-start">
+            <div className="group relative overflow-hidden rounded-2xl bg-indigo-800 p-8 text-white shadow-[0_8px_30px_rgb(79,70,229,0.2)]">
+              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-indigo-600 blur-xl transition-transform duration-700 group-hover:scale-150" />
 
-                <div className="flex flex-col gap-3">
-                  <Link
-                    to="/testimonials"
-                    className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
-                  >
-                    <div>
-                      <p className="text-sm font-bold text-white">
-                        Manage Reviews
-                      </p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Review, approve, and organize testimonials
-                      </p>
-                    </div>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
-                  </Link>
-
-                  <Link
-                    to="/send-request"
-                    className="group flex items-center justify-between rounded-xl bg-slate-800 p-4 transition-colors hover:bg-slate-700"
-                  >
-                    <div>
-                      <p className="text-sm font-bold text-white">Send Invites</p>
-                      <p className="mt-1 text-xs text-slate-400">
-                        Request new reviews from customers
-                      </p>
-                    </div>
-                    <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-white" />
-                  </Link>
+              <div className="relative z-10 flex h-full flex-col justify-between">
+                <div>
+                  <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
+                    <ArrowUpRight className="h-5 w-5 text-white" />
+                  </div>
+                  <h3 className="mb-1 text-xl font-bold">Share Link</h3>
+                  <p className="mb-6 text-sm text-indigo-100">
+                    Collect new reviews instantly.
+                  </p>
                 </div>
-              </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+                <Button
+                  className="h-10 w-full rounded-xl bg-white font-bold text-indigo-600 shadow-sm hover:bg-indigo-50"
+                  onClick={handleCopyLink}
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy URL
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
                 <h3 className="text-base font-bold text-slate-900">
                   Embed on your website
                 </h3>
@@ -517,7 +478,6 @@ export default function DashboardPage() {
                 >
                   {embedCopied ? "Copied!" : "Copy code"}
                 </Button>
-              </div>
             </div>
           </div>
         </div>
