@@ -7,7 +7,6 @@ import {
   Menu,
   MessagesSquare,
   Power,
-  Settings,
   X,
 } from "lucide-react";
 import logo from "../assets/logo2.svg";
@@ -143,21 +142,6 @@ function SidebarContent({ onNavigate }) {
         </div>
       </nav>
 
-      {/* Business Card */}
-      <div className="px-3 pt-5 py-2">
-        <div className="rounded border border-white/10 bg-white/5 p-4 text-white">
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
-            Business
-          </p>
-          <div className="flex items-center gap-2 mt-3">
-            <Settings size={20} className="mt-0.5" />
-            <p className="text-base font-bold text-slate-200 tracking-wide truncate max-w-[200px]">
-              {business?.businessName || "Your Business"}
-            </p>
-          </div>
-        </div>
-      </div>
-
       {/* Logout */}
       <div className="border-t border-white/10 px-5 py-5">
         <Button
@@ -245,7 +229,7 @@ export default function AppShell() {
         {/* Content area — pb-16 reserves space for the mobile tab bar */}
         <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-16 lg:pb-0">
           {/* Header */}
-          <header className="sticky top-0 z-30 border-b shadow-lg py-5 border-black/[0.06] bg-white/80 backdrop-blur-xl">
+          <header className="sticky top-0 z-30 border-b shadow-lg py-5 border-black/[0.06] bg-white ">
             <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
               {/* Left — hamburger + page title */}
               <div className="flex items-center gap-3">
@@ -280,7 +264,10 @@ export default function AppShell() {
                   <p className="truncate text-sm font-semibold leading-tight text-slate-900">
                     {profileName}
                   </p>
-                  <p className="truncate text-[11px] leading-tight text-slate-400">
+                  <p
+                    className="max-w-[180px] truncate text-[11px] leading-tight text-slate-400 md:max-w-[220px] lg:max-w-[260px]"
+                    title={business?.businessName || "Woice workspace"}
+                  >
                     {business?.businessName || "Woice workspace"}
                   </p>
                 </div>

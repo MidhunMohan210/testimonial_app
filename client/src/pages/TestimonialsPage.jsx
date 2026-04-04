@@ -1,4 +1,4 @@
-import { useDeferredValue, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   keepPreviousData,
   useMutation,
@@ -61,6 +61,99 @@ function LoadingState() {
   );
 }
 
+function PaginationControls({ currentPage, totalPages, onPageChange }) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  const pageItems = [];
+  const startPage = Math.max(2, currentPage - 1);
+  const endPage = Math.min(totalPages - 1, currentPage + 1);
+
+  pageItems.push(1);
+
+  if (startPage > 2) {
+    pageItems.push("start-ellipsis");
+  }
+
+  for (let page = startPage; page <= endPage; page += 1) {
+    pageItems.push(page);
+  }
+
+  if (endPage < totalPages - 1) {
+    pageItems.push("end-ellipsis");
+  }
+
+  if (totalPages > 1) {
+    pageItems.push(totalPages);
+  }
+
+  return (
+    <div className="mt-6 rounded-2xl border border-slate-200/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] px-4 py-4 shadow-[0_24px_60px_-42px_rgba(15,23,42,0.2),0_10px_24px_-18px_rgba(15,23,42,0.08)]">
+      <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
+        <div>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-400">
+            Pagination
+          </p>
+          <p className="mt-1 text-sm font-medium text-slate-600">
+            Page <span className="text-slate-950">{currentPage}</span> of{" "}
+            <span className="text-slate-950">{totalPages}</span>
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center gap-2 rounded-full border border-slate-200 bg-white/90 p-1.5 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.18)]">
+          {pageItems.map((item) =>
+            typeof item === "number" ? (
+              <button
+                key={item}
+                type="button"
+                className={`h-9 min-w-9 rounded-full px-3 text-sm font-semibold transition-all duration-200 ${
+                  item === currentPage
+                    ? "bg-slate-900 text-white shadow-[0_12px_24px_-16px_rgba(15,23,42,0.75)]"
+                    : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                }`}
+                onClick={() => onPageChange(item)}
+                aria-label={`Go to page ${item}`}
+                aria-current={item === currentPage ? "page" : undefined}
+              >
+                {item}
+              </button>
+            ) : (
+              <span
+                key={item}
+                className="px-1 text-sm font-semibold tracking-[0.2em] text-slate-300"
+                aria-hidden="true"
+              >
+                ...
+              </span>
+            ),
+          )}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 rounded-full border-slate-200 bg-white px-4 font-semibold text-slate-700 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.18)] hover:bg-slate-50"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            Previous
+          </Button>
+          <Button
+            type="button"
+            className="h-10 rounded-full bg-slate-900 px-4 font-semibold text-white shadow-[0_16px_30px_-18px_rgba(15,23,42,0.6)] hover:bg-slate-800"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PrivateFeedbackCard({ feedback, onOpen }) {
   const createdDate = new Date(feedback.createdAt).toLocaleDateString(
     undefined,
@@ -109,8 +202,10 @@ function PrivateFeedbackCard({ feedback, onOpen }) {
 }
 
 export default function TestimonialsPage() {
+  const PAGE_SIZE = 6;
   const queryClient = useQueryClient();
   const [activeStatus, setActiveStatus] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
   const [manualOpen, setManualOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
@@ -157,6 +252,31 @@ export default function TestimonialsPage() {
   const privateFeedback = privateFeedbackQuery.data || [];
   const hasPrivateFeedback = privateFeedback.length > 0;
   const isFeedbackView = deferredStatus === "private-feedback";
+  const activeItems = isFeedbackView ? privateFeedback : testimonials;
+  const totalPages = Math.max(1, Math.ceil(activeItems.length / PAGE_SIZE));
+  const paginatedItems = useMemo(() => {
+    const startIndex = (currentPage - 1) * PAGE_SIZE;
+    return activeItems.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [activeItems, currentPage]);
+
+  const handlePageChange = (page) => {
+    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    setCurrentPage(nextPage);
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [deferredStatus]);
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [currentPage]);
 
   return (
     <>
@@ -221,9 +341,7 @@ export default function TestimonialsPage() {
                     Items
                   </p>
                   <p className="mt-2 text-base font-semibold text-slate-950">
-                    {isFeedbackView
-                      ? privateFeedback.length
-                      : testimonials.length}
+                    {activeItems.length}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
@@ -244,15 +362,22 @@ export default function TestimonialsPage() {
                 privateFeedbackQuery.isLoading ? (
                   <LoadingState />
                 ) : hasPrivateFeedback ? (
-                  <div className="space-y-4">
-                    {privateFeedback.map((feedback) => (
-                      <PrivateFeedbackCard
-                        key={feedback._id}
-                        feedback={feedback}
-                        onOpen={handleOpenEntry}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    <div className="space-y-4">
+                      {paginatedItems.map((feedback) => (
+                        <PrivateFeedbackCard
+                          key={feedback._id}
+                          feedback={feedback}
+                          onOpen={handleOpenEntry}
+                        />
+                      ))}
+                    </div>
+                    <PaginationControls
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
+                    />
+                  </>
                 ) : (
                   <Card className="border-dashed border-slate-300 bg-white shadow-[0_18px_50px_-40px_rgba(15,23,42,0.3)]">
                     <CardContent className="py-16 text-center">
@@ -269,19 +394,26 @@ export default function TestimonialsPage() {
               ) : testimonialsQuery.isLoading ? (
                 <LoadingState />
               ) : hasTestimonials ? (
-                <div className="space-y-4">
-                  {testimonials.map((testimonial) => (
-                    <TestimonialCard
-                      key={testimonial._id}
-                      testimonial={testimonial}
-                      onStatusChange={(id, status) =>
-                        statusMutation.mutate({ id, status })
-                      }
-                      isUpdating={statusMutation.isPending}
-                      onOpen={handleOpenEntry}
-                    />
-                  ))}
-                </div>
+                <>
+                  <div className="space-y-4">
+                    {paginatedItems.map((testimonial) => (
+                      <TestimonialCard
+                        key={testimonial._id}
+                        testimonial={testimonial}
+                        onStatusChange={(id, status) =>
+                          statusMutation.mutate({ id, status })
+                        }
+                        isUpdating={statusMutation.isPending}
+                        onOpen={handleOpenEntry}
+                      />
+                    ))}
+                  </div>
+                  <PaginationControls
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
+                  />
+                </>
               ) : (
                 <EmptyState onManualAdd={() => setManualOpen(true)} />
               )}

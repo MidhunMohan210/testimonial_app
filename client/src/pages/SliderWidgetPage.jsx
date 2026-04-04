@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, Quote, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -187,6 +187,43 @@ export default function SliderWidgetPage() {
     () => [...marqueeTestimonials, ...marqueeTestimonials],
     [marqueeTestimonials],
   );
+
+  useEffect(() => {
+    let timeoutId;
+
+    const postHeight = () => {
+      if (typeof window === "undefined" || window.parent === window) {
+        return;
+      }
+
+      window.parent.postMessage(
+        {
+          type: "RESIZE_IFRAME",
+          height: document.body.scrollHeight,
+        },
+        "*"
+      );
+    };
+
+    const debouncedPostHeight = () => {
+      window.clearTimeout(timeoutId);
+      timeoutId = window.setTimeout(postHeight, 100);
+    };
+
+    debouncedPostHeight();
+    window.addEventListener("resize", debouncedPostHeight);
+    window.addEventListener("load", debouncedPostHeight);
+
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(debouncedPostHeight).catch(() => {});
+    }
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      window.removeEventListener("resize", debouncedPostHeight);
+      window.removeEventListener("load", debouncedPostHeight);
+    };
+  }, [duplicatedTestimonials.length, embedMode, testimonialsQuery.isLoading]);
 
   if (testimonialsQuery.isLoading) {
     return (

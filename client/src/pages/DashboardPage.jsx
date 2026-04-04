@@ -180,13 +180,31 @@ export default function DashboardPage() {
     ? `${window.location.origin}/r/${businessQuery.data.slug}`
     : "";
   const widgetSlug = businessQuery.data?.slug || "";
+  const widgetOrigin = window.location.origin;
   const iframeCode = widgetSlug
-    ? `<iframe
-  src="${window.location.origin}/widget/slider/${widgetSlug}"
-  width="100%"
-  height="260"
-  frameborder="0">
-</iframe>`
+    ? `<div id="testimonial-widget-${widgetSlug}"></div>
+<script>
+  (function () {
+    var container = document.getElementById("testimonial-widget-${widgetSlug}");
+    if (!container) return;
+
+    var iframe = document.createElement("iframe");
+    iframe.src = "${widgetOrigin}/widget/slider/${widgetSlug}?embed=true";
+    iframe.width = "100%";
+    iframe.height = "500";
+    iframe.style.border = "0";
+    iframe.style.display = "block";
+    iframe.style.transition = "height 0.3s ease";
+    iframe.setAttribute("scrolling", "no");
+    container.appendChild(iframe);
+
+    window.addEventListener("message", function (event) {
+      if (event.origin !== "${widgetOrigin}") return;
+      if (!event.data || event.data.type !== "RESIZE_IFRAME") return;
+      iframe.style.height = event.data.height + "px";
+    });
+  })();
+</script>`
     : "";
   const recentTestimonials = (allTestimonialsQuery.data?.data || []).slice(
     0,
@@ -424,62 +442,88 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 lg:grid-cols-[1fr_1.4fr] items-start">
-            <div className="group relative overflow-hidden rounded-2xl bg-indigo-800 p-8 text-white shadow-[0_8px_30px_rgb(79,70,229,0.2)]">
-              <div className="absolute -right-10 -top-10 h-40 w-40 rounded-full bg-indigo-600 blur-xl transition-transform duration-700 group-hover:scale-150" />
+     <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 lg:grid-cols-[1fr_1.4fr] items-start">
+  
+  {/* Share Link Card */}
+<div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-sm transition hover:shadow-md">
+    
+    <div className="relative z-10 flex h-full flex-col justify-between">
+      <div>
+        <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+          <ArrowUpRight className="h-5 w-5" />
+        </div>
 
-              <div className="relative z-10 flex h-full flex-col justify-between">
-                <div>
-                  <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-md">
-                    <ArrowUpRight className="h-5 w-5 text-white" />
-                  </div>
-                  <h3 className="mb-1 text-xl font-bold">Share Link</h3>
-                  <p className="mb-6 text-sm text-indigo-100">
-                    Collect new reviews instantly.
-                  </p>
-                </div>
+        <h3 className="mb-1 text-lg font-semibold text-slate-900">
+          Share Link
+        </h3>
 
-                <Button
-                  className="h-10 w-full rounded-xl bg-white font-bold text-indigo-600 shadow-sm hover:bg-indigo-50"
-                  onClick={handleCopyLink}
-                >
-                  {copied ? (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy URL
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
+        <p className="mb-3 text-sm text-slate-500">
+          Send this link to customers to collect reviews instantly.
+        </p>
 
-            <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
-                <h3 className="text-base font-bold text-slate-900">
-                  Embed on your website
-                </h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  Add this slider to your homepage to showcase your latest reviews.
-                </p>
-                <Textarea
-                  readOnly
-                  value={iframeCode}
-                  className="mt-4 min-h-[140px] rounded-xl border-slate-200 bg-slate-50 font-mono text-xs leading-6 text-slate-700"
-                />
-                <Button
-                  variant="outline"
-                  className="mt-4 rounded-xl"
-                  onClick={handleCopyEmbedCode}
-                  disabled={!iframeCode}
-                >
-                  {embedCopied ? "Copied!" : "Copy code"}
-                </Button>
-            </div>
-          </div>
+        {/* Preview Link */}
+        <p className="text-xs text-slate-400 truncate">
+          {reviewLink || "Review link will appear here once your page is ready."}
+        </p>
+      </div>
+
+      <Button
+        className="mt-5 h-11 w-full rounded-xl bg-slate-900 px-4 font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-slate-800 hover:shadow-[0_18px_36px_rgba(15,23,42,0.2)] active:translate-y-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+        onClick={handleCopyLink}
+      >
+        {copied ? (
+          <>
+            <CheckCircle2 className="mr-2 h-4 w-4" />
+            Copied!
+          </>
+        ) : (
+          <>
+            <Copy className="mr-2 h-4 w-4" />
+            Copy review link
+          </>
+        )}
+      </Button>
+    </div>
+  </div>
+
+  {/* Embed Card */}
+  <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+    
+    <h3 className="text-base font-semibold text-slate-900">
+      Embed on your website
+    </h3>
+
+    <p className="mt-2 text-sm leading-6 text-slate-500">
+      Add this slider to your homepage to showcase your latest reviews.
+    </p>
+
+    <Textarea
+      readOnly
+      value={iframeCode}
+      className="mt-4 min-h-[140px] rounded-xl border-slate-200 bg-slate-50 font-mono text-xs leading-6 text-slate-700"
+    />
+
+    <Button
+      variant="outline"
+      className="mt-4 h-11 rounded-2xl border-slate-300 bg-white px-4 font-semibold text-slate-700 shadow-[0_8px_24px_rgba(148,163,184,0.12)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 hover:shadow-[0_14px_30px_rgba(148,163,184,0.16)] active:translate-y-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+      onClick={handleCopyEmbedCode}
+      disabled={!iframeCode}
+    >
+      {embedCopied ? (
+        <>
+          <CheckCircle2 className="mr-2 h-4 w-4" />
+          Copied!
+        </>
+      ) : (
+        <>
+          <Copy className="mr-2 h-4 w-4" />
+          Copy code
+        </>
+      )}
+    </Button>
+  </div>
+
+</div>
         </div>
       </div>
 
