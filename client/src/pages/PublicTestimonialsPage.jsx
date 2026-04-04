@@ -1,20 +1,27 @@
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Star } from "lucide-react";
-import { Link, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import { getPublicTestimonials } from "../api/publicTestimonialsApi";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Button } from "../components/ui/button";
 import { Skeleton } from "../components/ui/skeleton";
 
-function StarRating({ rating }) {
+const INITIAL_COUNT = 12;
+const LOAD_MORE_COUNT = 12;
+
+function StarRating({ rating, muted = false }) {
   return (
     <div className="flex items-center gap-1">
       {Array.from({ length: 5 }).map((_, index) => (
         <Star
           key={index}
-          className={`h-4 w-4 ${
-            index < Math.round(rating) ? "fill-amber-400 text-amber-400" : "text-slate-300"
+          className={`h-3 w-3 ${
+            index < Math.round(rating)
+              ? muted
+                ? "fill-white/85 text-white/85"
+                : "fill-[#f2b554] text-[#f2b554]"
+              : muted
+                ? "text-white/25"
+                : "text-slate-200"
           }`}
         />
       ))}
@@ -22,18 +29,303 @@ function StarRating({ rating }) {
   );
 }
 
-function formatDate(date) {
-  return new Date(date).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+function getInitials(name) {
+  if (!name) return "A";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() || "")
+    .join("");
+}
+
+function getAvatarTone(index) {
+  const tones = [
+    "from-[#1f2937] to-[#7c3aed]",
+    "from-[#4338ca] to-[#8b5cf6]",
+    "from-[#0f766e] to-[#14b8a6]",
+    "from-[#9a3412] to-[#f59e0b]",
+    "from-[#334155] to-[#94a3b8]",
+  ];
+  return tones[index % tones.length];
+}
+
+const CARD_TONES = [
+  {
+    bg: "#7744d4",
+    color: "white",
+    shadow: "0 25px 60px rgba(119,68,212,0.18)",
+    body: "rgba(255,255,255,0.88)",
+    sub: "rgba(255,255,255,0.70)",
+    showQuote: true,
+    mutedStars: true,
+  },
+  {
+    bg: "#ffffff",
+    color: "#334155",
+    shadow: "0 16px 38px rgba(148,163,184,0.14)",
+    body: "#64748b",
+    sub: "#94a3b8",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#fdf7f2",
+    color: "#5b6474",
+    shadow: "0 16px 38px rgba(148,163,184,0.10)",
+    body: "#6b7280",
+    sub: "#a8b0bc",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#f3f8ff",
+    color: "#42526b",
+    shadow: "0 16px 38px rgba(148,163,184,0.10)",
+    body: "#64748b",
+    sub: "#94a3b8",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#f6f4ff",
+    color: "#554a7f",
+    shadow: "0 16px 38px rgba(148,163,184,0.10)",
+    body: "#736b92",
+    sub: "#aea7c5",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#f4fbf8",
+    color: "#43635c",
+    shadow: "0 16px 38px rgba(148,163,184,0.10)",
+    body: "#5f7a73",
+    sub: "#99b3ac",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#fff8ef",
+    color: "#6a5a46",
+    shadow: "0 16px 38px rgba(148,163,184,0.10)",
+    body: "#7d6d59",
+    sub: "#b9ab97",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#56647e",
+    color: "white",
+    shadow: "0 25px 60px rgba(86,100,126,0.16)",
+    body: "rgba(255,255,255,0.82)",
+    sub: "rgba(255,255,255,0.70)",
+    showQuote: false,
+    mutedStars: true,
+  },
+  {
+    bg: "#f8fafc",
+    color: "#475569",
+    shadow: "0 16px 38px rgba(148,163,184,0.10)",
+    body: "#64748b",
+    sub: "#94a3b8",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#f7f3ff",
+    color: "#5b5f84",
+    shadow: "0 16px 38px rgba(148,163,184,0.10)",
+    body: "#787c9a",
+    sub: "#acaecc",
+    showQuote: false,
+    mutedStars: false,
+  },
+  {
+    bg: "#2d3a4f",
+    color: "white",
+    shadow: "0 25px 60px rgba(29,38,52,0.18)",
+    body: "rgba(255,255,255,0.78)",
+    sub: "rgba(255,255,255,0.65)",
+    showQuote: false,
+    mutedStars: true,
+  },
+];
+
+const CARD_LAYOUTS = [
+  "break-inside-avoid mb-5 w-full",
+  "break-inside-avoid mb-5 w-full",
+  "break-inside-avoid mb-5 w-full",
+  "break-inside-avoid mb-5 w-full",
+  "break-inside-avoid mb-5 w-full",
+  "break-inside-avoid mb-5 w-full",
+  "break-inside-avoid mb-5 w-full",
+  "break-inside-avoid mb-5 w-full",
+];
+
+function getCardLayout(index) {
+  return CARD_LAYOUTS[index % CARD_LAYOUTS.length];
+}
+
+function getCardSizing(reviewText, index) {
+  const length = reviewText.trim().length;
+  const featuredSlot = index % CARD_LAYOUTS.length === 2;
+
+  if (length < 90) {
+    return {
+      cardClass: "min-h-[170px]",
+      titleSize: "1rem",
+      clamp: 3,
+      featured: false,
+    };
+  }
+
+  if (length < 180) {
+    return {
+      cardClass: "min-h-[210px]",
+      titleSize: "1rem",
+      clamp: 4,
+      featured: false,
+    };
+  }
+
+  if (featuredSlot || length > 320) {
+    return {
+      cardClass: "min-h-[280px] lg:min-h-[360px]",
+      titleSize: "1.12rem",
+      clamp: null,
+      featured: true,
+    };
+  }
+
+  return {
+    cardClass: "min-h-[240px]",
+    titleSize: "1rem",
+    clamp: 6,
+    featured: false,
+  };
+}
+
+function ReviewBoardCard({ testimonial, index }) {
+  const tone = CARD_TONES[index % CARD_TONES.length];
+  const layout = getCardLayout(index);
+  const reviewText = testimonial.testimonialText || "No written review provided.";
+  const sizing = getCardSizing(reviewText, index);
+
+  return (
+    <article
+      data-review-id={testimonial.id}
+      className={`relative flex flex-col overflow-hidden rounded-[12px] p-5 sm:p-[22px] ${layout}  ${sizing.cardClass}`}
+      style={{
+        background: tone.bg,
+        color: tone.color,
+        boxShadow: tone.shadow,
+        display: "inline-flex",
+      }}
+    >
+      {tone.showQuote && (
+        <div
+          style={{
+            position: "absolute",
+            right: 24,
+            top: -8,
+            fontSize: 90,
+            fontWeight: 700,
+            lineHeight: 1,
+            color: "rgba(255,255,255,0.16)",
+            pointerEvents: "none",
+            userSelect: "none",
+          }}
+        >
+          &rdquo;
+        </div>
+      )}
+
+      <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 12 }}>
+          <div
+            style={{
+              width: 44,
+              height: 44,
+              borderRadius: "50%",
+              border: "1.5px solid rgba(255,255,255,0.35)",
+              overflow: "hidden",
+              flexShrink: 0,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: 12,
+              fontWeight: 600,
+              background: testimonial.avatarUrl ? "#cbd5e1" : undefined,
+            }}
+            className={
+              testimonial.avatarUrl
+                ? ""
+                : `bg-gradient-to-br ${getAvatarTone(index)} text-white`
+            }
+          >
+            {testimonial.avatarUrl ? (
+              <img
+                src={testimonial.avatarUrl}
+                alt={testimonial.customerName || "Reviewer"}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              <span>{getInitials(testimonial.customerName)}</span>
+            )}
+          </div>
+
+          <div style={{ minWidth: 0 }}>
+            <p style={{ margin: 0, fontSize: "0.95rem", fontWeight: 600, color: tone.color }}>
+              {testimonial.customerName || "Anonymous"}
+            </p>
+            <p style={{ margin: 0, fontSize: "0.68rem", fontWeight: 500, color: tone.sub }}>
+              Verified Graduate
+            </p>
+            <div style={{ marginTop: 3 }}>
+              <StarRating rating={testimonial.rating || 0} muted={tone.mutedStars} />
+            </div>
+          </div>
+        </div>
+
+        <h2
+          style={{
+            marginTop: 20,
+            marginBottom: 0,
+            fontSize: sizing.titleSize,
+            fontWeight: 600,
+            lineHeight: 1.45,
+            color: tone.color,
+          }}
+        >
+          {reviewText.length > 80 ? `${reviewText.slice(0, 80)}...` : reviewText}
+        </h2>
+
+        <p
+          style={{
+            marginTop: 16,
+            fontSize: "0.88rem",
+            lineHeight: 1.65,
+            color: tone.body,
+            display: "-webkit-box",
+            WebkitLineClamp: sizing.clamp === null ? "unset" : sizing.clamp,
+            WebkitBoxOrient: "vertical",
+            overflow: sizing.clamp === null ? "visible" : "hidden",
+          }}
+        >
+          {reviewText}
+        </p>
+      </div>
+    </article>
+  );
 }
 
 export default function PublicTestimonialsPage() {
   const { slug = "" } = useParams();
   const [searchParams] = useSearchParams();
   const embedMode = searchParams.get("embed") === "true";
+  const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   const testimonialsQuery = useQuery({
     queryKey: ["public-testimonials", slug],
@@ -42,20 +334,137 @@ export default function PublicTestimonialsPage() {
     retry: false,
   });
 
-  const averageLabel = useMemo(
-    () => `${Number(testimonialsQuery.data?.averageRating || 0).toFixed(1)} / 5`,
-    [testimonialsQuery.data?.averageRating]
+  const data = testimonialsQuery.data;
+  const reviewIdParam = searchParams.get("review");
+  const cleanedTestimonials = useMemo(
+    () =>
+      (data?.testimonials || []).filter(
+        (testimonial) =>
+          (testimonial.rating || 0) > 0 &&
+          (testimonial.testimonialText || "").trim().length > 10
+      ),
+    [data?.testimonials]
   );
+  const boardTestimonials = useMemo(
+    () => (cleanedTestimonials.length > 0 ? cleanedTestimonials : data?.testimonials || []),
+    [cleanedTestimonials, data?.testimonials]
+  );
+  const visibleTestimonials = useMemo(
+    () => boardTestimonials.slice(0, Math.min(visibleCount, boardTestimonials.length)),
+    [boardTestimonials, visibleCount]
+  );
+  const hasMoreTestimonials = visibleCount < boardTestimonials.length;
+  const averageRating = useMemo(
+    () => Number(data?.averageRating || 0).toFixed(1),
+    [data?.averageRating]
+  );
+
+  useEffect(() => {
+    setVisibleCount(INITIAL_COUNT);
+    setIsLoadingMore(false);
+  }, [slug]);
+
+  useEffect(() => {
+    if (!data?.businessName) {
+      return undefined;
+    }
+
+    const previousTitle = document.title;
+    document.title = `${data.businessName} Reviews`;
+
+    let descriptionMeta = document.querySelector('meta[name="description"]');
+    const createdMeta = !descriptionMeta;
+
+    if (!descriptionMeta) {
+      descriptionMeta = document.createElement("meta");
+      descriptionMeta.setAttribute("name", "description");
+      document.head.appendChild(descriptionMeta);
+    }
+
+    const previousDescription = descriptionMeta.getAttribute("content");
+    descriptionMeta.setAttribute(
+      "content",
+      `Read verified customer reviews for ${data.businessName}`
+    );
+
+    const schemaScript = document.createElement("script");
+    schemaScript.type = "application/ld+json";
+    schemaScript.setAttribute("data-public-reviews-schema", slug);
+    schemaScript.text = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "LocalBusiness",
+      name: data.businessName,
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: Number(data.averageRating || 0),
+        reviewCount: Number(data.totalCount || 0),
+      },
+    });
+    document.head.appendChild(schemaScript);
+
+    return () => {
+      document.title = previousTitle;
+
+      if (descriptionMeta) {
+        if (previousDescription !== null) {
+          descriptionMeta.setAttribute("content", previousDescription);
+        } else if (createdMeta) {
+          descriptionMeta.remove();
+        } else {
+          descriptionMeta.removeAttribute("content");
+        }
+      }
+
+      schemaScript.remove();
+    };
+  }, [data?.averageRating, data?.businessName, data?.totalCount, slug]);
+
+  useEffect(() => {
+    if (!reviewIdParam || boardTestimonials.length === 0) {
+      return;
+    }
+
+    const targetIndex = boardTestimonials.findIndex(
+      (testimonial) => String(testimonial.id) === reviewIdParam
+    );
+
+    if (targetIndex === -1) {
+      return;
+    }
+
+    if (targetIndex >= visibleCount) {
+      setVisibleCount(
+        Math.min(Math.max(INITIAL_COUNT, targetIndex + 1), boardTestimonials.length)
+      );
+      return;
+    }
+
+    const target = document.querySelector(`[data-review-id="${reviewIdParam}"]`);
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+  }, [boardTestimonials, reviewIdParam, visibleCount]);
+
+  const handleLoadMore = () => {
+    setIsLoadingMore(true);
+
+    window.requestAnimationFrame(() => {
+      setVisibleCount((current) =>
+        Math.min(current + LOAD_MORE_COUNT, boardTestimonials.length)
+      );
+      setIsLoadingMore(false);
+    });
+  };
 
   if (testimonialsQuery.isLoading) {
     return (
-      <main className={`min-h-screen bg-slate-50 ${embedMode ? "py-4" : "px-4 py-10"}`}>
-        <div className="mx-auto max-w-5xl">
-          <div className="space-y-4">
-            <Skeleton className="h-10 w-48 rounded-xl" />
-            <Skeleton className="h-6 w-36 rounded-xl" />
-            <Skeleton className="h-36 w-full rounded-xl" />
-          </div>
+      <main
+        className={`min-h-screen overflow-x-hidden bg-[#edf3fb] ${
+          embedMode ? "px-3 py-4" : "px-4 py-6 sm:px-6 sm:py-8"
+        }`}
+      >
+        <div className="mx-auto max-w-6xl rounded-[22px] p-2">
+          <Skeleton className="h-[640px] w-full rounded-[20px] bg-white/70" />
         </div>
       </main>
     );
@@ -63,96 +472,70 @@ export default function PublicTestimonialsPage() {
 
   if (testimonialsQuery.isError) {
     return (
-      <main className={`min-h-screen bg-slate-50 ${embedMode ? "py-4" : "px-4 py-10"}`}>
-        <div className="mx-auto max-w-3xl">
-          <Card className="rounded-2xl border-slate-200 bg-white">
-            <CardContent className="p-10 text-center">
-              <h1 className="text-2xl font-semibold text-slate-950">
-                We couldn&apos;t find this business
-              </h1>
-            </CardContent>
-          </Card>
+      <main className="min-h-screen bg-[#edf3fb] px-4 py-6 sm:px-6 sm:py-8">
+        <div className="mx-auto max-w-2xl rounded-[20px] bg-white px-8 py-14 text-center shadow-[0_24px_60px_rgba(148,163,184,0.12)]">
+          <p className="text-lg font-semibold text-slate-900">Business not found</p>
+          <p className="mt-2 text-sm text-slate-500">
+            We couldn&apos;t load this public review page.
+          </p>
         </div>
       </main>
     );
   }
 
-  const data = testimonialsQuery.data;
-
   return (
-    <main className={`min-h-screen bg-slate-50 ${embedMode ? "py-4" : "px-4 py-10"}`}>
-      <div className={`mx-auto ${embedMode ? "max-w-4xl px-4" : "max-w-5xl"}`}>
-        <section className="rounded-2xl border border-slate-200 bg-white p-6 shadow-[0_20px_50px_-42px_rgba(15,23,42,0.3)] sm:p-8">
-          <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.22em] text-slate-400">
-                Public reviews
-              </p>
-              <h1 className="mt-3 text-3xl font-bold tracking-tight text-slate-950">
-                {data.businessName}
-              </h1>
+    <main
+      className={`min-h-screen overflow-x-hidden bg-[#edf3fb] ${
+        embedMode ? "px-3 py-4" : "px-4 py-6 sm:px-6 sm:py-8"
+      }`}
+    >
+      <div className={`mx-auto ${embedMode ? "max-w-5xl" : "max-w-6xl"}`}>
+        {boardTestimonials.length === 0 ? (
+          <section className="rounded-[20px] bg-white px-8 py-14 text-center shadow-[0_24px_60px_rgba(148,163,184,0.12)]">
+            <p className="text-lg font-semibold text-slate-900">No reviews yet</p>
+            <p className="mt-2 text-sm text-slate-500">
+              Public testimonials will appear here automatically.
+            </p>
+          </section>
+        ) : (
+          <section className="py-10 sm:py-16">
+            <h1 className="mb-2 text-center text-xl font-semibold text-slate-600 sm:text-2xl tracking-wider">
+              {data?.businessName} Reviews & Ratings
+            </h1>
+            <div className="mb-6 text-center text-sm font-medium text-slate-600">
+              {averageRating} / 5 • {data?.totalCount || 0} reviews
             </div>
-            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
-              <div className="flex items-center gap-3">
-                <StarRating rating={data.averageRating} />
-                <span className="text-base font-semibold text-slate-900">{averageLabel}</span>
-              </div>
-              <p className="mt-2 text-sm text-slate-500">
-                Based on {data.totalCount} review{data.totalCount === 1 ? "" : "s"}
-              </p>
-            </div>
-          </div>
 
-          {!embedMode ? (
-            <div className="mt-6">
-              <Link to={`/r/${slug}`} target="_blank" rel="noreferrer">
-                <Button className="rounded-xl">Leave a review</Button>
-              </Link>
-            </div>
-          ) : null}
-        </section>
-
-        <section className="mt-6">
-          {data.testimonials.length === 0 ? (
-            <Card className="rounded-2xl border-slate-200 bg-white">
-              <CardContent className="p-10 text-center text-slate-500">
-                No public reviews yet. Check back soon.
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-4 md:grid-cols-2">
-              {data.testimonials.map((testimonial) => (
-                <Card
-                  key={testimonial.id}
-                  className="rounded-2xl border-slate-200 bg-white shadow-[0_18px_50px_-40px_rgba(15,23,42,0.22)]"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between gap-4">
-                      <StarRating rating={testimonial.rating || 0} />
-                      <p className="text-sm text-slate-500">
-                        {formatDate(testimonial.collectedAt)}
-                      </p>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm leading-7 text-slate-700">
-                      {testimonial.testimonialText || "No review text provided."}
-                    </p>
-                    <CardTitle className="mt-5 text-base text-slate-950">
-                      {testimonial.customerName || "Anonymous"}
-                    </CardTitle>
-                  </CardContent>
-                </Card>
+            <div className=". columns-1 gap-5 md:columns-2 lg:columns-3 xl:columns-3 margin mt-16 ">
+              {visibleTestimonials.map((testimonial, index) => (
+                <ReviewBoardCard
+                  key={`${testimonial.id ?? testimonial.customerName ?? "review"}-${index}`}
+                  testimonial={testimonial}
+                  index={index}
+                />
               ))}
             </div>
-          )}
-        </section>
 
-        {!embedMode ? (
-          <footer className="py-8 text-center text-sm text-slate-400">
-            Powered by Woice
-          </footer>
-        ) : null}
+            {hasMoreTestimonials ? (
+              <div className="mt-10 text-center">
+                <button
+                  type="button"
+                  className="inline-flex items-center justify-center rounded-full bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-300 focus:ring-offset-2"
+                  onClick={handleLoadMore}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? "Loading..." : "Load more reviews"}
+                </button>
+              </div>
+            ) : null}
+
+            {!embedMode ? (
+              <p className="mt-8 text-center text-xs text-slate-400">
+                Powered by Woice
+              </p>
+            ) : null}
+          </section>
+        )}
       </div>
     </main>
   );

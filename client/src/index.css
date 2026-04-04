@@ -42,3 +42,43 @@
     @apply min-h-screen;
   }
 }
+
+@keyframes public-review-marquee {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.public-review-marquee {
+  animation: public-review-marquee 32s linear infinite;
+  will-change: transform;
+}
+
+.public-review-marquee:hover {
+  animation-play-state: paused;
+}
+
+.public-review-card {
+  backdrop-filter: blur(8px);
+}
+
+
+/* ── Infinite auto-scroll marquee ── */
+@keyframes marquee-scroll {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.public-review-marquee {
+  animation: marquee-scroll 46s linear infinite;
+}
+
+/* Pause on hover */
+.public-review-marquee:hover,
+.public-review-marquee.group:hover {
+  animation-play-state: paused;
+}
