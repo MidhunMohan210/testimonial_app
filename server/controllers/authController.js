@@ -51,23 +51,22 @@ const createBusinessSlug = async (businessName, session) => {
 
 export const register = async (req, res) => {
   const session = await mongoose.startSession();
-
-  try {
+  return await (async () => {
     const { fullName, email, mobile, password, businessName } = req.body;
 
     if (!fullName || !email || !mobile || !password || !businessName) {
-      return res.status(400).json({ message: "All fields are required" });
+      throw createHttpError(400, "All fields are required");
     }
 
     const normalizedEmail = normalizeEmail(email);
     const normalizedMobile = normalizeMobile(mobile);
 
     if (!isEmail(normalizedEmail)) {
-      return res.status(400).json({ message: "Please enter a valid email address" });
+      throw createHttpError(400, "Please enter a valid email address");
     }
 
     if (!/^\+?[1-9]\d{7,14}$/.test(normalizedMobile)) {
-      return res.status(400).json({ message: "Please enter a valid mobile number" });
+      throw createHttpError(400, "Please enter a valid mobile number");
     }
 
     const existingUser = await User.findOne({
@@ -75,7 +74,7 @@ export const register = async (req, res) => {
     }).session(session);
 
     if (existingUser) {
-      return res.status(409).json({ message: "User with this email or mobile already exists" });
+      throw createHttpError(409, "User with this email or mobile already exists");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -83,84 +82,82 @@ export const register = async (req, res) => {
     let user;
     let business;
 
-    await session.withTransaction(async () => {
-      const businessSlug = await createBusinessSlug(businessName.trim(), session);
+    await session
+      .withTransaction(async () => {
+        const businessSlug = await createBusinessSlug(businessName.trim(), session);
 
-      [user] = await User.create(
-        [
-          {
-            name: fullName.trim(),
-            email: normalizedEmail,
-            mobile: normalizedMobile,
-            password: hashedPassword,
-          },
-        ],
-        { session }
-      );
+        [user] = await User.create(
+          [
+            {
+              name: fullName.trim(),
+              email: normalizedEmail,
+              mobile: normalizedMobile,
+              password: hashedPassword,
+            },
+          ],
+          { session }
+        );
 
-      [business] = await Business.create(
-        [
-          {
-            userId: user._id,
-            businessName: businessName.trim(),
-            slug: businessSlug,
-            whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
-          },
-        ],
-        { session }
-      );
+        [business] = await Business.create(
+          [
+            {
+              userId: user._id,
+              businessName: businessName.trim(),
+              slug: businessSlug,
+              whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+            },
+          ],
+          { session }
+        );
 
-      user.businessId = business._id;
-      await user.save({ session });
-    });
+        user.businessId = business._id;
+        await user.save({ session });
+      })
+      .catch((error) => {
+        if (error?.code === 11000) {
+          throw createHttpError(409, "User with this email or mobile already exists");
+        }
+
+        throw error;
+      });
 
     return res.status(201).json({
       token: signToken(user._id),
       user: sanitizeUser(user),
       business: sanitizeBusiness(business),
     });
-  } catch (error) {
-    if (error?.code === 11000) {
-      return res.status(409).json({ message: "User with this email or mobile already exists" });
-    }
-
-    throw createHttpError(500, "Internal server error");
-  } finally {
+  })().finally(async () => {
     await session.endSession();
-  }
+  });
 };
 
 export const login = async (req, res) => {
-  try {
-    const { emailOrMobile, password } = req.body;
+  const { emailOrMobile, password } = req.body;
 
-    if (!emailOrMobile || !password) {
-      return res.status(400).json({ message: "Email/mobile and password are required" });
-    }
-
-    const identifier = emailOrMobile.trim();
-    const user = await User.findOne({
-      $or: [{ email: normalizeEmail(identifier) }, { mobile: normalizeMobile(identifier) }],
-    });
-
-    if (!user) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    const isMatch = await bcrypt.compare(password, user.password);
-
-    if (!isMatch) {
-      return res.status(401).json({ message: "Invalid credentials" });
-    }
-
-    const business = await Business.findById(user.businessId);
-
-    return res.json({
-      token: signToken(user._id),
-      user: sanitizeUser(user),
-      business: business ? sanitizeBusiness(business) : null,
-    });
-  } catch (error) {
-    throw createHttpError(500, "Internal server error");
+  if (!emailOrMobile || !password) {
+    throw createHttpError(400, "Email/mobile and password are required");
   }
+
+  const identifier = emailOrMobile.trim();
+  const user = await User.findOne({
+    $or: [{ email: normalizeEmail(identifier) }, { mobile: normalizeMobile(identifier) }],
+  });
+
+  if (!user) {
+    throw createHttpError(401, "Invalid credentials");
+  }
+
+  const isMatch = await bcrypt.compare(password, user.password);
+
+  if (!isMatch) {
+    throw createHttpError(401, "Invalid credentials");
+  }
+
+  const business = await Business.findById(user.businessId);
+
+  return res.json({
+    token: signToken(user._id),
+    user: sanitizeUser(user),
+    business: business ? sanitizeBusiness(business) : null,
+  });
 };

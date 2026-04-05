@@ -82,3 +82,27 @@
 .public-review-marquee.group:hover {
   animation-play-state: paused;
 }
+
+[data-sonner-toast] {
+  background: #020617 !important;
+  color: #ffffff !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-sonner-toast] [data-title] {
+  color: #ffffff !important;
+}
+
+[data-sonner-toast] [data-description] {
+  color: #cbd5e1 !important;
+}
+
+@media (max-width: 640px) {
+  [data-sonner-toaster] {
+    top: 1rem !important;
+    bottom: auto !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+  }
+}

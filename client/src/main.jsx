@@ -23,7 +23,21 @@ ReactDOM.createRoot(document.getElementById("root")).render(
       <BrowserRouter>
         <AuthProvider>
           <App />
-          <Toaster richColors position="top-right" />
+          <Toaster
+            theme="dark"
+            richColors
+            position="bottom-right"
+            toastOptions={{
+              classNames: {
+                toast:
+                  "border border-white/10 bg-slate-950 text-white shadow-[0_18px_40px_-24px_rgba(15,23,42,0.85)]",
+                title: "text-white",
+                description: "text-slate-300",
+                actionButton: "bg-white text-slate-950",
+                cancelButton: "bg-slate-800 text-white",
+              },
+            }}
+          />
           <ReactQueryDevtools initialIsOpen={false} />
         </AuthProvider>
       </BrowserRouter>
