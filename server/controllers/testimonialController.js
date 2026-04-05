@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import Testimonial from "../models/Testimonial.js";
+import { createHttpError } from "../utils/httpError.js";
 
 export const getTestimonials = async (req, res) => {
   try {
@@ -43,8 +44,7 @@ export const getTestimonials = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    throw createHttpError(500, "Internal server error");
   }
 };
 
@@ -73,8 +73,7 @@ export const updateStatus = async (req, res) => {
 
     return res.json(testimonial);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    throw createHttpError(500, "Internal server error");
   }
 };
 
@@ -104,7 +103,6 @@ export const addManualTestimonial = async (req, res) => {
 
     return res.status(201).json(testimonial);
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    throw createHttpError(500, "Internal server error");
   }
 };

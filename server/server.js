@@ -16,6 +16,7 @@ import publicReviewRouter from "./routes/publicReview.js";
 import publicTestimonialsRouter from "./routes/publicTestimonials.js";
 import whatsappWebhookRoutes from "./webhook/whatsappWebhook.js";
 import authMiddleware from "./middleware/authMiddleware.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
 
@@ -151,6 +152,7 @@ app.use("/api/business", authMiddleware, businessSettingsRouter);
 app.use("/api/feedback", authMiddleware, privateFeedbackRouter);
 app.use("/api/whatsapp", authMiddleware, whatsappRoutes);       // added authMiddleware — was missing
 app.use("/api/testimonials", authMiddleware, testimonialRoutes); // added authMiddleware — was missing
+app.use(errorHandler);
 
 // ─── Database + Server Start ──────────────────────────────────────────────────
 mongoose

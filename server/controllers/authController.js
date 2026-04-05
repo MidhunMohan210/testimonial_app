@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Business from "../models/Business.js";
+import { createHttpError } from "../utils/httpError.js";
 
 const isEmail = (value) => /\S+@\S+\.\S+/.test(value);
 const normalizeEmail = (value) => value?.trim().toLowerCase();
@@ -52,9 +53,9 @@ export const register = async (req, res) => {
   const session = await mongoose.startSession();
 
   try {
-    const { name, email, mobile, password, businessName } = req.body;
+    const { fullName, email, mobile, password, businessName } = req.body;
 
-    if (!name || !email || !mobile || !password || !businessName) {
+    if (!fullName || !email || !mobile || !password || !businessName) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -88,7 +89,7 @@ export const register = async (req, res) => {
       [user] = await User.create(
         [
           {
-            name: name.trim(),
+            name: fullName.trim(),
             email: normalizedEmail,
             mobile: normalizedMobile,
             password: hashedPassword,
@@ -123,8 +124,7 @@ export const register = async (req, res) => {
       return res.status(409).json({ message: "User with this email or mobile already exists" });
     }
 
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    throw createHttpError(500, "Internal server error");
   } finally {
     await session.endSession();
   }
@@ -161,7 +161,6 @@ export const login = async (req, res) => {
       business: business ? sanitizeBusiness(business) : null,
     });
   } catch (error) {
-    console.error(error);
-    return res.status(500).json({ message: "Internal server error" });
+    throw createHttpError(500, "Internal server error");
   }
 };
