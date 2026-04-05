@@ -3,7 +3,6 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Star } from "lucide-react";
 import { useParams } from "react-router-dom";
-import { toast } from "sonner";
 import {
   getBusinessBySlug,
   submitFeedback,
@@ -14,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
+
+const MAX_MESSAGE_LENGTH = 500;
 
 function StarButton({ active, onClick, value }) {
   return (
@@ -35,17 +36,23 @@ export default function ReviewFormPage() {
   const [step, setStep] = useState("rating");
   const [formType, setFormType] = useState("review");
   const [rating, setRating] = useState(0);
+  const [submittedState, setSubmittedState] = useState(null);
+  const [formAlert, setFormAlert] = useState("");
   const {
     register,
     handleSubmit,
     reset,
+    watch,
+    clearErrors,
+    setError,
     formState: { errors },
   } = useForm({
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
       customerName: "",
-      message: "",
+      reviewText: "",
+      feedbackText: "",
     },
   });
 
@@ -59,43 +66,83 @@ export default function ReviewFormPage() {
   const reviewMutation = useMutation({
     mutationFn: (payload) => submitReview(slug, payload),
     onSuccess: () => {
+      setSubmittedState("review");
       setStep("done");
+      setFormAlert("");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to submit review");
+      mapBackendErrors(error, "reviewText");
     },
   });
 
   const feedbackMutation = useMutation({
     mutationFn: (payload) => submitFeedback(slug, payload),
     onSuccess: () => {
+      setSubmittedState("feedback");
       setStep("done");
+      setFormAlert("");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to send feedback");
+      mapBackendErrors(error, "feedbackText");
     },
   });
 
   const isSubmitting = reviewMutation.isPending || feedbackMutation.isPending;
   const businessName = businessQuery.data?.businessName || "Business";
-  const googleReviewLink = businessQuery.data?.googleReviewLink || "";
+  const googleReviewUrl = businessQuery.data?.googleReviewLink || "";
+  const reviewTextValue = watch("reviewText") || "";
+  const feedbackTextValue = watch("feedbackText") || "";
 
   const selectedStarsLabel = useMemo(() => {
     if (!rating) {
-      return "Tap a star to continue";
+      return "Select a rating to continue.";
     }
 
-    return `${rating} out of 5 selected`;
+    if (rating >= 4) {
+      return "Next, you can share a public testimonial.";
+    }
+
+    return "Next, you can send private feedback directly to the team.";
   }, [rating]);
+
+  const mapBackendErrors = (error, messageField) => {
+    const details = error.response?.data?.details;
+
+    if (!Array.isArray(details) || details.length === 0) {
+      setFormAlert(error.response?.data?.message || "Something went wrong. Please try again.");
+      return;
+    }
+
+    setFormAlert(details[0]?.message || "Please review the highlighted fields.");
+
+    details.forEach(({ field, message }) => {
+      if (field === "customerName" || field === "name") {
+        setError("customerName", { type: "server", message });
+      }
+
+      if (
+        field === messageField ||
+        (field === "message" && messageField) ||
+        (field === "reviewText" && messageField === "reviewText") ||
+        (field === "feedbackText" && messageField === "feedbackText")
+      ) {
+        setError(messageField, { type: "server", message });
+      }
+    });
+  };
 
   const handleRatingSelect = (selectedRating) => {
     setRating(selectedRating);
     setFormType(selectedRating >= 4 ? "review" : "feedback");
     setStep("form");
+    setFormAlert("");
+    setSubmittedState(null);
+    clearErrors();
     reset(
       {
         customerName: "",
-        message: "",
+        reviewText: "",
+        feedbackText: "",
       },
       {
         keepErrors: false,
@@ -103,15 +150,22 @@ export default function ReviewFormPage() {
     );
   };
 
-  const handleFormSubmit = async ({ customerName, message }) => {
+  const handleFormSubmit = async ({
+    customerName,
+    reviewText,
+    feedbackText,
+  }) => {
     const trimmedName = customerName.trim();
-    const trimmedMessage = message.trim();
+    const trimmedReviewText = reviewText.trim();
+    const trimmedFeedbackText = feedbackText.trim();
+    setFormAlert("");
+    clearErrors();
 
     if (formType === "review") {
       await reviewMutation.mutateAsync({
         customerName: trimmedName,
         rating,
-        reviewText: trimmedMessage,
+        reviewText: trimmedReviewText,
       });
       return;
     }
@@ -119,7 +173,7 @@ export default function ReviewFormPage() {
     await feedbackMutation.mutateAsync({
       customerName: trimmedName,
       rating,
-      feedbackText: trimmedMessage,
+      feedbackText: trimmedFeedbackText,
     });
   };
 
@@ -160,18 +214,18 @@ export default function ReviewFormPage() {
           {step === "rating" ? (
             <CardTitle className="text-3xl text-slate-950">How was your experience?</CardTitle>
           ) : step === "form" && formType === "review" ? (
-            <CardTitle className="text-3xl text-slate-950">
+            <CardTitle className="text-2xl text-slate-950 tracking-normal ">
               Tell others about your experience
             </CardTitle>
           ) : step === "form" ? (
             <CardTitle className="text-3xl text-slate-950">
-              We are sorry to hear that. What went wrong?
+              Help the team improve
             </CardTitle>
-          ) : formType === "review" ? (
-            <CardTitle className="text-3xl text-slate-950">Thank you! 🎉</CardTitle>
+          ) : submittedState === "review" ? (
+            <CardTitle className="text-3xl text-slate-950">Thanks for your review!</CardTitle>
           ) : (
             <CardTitle className="text-3xl text-slate-950">
-              Thanks for letting us know
+              Thanks for your honest feedback
             </CardTitle>
           )}
         </CardHeader>
@@ -179,6 +233,9 @@ export default function ReviewFormPage() {
         <CardContent className="p-6 pt-4 sm:p-8 sm:pt-4">
           {step === "rating" ? (
             <div className="space-y-6">
+              <p className="text-center text-sm font-medium text-slate-600">
+                Rate your experience with {businessName}.
+              </p>
               <div className="flex items-center justify-center gap-2">
                 {Array.from({ length: 5 }).map((_, index) => {
                   const value = index + 1;
@@ -196,14 +253,16 @@ export default function ReviewFormPage() {
             </div>
           ) : step === "form" ? (
             <form className="space-y-5" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
-              {formType === "feedback" ? (
-                <p className="text-sm text-slate-500">
-                  Your feedback is private and only visible to the business owner.
-                </p>
+              {formAlert ? (
+                <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {formAlert}
+                </div>
               ) : null}
 
               <div className="space-y-2">
-                <Label htmlFor="customerName">Your name (optional)</Label>
+                <Label htmlFor="customerName">
+                  {formType === "review" ? "Your name" : "Your name (optional)"}
+                </Label>
                 <Input
                   id="customerName"
                   placeholder="Jane Doe"
@@ -230,45 +289,85 @@ export default function ReviewFormPage() {
                 ) : null}
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="message">
-                  {formType === "review" ? "Your review" : "Tell us what went wrong"}
-                </Label>
-                <Textarea
-                  id="message"
-                  placeholder={
-                    formType === "review"
-                      ? "Share a few words about your experience"
-                      : "Help us understand what happened"
-                  }
-                  aria-invalid={errors.message ? "true" : "false"}
-                  className={errors.message ? "border-red-500 focus:ring-red-500" : ""}
-                  {...register("message", {
-                    validate: (value) => {
-                      const trimmed = value.trim();
+              {formType === "review" ? (
+                <div className="space-y-2">
+                  <Label htmlFor="reviewText">Share what you liked most.</Label>
+                  <p className="text-sm text-slate-500">
+                    This is for a public testimonial and may appear after approval.
+                  </p>
+                  <Textarea
+                    id="reviewText"
+                    maxLength={MAX_MESSAGE_LENGTH}
+                    placeholder="They loved the quick service and friendly staff..."
+                    aria-invalid={errors.reviewText ? "true" : "false"}
+                    className={errors.reviewText ? "border-red-500 focus:ring-red-500" : ""}
+                    {...register("reviewText", {
+                      validate: (value) => {
+                        const trimmed = value.trim();
 
-                      if (trimmed.length < 1) {
-                        return formType === "review"
-                          ? "Review message is required"
-                          : "Feedback message is required";
-                      }
+                        if (trimmed.length < 10) {
+                          return "Review must be at least 10 characters";
+                        }
 
-                      if (formType === "feedback" && trimmed.length < 5) {
-                        return "Feedback must be at least 5 characters";
-                      }
+                        if (trimmed.length > MAX_MESSAGE_LENGTH) {
+                          return "Review must be 500 characters or fewer";
+                        }
 
-                      if (trimmed.length > 500) {
-                        return "Message must be 500 characters or fewer";
-                      }
+                        return true;
+                      },
+                    })}
+                  />
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      {errors.reviewText ? (
+                        <p className="text-sm text-red-600">{errors.reviewText.message}</p>
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      {reviewTextValue.length} / {MAX_MESSAGE_LENGTH}
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <Label htmlFor="feedbackText">Tell us what could have been better</Label>
+                  <p className="text-sm text-slate-500">
+                    This feedback is private and goes directly to the team. It will not be published.
+                  </p>
+                  <Textarea
+                    id="feedbackText"
+                    maxLength={MAX_MESSAGE_LENGTH}
+                    placeholder="Share what could have been improved about your experience..."
+                    aria-invalid={errors.feedbackText ? "true" : "false"}
+                    className={errors.feedbackText ? "border-red-500 focus:ring-red-500" : ""}
+                    {...register("feedbackText", {
+                      validate: (value) => {
+                        const trimmed = value.trim();
 
-                      return true;
-                    },
-                  })}
-                />
-                {errors.message ? (
-                  <p className="text-sm text-red-600">{errors.message.message}</p>
-                ) : null}
-              </div>
+                        if (trimmed.length < 10) {
+                          return "Feedback must be at least 10 characters";
+                        }
+
+                        if (trimmed.length > MAX_MESSAGE_LENGTH) {
+                          return "Feedback must be 500 characters or fewer";
+                        }
+
+                        return true;
+                      },
+                    })}
+                  />
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      {errors.feedbackText ? (
+                        <p className="text-sm text-red-600">{errors.feedbackText.message}</p>
+                      ) : null}
+                    </div>
+                    <p className="text-xs text-slate-400">
+                      {feedbackTextValue.length} / {MAX_MESSAGE_LENGTH}
+                    </p>
+                  </div>
+                </div>
+              )}
 
               <Button className="w-full" type="submit" disabled={isSubmitting}>
                 {isSubmitting
@@ -280,17 +379,18 @@ export default function ReviewFormPage() {
             </form>
           ) : (
             <div className="space-y-5 text-center">
-              <p className="text-sm text-slate-500">
-                {formType === "review"
-                  ? "Your review has been submitted."
-                  : "We will work on improving your experience."}
+              <p className="text-sm leading-7 text-slate-500">
+                {submittedState === "review"
+                  ? "Your testimonial was submitted and may appear after approval."
+                  : "Your feedback has been sent privately to the team."}
               </p>
-              {formType === "review" && googleReviewLink ? (
+              {submittedState === "review" && googleReviewUrl ? (
                 <Button
+                  variant="outline"
                   className="w-full"
-                  onClick={() => window.open(googleReviewLink, "_blank", "noopener,noreferrer")}
+                  onClick={() => window.open(googleReviewUrl, "_blank", "noopener,noreferrer")}
                 >
-                  Also post on Google ↗
+                  Also review on Google
                 </Button>
               ) : null}
             </div>
