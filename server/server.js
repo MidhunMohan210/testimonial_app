@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 import express from "express";
 import cors from "cors";
+import helmet from "helmet";
 import mongoose from "mongoose";
 import session from "express-session";           // NEW: session support for OAuth callback
 import MongoStore from "connect-mongo";          // NEW: stores sessions in MongoDB (survives server restarts)
@@ -22,6 +23,8 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.use(helmet());
 
 // ─── Webhook JSON Parser ───────────────────────────────────────────────────────
 // Separate parser ONLY for /webhook so rawBody is captured.

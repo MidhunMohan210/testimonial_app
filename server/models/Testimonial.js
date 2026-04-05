@@ -40,6 +40,10 @@ const testimonialSchema = new mongoose.Schema({
     sparse: true,
     trim: true,
   },
+  ip: {
+    type: String,
+    trim: true,
+  },
   collectedAt: {
     type: Date,
     default: Date.now,

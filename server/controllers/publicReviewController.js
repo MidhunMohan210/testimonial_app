@@ -36,10 +36,23 @@ export const submitPublicReview = async (req, res) => {
     throw createHttpError(404, "Business not found");
   }
 
+  const existingSubmission = await Testimonial.findOne({
+    businessId: business._id,
+    ip: req.ip,
+    collectedAt: {
+      $gt: new Date(Date.now() - 5 * 60 * 1000),
+    },
+  });
+
+  if (existingSubmission) {
+    throw createHttpError(429, "You have already submitted recently");
+  }
+
   await Testimonial.create({
     businessId: business._id,
     customerName: customerName?.trim(),
     customerPhone: `link-${Date.now()}`,
+    ip: req.ip,
     rating: numericRating,
     testimonialText: reviewText.trim(),
     status: "pending",
