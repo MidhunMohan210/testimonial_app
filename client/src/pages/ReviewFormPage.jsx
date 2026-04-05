@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
 import { Star } from "lucide-react";
 import { useParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -34,8 +35,19 @@ export default function ReviewFormPage() {
   const [step, setStep] = useState("rating");
   const [formType, setFormType] = useState("review");
   const [rating, setRating] = useState(0);
-  const [customerName, setCustomerName] = useState("");
-  const [message, setMessage] = useState("");
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm({
+    mode: "onChange",
+    reValidateMode: "onChange",
+    defaultValues: {
+      customerName: "",
+      message: "",
+    },
+  });
 
   const businessQuery = useQuery({
     queryKey: ["public-review-business", slug],
@@ -80,24 +92,34 @@ export default function ReviewFormPage() {
     setRating(selectedRating);
     setFormType(selectedRating >= 4 ? "review" : "feedback");
     setStep("form");
+    reset(
+      {
+        customerName: "",
+        message: "",
+      },
+      {
+        keepErrors: false,
+      },
+    );
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleFormSubmit = async ({ customerName, message }) => {
+    const trimmedName = customerName.trim();
+    const trimmedMessage = message.trim();
 
     if (formType === "review") {
       await reviewMutation.mutateAsync({
-        customerName,
+        customerName: trimmedName,
         rating,
-        reviewText: message,
+        reviewText: trimmedMessage,
       });
       return;
     }
 
     await feedbackMutation.mutateAsync({
-      customerName,
+      customerName: trimmedName,
       rating,
-      feedbackText: message,
+      feedbackText: trimmedMessage,
     });
   };
 
@@ -143,7 +165,7 @@ export default function ReviewFormPage() {
             </CardTitle>
           ) : step === "form" ? (
             <CardTitle className="text-3xl text-slate-950">
-              We&apos;re sorry to hear that. What went wrong?
+              We are sorry to hear that. What went wrong?
             </CardTitle>
           ) : formType === "review" ? (
             <CardTitle className="text-3xl text-slate-950">Thank you! 🎉</CardTitle>
@@ -173,7 +195,7 @@ export default function ReviewFormPage() {
               <p className="text-center text-sm text-slate-500">{selectedStarsLabel}</p>
             </div>
           ) : step === "form" ? (
-            <form className="space-y-5" onSubmit={handleSubmit}>
+            <form className="space-y-5" onSubmit={handleSubmit(handleFormSubmit)} noValidate>
               {formType === "feedback" ? (
                 <p className="text-sm text-slate-500">
                   Your feedback is private and only visible to the business owner.
@@ -184,10 +206,28 @@ export default function ReviewFormPage() {
                 <Label htmlFor="customerName">Your name (optional)</Label>
                 <Input
                   id="customerName"
-                  value={customerName}
-                  onChange={(event) => setCustomerName(event.target.value)}
                   placeholder="Jane Doe"
+                  aria-invalid={errors.customerName ? "true" : "false"}
+                  className={errors.customerName ? "border-red-500 focus:ring-red-500" : ""}
+                  {...register("customerName", {
+                    validate: (value) => {
+                      const trimmed = value.trim();
+
+                      if (formType === "review" && trimmed.length < 1) {
+                        return "Name is required";
+                      }
+
+                      if (trimmed.length > 100) {
+                        return "Name must be 100 characters or fewer";
+                      }
+
+                      return true;
+                    },
+                  })}
                 />
+                {errors.customerName ? (
+                  <p className="text-sm text-red-600">{errors.customerName.message}</p>
+                ) : null}
               </div>
 
               <div className="space-y-2">
@@ -196,15 +236,38 @@ export default function ReviewFormPage() {
                 </Label>
                 <Textarea
                   id="message"
-                  value={message}
-                  onChange={(event) => setMessage(event.target.value)}
                   placeholder={
                     formType === "review"
                       ? "Share a few words about your experience"
                       : "Help us understand what happened"
                   }
-                  required
+                  aria-invalid={errors.message ? "true" : "false"}
+                  className={errors.message ? "border-red-500 focus:ring-red-500" : ""}
+                  {...register("message", {
+                    validate: (value) => {
+                      const trimmed = value.trim();
+
+                      if (trimmed.length < 1) {
+                        return formType === "review"
+                          ? "Review message is required"
+                          : "Feedback message is required";
+                      }
+
+                      if (formType === "feedback" && trimmed.length < 5) {
+                        return "Feedback must be at least 5 characters";
+                      }
+
+                      if (trimmed.length > 500) {
+                        return "Message must be 500 characters or fewer";
+                      }
+
+                      return true;
+                    },
+                  })}
                 />
+                {errors.message ? (
+                  <p className="text-sm text-red-600">{errors.message.message}</p>
+                ) : null}
               </div>
 
               <Button className="w-full" type="submit" disabled={isSubmitting}>
@@ -220,7 +283,7 @@ export default function ReviewFormPage() {
               <p className="text-sm text-slate-500">
                 {formType === "review"
                   ? "Your review has been submitted."
-                  : "We&apos;ll work on improving your experience."}
+                  : "We will work on improving your experience."}
               </p>
               {formType === "review" && googleReviewLink ? (
                 <Button

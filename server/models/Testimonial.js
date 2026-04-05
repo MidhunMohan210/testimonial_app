@@ -12,7 +12,7 @@ const testimonialSchema = new mongoose.Schema({
   },
   customerPhone: {
     type: String,
-    required: true,
+    // required: true,
     trim: true,
   },
   rating: {

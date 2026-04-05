@@ -2,6 +2,8 @@ import express from "express";
 import Business from "../models/Business.js";
 import PrivateFeedback from "../models/PrivateFeedback.js";
 import Testimonial from "../models/Testimonial.js";
+import { validate } from "../middleware/validate.js";
+import { privateFeedbackSchema, submitReviewSchema } from "../schemas/reviewSchema.js";
 
 const router = express.Router();
 
@@ -25,7 +27,7 @@ router.get("/:slug", async (req, res) => {
   }
 });
 
-router.post("/:slug/submit", async (req, res) => {
+router.post("/:slug/submit", validate(submitReviewSchema), async (req, res) => {
   try {
     const { customerName, rating, reviewText } = req.body;
     const numericRating = Number(rating);
@@ -61,7 +63,7 @@ router.post("/:slug/submit", async (req, res) => {
   }
 });
 
-router.post("/:slug/feedback", async (req, res) => {
+router.post("/:slug/feedback", validate(privateFeedbackSchema), async (req, res) => {
   try {
     const { customerName, rating, feedbackText } = req.body;
     const numericRating = Number(rating);

@@ -48,7 +48,6 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
     reValidateMode: "onChange",
     defaultValues: {
       customerName: "",
-      customerPhone: "",
       rating: 5,
       testimonialText: "",
     },
@@ -58,7 +57,6 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
     if (open) {
       reset({
         customerName: "",
-        customerPhone: "",
         rating: 5,
         testimonialText: "",
       });
@@ -71,7 +69,6 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
       toast.success("Testimonial added successfully");
       reset({
         customerName: "",
-        customerPhone: "",
         rating: 5,
         testimonialText: "",
       });
@@ -82,7 +79,13 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
       onOpenChange(false);
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Failed to add testimonial");
+      // Show backend validation errors if present
+      const details = error.response?.data?.details;
+      if (details?.length) {
+        toast.error(details[0].message);
+      } else {
+        toast.error(error.response?.data?.message || "Failed to add testimonial");
+      }
     },
   });
 
@@ -103,30 +106,13 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
               id="manual-name"
               placeholder="Priya Patel"
               {...register("customerName", {
+                required: "Customer name is required",
                 validate: (value) =>
-                  !value || value.trim().length <= 80 || "Customer name must be under 80 characters",
+                  value.trim().length <= 100 || "Name must be under 100 characters",
               })}
             />
             {errors.customerName && (
               <p className="text-sm text-red-600">{errors.customerName.message}</p>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="manual-phone">Customer Phone</Label>
-            <Input
-              id="manual-phone"
-              placeholder="+919999999999"
-              {...register("customerPhone", {
-                required: "Customer phone is required",
-                pattern: {
-                  value: /^\+?[1-9]\d{7,14}$/,
-                  message: "Enter a valid phone number with country code",
-                },
-              })}
-            />
-            {errors.customerPhone && (
-              <p className="text-sm text-red-600">{errors.customerPhone.message}</p>
             )}
           </div>
 
@@ -144,7 +130,9 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
                 <RatingSelector value={field.value} onChange={field.onChange} />
               )}
             />
-            {errors.rating && <p className="text-sm text-red-600">{errors.rating.message}</p>}
+            {errors.rating && (
+              <p className="text-sm text-red-600">{errors.rating.message}</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -154,8 +142,19 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
               placeholder="They loved the quick service and smooth onboarding."
               {...register("testimonialText", {
                 required: "Review text is required",
-                validate: (value) =>
-                  value.trim().length >= 10 || "Review should be at least 10 characters",
+                validate: (value) => {
+                  const trimmed = value.trim();
+
+                  if (trimmed.length < 10) {
+                    return "Review should be at least 10 characters";
+                  }
+
+                  if (trimmed.length > 1000) {
+                    return "Review must be 1000 characters or fewer";
+                  }
+
+                  return true;
+                },
               })}
             />
             {errors.testimonialText && (

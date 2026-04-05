@@ -83,7 +83,7 @@ export const addManualTestimonial = async (req, res) => {
     const { customerName, customerPhone, rating, testimonialText } = req.body;
     const numericRating = Number(rating);
 
-    if (!customerPhone || !rating || !testimonialText) {
+    if ( !rating || !testimonialText) {
       return res
         .status(400)
         .json({ message: "Customer phone, rating, and testimonial text are required" });
@@ -96,7 +96,6 @@ export const addManualTestimonial = async (req, res) => {
     const testimonial = await Testimonial.create({
       businessId: req.user.businessId,
       customerName: customerName?.trim(),
-      customerPhone: String(customerPhone).trim(),
       rating: numericRating,
       testimonialText: testimonialText.trim(),
       source: "manual",

@@ -137,8 +137,11 @@ app.get("/api/health", (req, res) => {
 
 // Public unauthenticated routes — rate limiters applied here
 app.use("/whatsapp", whatsappCallbackRoutes);
-app.use("/api/r", publicReviewLimiter, publicReviewRouter);     // review form submissions
-app.use("/api/p", publicReadLimiter, publicTestimonialsRouter); // embed widget reads
+// app.use("/api/r", publicReviewLimiter, publicReviewRouter);     // review form submissions
+// app.use("/api/p", publicReadLimiter, publicTestimonialsRouter); // embed widget reads
+
+app.use("/api/r", publicReviewRouter);     // review form submissions
+app.use("/api/p", publicTestimonialsRouter); // embed widget reads
 
 // Auth routes — register/login, no middleware needed
 app.use("/api/auth", authRoutes);
