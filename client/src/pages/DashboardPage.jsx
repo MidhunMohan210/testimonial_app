@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
   Copy,
@@ -14,8 +15,10 @@ import { toast } from "sonner";
 import { getMyBusiness, updateBusiness } from "../api/businessApi";
 import { getTestimonials } from "../api/testimonialApi";
 import SendRequestModal from "../components/SendRequestModal";
+import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
 import { Button } from "../components/ui/button";
+import { Card, CardContent } from "../components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -25,6 +28,7 @@ import {
 } from "../components/ui/dialog";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
+import { Skeleton } from "../components/ui/skeleton";
 import { Textarea } from "../components/ui/textarea";
 
 function WavesDecoration() {
@@ -126,7 +130,31 @@ function GridDecoration() {
   );
 }
 
+function DashboardLoadingState() {
+  return (
+    <div className="min-h-screen pb-16 font-sans">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-5">
+        <div className="space-y-5">
+          <Skeleton className="h-40 w-full rounded-2xl" />
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-4">
+            {Array.from({ length: 4 }).map((_, index) => (
+              <Skeleton key={index} className="h-[170px] w-full rounded-2xl" />
+            ))}
+          </div>
+          <Skeleton className="h-44 w-full rounded-2xl" />
+          <Skeleton className="h-[360px] w-full rounded-2xl" />
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1.4fr]">
+            <Skeleton className="h-64 w-full rounded-2xl" />
+            <Skeleton className="h-64 w-full rounded-2xl" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [sendOpen, setSendOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -210,6 +238,11 @@ export default function DashboardPage() {
     0,
     3,
   );
+  const hasTestimonials = recentTestimonials.length > 0;
+  const isDashboardLoading =
+    allTestimonialsQuery.isLoading || businessQuery.isLoading;
+  const isDashboardError =
+    allTestimonialsQuery.isError || businessQuery.isError;
 
   const insights = useMemo(() => {
     const testimonials = allTestimonialsQuery.data?.data || [];
@@ -287,6 +320,28 @@ export default function DashboardPage() {
       toast.error("Failed to copy embed code");
     }
   };
+
+  const handleRetryDashboard = () => {
+    allTestimonialsQuery.refetch();
+    businessQuery.refetch();
+  };
+
+  if (isDashboardLoading) {
+    return <DashboardLoadingState />;
+  }
+
+  if (isDashboardError) {
+    return (
+      <div className="min-h-screen pb-16 font-sans">
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-5">
+          <ErrorStateCard
+            message="We couldn’t load your dashboard right now."
+            onRetry={handleRetryDashboard}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen  pb-16 font-sans">
@@ -440,6 +495,49 @@ export default function DashboardPage() {
                 })}
               </div>
             </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 items-start">
+            <Card className="border-white/80 bg-white p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)]">
+              <CardContent className="p-0">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-900">
+                      Recent testimonials
+                    </h3>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                      Review the latest customer responses coming into your workspace.
+                    </p>
+                  </div>
+                  {hasTestimonials ? (
+                    <Button
+                      variant="outline"
+                      className="rounded-xl"
+                      onClick={() => navigate("/testimonials")}
+                    >
+                      View all testimonials
+                    </Button>
+                  ) : null}
+                </div>
+
+                <div className="mt-5">
+                  {hasTestimonials ? (
+                    <div className="space-y-4">
+                      {recentTestimonials.map((testimonial) => (
+                        <TestimonialCard key={testimonial._id} testimonial={testimonial} />
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyStateCard
+                      title="No testimonials yet"
+                      description="Send your first request to start collecting testimonials from your customers."
+                      actionLabel="Send a request"
+                      onAction={() => navigate("/send-request")}
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
           </div>
 
      <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 lg:grid-cols-[1fr_1.4fr] items-start">

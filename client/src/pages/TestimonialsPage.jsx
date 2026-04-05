@@ -1,4 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   keepPreviousData,
   useMutation,
@@ -10,6 +11,7 @@ import { MessageSquareWarning } from "lucide-react";
 import { getPrivateFeedback } from "../api/businessApi";
 import { getTestimonials, updateStatus } from "../api/testimonialApi";
 import ManualAddModal from "../components/ManualAddModal";
+import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -33,23 +35,6 @@ import {
   TabsList,
   TabsTrigger,
 } from "../components/ui/tabs";
-
-function EmptyState({ onManualAdd }) {
-  return (
-    <Card className="border-dashed border-slate-300 bg-white shadow-[0_18px_50px_-40px_rgba(15,23,42,0.3)]">
-      <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-        <h3 className="text-xl font-semibold">No testimonials yet</h3>
-        <p className="mt-2 max-w-md text-sm text-muted-foreground">
-          Testimonials you collect from customers will appear here once they are
-          submitted.
-        </p>
-        <Button className="mt-6 rounded-xl px-5" onClick={onManualAdd}>
-          Add testimonial manually
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
 
 function LoadingState() {
   return (
@@ -202,6 +187,7 @@ function PrivateFeedbackCard({ feedback, onOpen }) {
 }
 
 export default function TestimonialsPage() {
+  const navigate = useNavigate();
   const PAGE_SIZE = 6;
   const queryClient = useQueryClient();
   const [activeStatus, setActiveStatus] = useState("all");
@@ -277,6 +263,73 @@ export default function TestimonialsPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
+
+  const getEmptyStateConfig = () => {
+    if (isFeedbackView) {
+      return {
+        title: "No private feedback yet",
+        description:
+          "Customers who leave 1–3 star ratings will show up here so you can follow up and improve.",
+      };
+    }
+
+    if (activeStatus === "pending") {
+      return {
+        title: "No pending testimonials",
+        description:
+          "New reviews that need approval will appear here.",
+      };
+    }
+
+    if (activeStatus === "approved") {
+      return {
+        title: "No published testimonials yet",
+        description:
+          "Approve some from Pending to publish them.",
+      };
+    }
+
+    if (activeStatus === "hidden") {
+      return {
+        title: "No rejected testimonials",
+        description: "No rejected testimonials.",
+      };
+    }
+
+    return {
+      title: "You don’t have any testimonials yet",
+      description:
+        "Send a request or add one manually.",
+      actionLabel: "Add testimonial",
+      onAction: () => setManualOpen(true),
+      secondaryActionLabel: "Send a request",
+      onSecondaryAction: () => navigate("/send-request"),
+    };
+  };
+
+  const activeQuery = isFeedbackView ? privateFeedbackQuery : testimonialsQuery;
+  const emptyStateConfig = getEmptyStateConfig();
+  const activeErrorMessage = isFeedbackView
+    ? "We couldn’t load your private feedback."
+    : "We couldn’t load testimonials right now.";
+
+  if (activeQuery.isError) {
+    return (
+      <>
+        <div className="mx-auto max-w-7xl">
+          <ErrorStateCard
+            message={activeErrorMessage}
+            onRetry={() => activeQuery.refetch()}
+          />
+        </div>
+        <ManualAddModal
+          open={manualOpen}
+          onOpenChange={setManualOpen}
+          activeStatus={activeStatus}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -379,17 +432,10 @@ export default function TestimonialsPage() {
                     />
                   </>
                 ) : (
-                  <Card className="border-dashed border-slate-300 bg-white shadow-[0_18px_50px_-40px_rgba(15,23,42,0.3)]">
-                    <CardContent className="py-16 text-center">
-                      <h3 className="text-xl font-semibold">
-                        No private feedback yet
-                      </h3>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Lower-rated responses from the public review link will
-                        appear here for follow-up.
-                      </p>
-                    </CardContent>
-                  </Card>
+                  <EmptyStateCard
+                    title={emptyStateConfig.title}
+                    description={emptyStateConfig.description}
+                  />
                 )
               ) : testimonialsQuery.isLoading ? (
                 <LoadingState />
@@ -415,7 +461,14 @@ export default function TestimonialsPage() {
                   />
                 </>
               ) : (
-                <EmptyState onManualAdd={() => setManualOpen(true)} />
+                <EmptyStateCard
+                  title={emptyStateConfig.title}
+                  description={emptyStateConfig.description}
+                  actionLabel={emptyStateConfig.actionLabel}
+                  onAction={emptyStateConfig.onAction}
+                  secondaryActionLabel={emptyStateConfig.secondaryActionLabel}
+                  onSecondaryAction={emptyStateConfig.onSecondaryAction}
+                />
               )}
             </TabsContent>
           </Tabs>

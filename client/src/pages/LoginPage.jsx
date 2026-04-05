@@ -2,18 +2,13 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { Eye, EyeOff, MessageSquareQuote } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import logo from "../assets/logo2.svg";
 import { login as loginRequest } from "../api/authApi";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
@@ -51,40 +46,44 @@ export default function LoginPage() {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-md border-white/80 bg-white/95">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground">
-            <MessageSquareQuote className="h-8 w-8" />
+    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(65,90,119,0.14),transparent_30%),linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] px-4 py-10 sm:px-6">
+      <Card className="w-full max-w-md border-white/80 bg-white/92 shadow-[0_32px_80px_-40px_rgba(15,23,42,0.3)] backdrop-blur">
+        <CardContent className="p-6 sm:p-8">
+          <div className="mb-8 text-center">
+            <img src={logo} alt="Woice" className="mx-auto h-14 w-auto" />
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
+              Sign in
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-950">Welcome back</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Access your Woice workspace and continue collecting testimonials.
+            </p>
           </div>
-          <div className="space-y-1">
-            <CardTitle>Welcome to Woice</CardTitle>
-            <CardDescription>Collect customer love directly from WhatsApp.</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <form className="space-y-4" onSubmit={handleSubmit((data) => mutation.mutate(data))}>
+
+          <form className="space-y-5" onSubmit={handleSubmit((data) => mutation.mutate(data))}>
             <div className="space-y-2">
               <Label htmlFor="emailOrMobile">Email or Mobile</Label>
               <Input
                 id="emailOrMobile"
+                className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
                 {...register("emailOrMobile", {
                   required: "Email or mobile is required",
                   validate: (value) =>
                     value.trim().length >= 3 || "Enter a valid email or mobile",
                 })}
               />
-              {errors.emailOrMobile && (
+              {errors.emailOrMobile ? (
                 <p className="text-sm text-red-600">{errors.emailOrMobile.message}</p>
-              )}
+              ) : null}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <div className="relative">
                 <Input
                   id="password"
                   type={showPassword ? "text" : "password"}
-                  className="pr-12"
+                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70 pr-12"
                   {...register("password", {
                     required: "Password is required",
                     validate: (value) =>
@@ -97,23 +96,27 @@ export default function LoginPage() {
                   onClick={() => setShowPassword((value) => !value)}
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+              {errors.password ? (
+                <p className="text-sm text-red-600">{errors.password.message}</p>
+              ) : null}
             </div>
-            <Button className="w-full" type="submit" disabled={mutation.isPending}>
+
+            <Button
+              className="h-12 w-full rounded-2xl bg-slate-950 text-base font-semibold text-white shadow-[0_18px_36px_-22px_rgba(15,23,42,0.7)] hover:bg-slate-800"
+              type="submit"
+              disabled={mutation.isPending}
+            >
               {mutation.isPending ? "Signing in..." : "Sign In"}
+              {!mutation.isPending ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-center text-sm text-slate-500">
             Don&apos;t have an account?{" "}
-            <Link className="font-semibold text-foreground underline-offset-4 hover:underline" to="/register">
+            <Link className="font-semibold text-slate-950 underline-offset-4 hover:underline" to="/register">
               Create one
             </Link>
           </p>

@@ -2,18 +2,13 @@ import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
-import { Eye, EyeOff, MessageSquareQuote } from "lucide-react";
+import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import logo from "../assets/logo2.svg";
 import { register as registerRequest } from "../api/authApi";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 
@@ -31,7 +26,7 @@ export default function RegisterPage() {
     mode: "onChange",
     reValidateMode: "onChange",
     defaultValues: {
-      name: "",
+      fullName: "",
       email: "",
       mobile: "",
       password: "",
@@ -59,76 +54,88 @@ export default function RegisterPage() {
   const passwordValue = watch("password");
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4 py-10">
-      <Card className="w-full max-w-lg border-white/80 bg-white/95">
-        <CardHeader className="space-y-4 text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl bg-primary text-primary-foreground">
-            <MessageSquareQuote className="h-8 w-8" />
+    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(250,204,21,0.1),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] px-4 py-10 sm:px-6">
+      <Card className="w-full max-w-lg border-white/80 bg-white/92 shadow-[0_32px_80px_-40px_rgba(15,23,42,0.3)] backdrop-blur">
+        <CardContent className="p-6 sm:p-8">
+          <div className="mb-8 text-center">
+            <img src={logo} alt="Woice" className="mx-auto h-14 w-auto" />
+            <p className="mt-5 text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
+              Create account
+            </p>
+            <h1 className="mt-2 text-3xl font-semibold text-slate-950">Start your Woice workspace</h1>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Set up your business profile and begin collecting reviews in a few minutes.
+            </p>
           </div>
-          <div className="space-y-1">
-            <CardTitle>Create your Woice account</CardTitle>
-            <CardDescription>Launch a testimonial pipeline in a few minutes.</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
+
           <form
-            className="space-y-4"
+            className="space-y-5"
             onSubmit={handleSubmit((data) =>
               mutation.mutate({
-                name: data.name,
+                fullName: data.fullName,
                 email: data.email,
                 mobile: data.mobile,
                 password: data.password,
+                confirmPassword: data.confirmPassword,
                 businessName: data.businessName,
               })
             )}
           >
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2 sm:col-span-2">
-                <Label htmlFor="name">Full Name</Label>
+                <Label htmlFor="fullName">Full Name</Label>
                 <Input
-                  id="name"
-                  {...register("name", {
+                  id="fullName"
+                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
+                  {...register("fullName", {
                     required: "Full name is required",
                     validate: (value) =>
                       value.trim().length >= 2 || "Name must be at least 2 characters",
                   })}
                 />
-                {errors.name && <p className="text-sm text-red-600">{errors.name.message}</p>}
+                {errors.fullName ? (
+                  <p className="text-sm text-red-600">{errors.fullName.message}</p>
+                ) : null}
               </div>
+
               <div className="space-y-2 sm:col-span-2">
                 <Label htmlFor="businessName">Business Name</Label>
                 <Input
                   id="businessName"
+                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
                   {...register("businessName", {
                     required: "Business name is required",
                     validate: (value) =>
                       value.trim().length >= 2 || "Business name must be at least 2 characters",
                   })}
                 />
-                {errors.businessName && (
+                {errors.businessName ? (
                   <p className="text-sm text-red-600">{errors.businessName.message}</p>
-                )}
+                ) : null}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="register-email">Email</Label>
                 <Input
                   id="register-email"
                   type="email"
+                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
                   {...register("email", {
                     required: "Email is required",
                     validate: (value) =>
                       /\S+@\S+\.\S+/.test(value.trim()) || "Enter a valid email address",
                   })}
                 />
-                {errors.email && (
+                {errors.email ? (
                   <p className="text-sm text-red-600">{errors.email.message}</p>
-                )}
+                ) : null}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="register-mobile">Mobile</Label>
                 <Input
                   id="register-mobile"
+                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
                   {...register("mobile", {
                     required: "Mobile number is required",
                     validate: (value) =>
@@ -136,21 +143,22 @@ export default function RegisterPage() {
                       "Enter a valid mobile number with country code",
                   })}
                 />
-                {errors.mobile && (
+                {errors.mobile ? (
                   <p className="text-sm text-red-600">{errors.mobile.message}</p>
-                )}
+                ) : null}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="register-password">Password</Label>
                 <div className="relative">
                   <Input
                     id="register-password"
                     type={showPassword ? "text" : "password"}
-                    className="pr-12"
+                    className="h-12 rounded-2xl border-slate-200 bg-slate-50/70 pr-12"
                     {...register("password", {
                       required: "Password is required",
                       validate: (value) =>
-                        value.trim().length >= 6 || "Password must be at least 6 characters",
+                        value.trim().length >= 8 || "Password must be at least 8 characters",
                     })}
                   />
                   <button
@@ -159,22 +167,21 @@ export default function RegisterPage() {
                     onClick={() => setShowPassword((value) => !value)}
                     aria-label={showPassword ? "Hide password" : "Show password"}
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
-                {errors.password && <p className="text-sm text-red-600">{errors.password.message}</p>}
+                {errors.password ? (
+                  <p className="text-sm text-red-600">{errors.password.message}</p>
+                ) : null}
               </div>
+
               <div className="space-y-2">
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    className="pr-12"
+                    className="h-12 rounded-2xl border-slate-200 bg-slate-50/70 pr-12"
                     {...register("confirmPassword", {
                       required: "Please confirm your password",
                       validate: (value) =>
@@ -194,19 +201,25 @@ export default function RegisterPage() {
                     )}
                   </button>
                 </div>
-                {errors.confirmPassword && (
+                {errors.confirmPassword ? (
                   <p className="text-sm text-red-600">{errors.confirmPassword.message}</p>
-                )}
+                ) : null}
               </div>
             </div>
-            <Button className="w-full" type="submit" disabled={mutation.isPending}>
+
+            <Button
+              className="h-12 w-full rounded-2xl bg-slate-950 text-base font-semibold text-white shadow-[0_18px_36px_-22px_rgba(15,23,42,0.7)] hover:bg-slate-800"
+              type="submit"
+              disabled={mutation.isPending}
+            >
               {mutation.isPending ? "Creating account..." : "Create Account"}
+              {!mutation.isPending ? <ArrowRight className="ml-2 h-4 w-4" /> : null}
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-muted-foreground">
+          <p className="mt-6 text-center text-sm text-slate-500">
             Already have an account?{" "}
-            <Link className="font-semibold text-foreground underline-offset-4 hover:underline" to="/login">
+            <Link className="font-semibold text-slate-950 underline-offset-4 hover:underline" to="/login">
               Sign in
             </Link>
           </p>
