@@ -21,11 +21,11 @@ function StarButton({ active, onClick, value }) {
     <button
       type="button"
       onClick={onClick}
-      className="flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"
+      className="flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white transition hover:-translate-y-0.5 hover:border-amber-300 hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:h-14 sm:w-14"
       aria-label={`Rate ${value} star${value === 1 ? "" : "s"}`}
     >
       <Star
-        className={`h-8 w-8 ${active ? "fill-amber-400 text-amber-400" : "text-slate-300"}`}
+        className={`h-7 w-7 sm:h-8 sm:w-8 ${active ? "fill-amber-400 text-amber-400" : "text-slate-300"}`}
       />
     </button>
   );
@@ -179,7 +179,7 @@ export default function ReviewFormPage() {
 
   if (businessQuery.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-6 sm:py-10">
         <Card className="w-full max-w-[480px] border-slate-200 bg-white">
           <CardContent className="p-8 text-center text-sm text-slate-500">
             Loading review form...
@@ -191,7 +191,7 @@ export default function ReviewFormPage() {
 
   if (businessQuery.isError) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-6 sm:py-10">
         <Card className="w-full max-w-[480px] border-slate-200 bg-white">
           <CardContent className="p-8 text-center">
             <h1 className="text-xl font-semibold text-slate-950">Review link not found</h1>
@@ -205,38 +205,38 @@ export default function ReviewFormPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-10">
+    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-6 sm:py-10">
       <Card className="w-full max-w-[480px] border-slate-200 bg-white shadow-[0_24px_60px_-36px_rgba(15,23,42,0.45)]">
         <CardHeader className="space-y-3 pb-2 text-center">
           <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">
             {businessName}
           </p>
           {step === "rating" ? (
-            <CardTitle className="text-3xl text-slate-950">How was your experience?</CardTitle>
+            <CardTitle className="text-2xl text-slate-950 sm:text-3xl">How was your experience?</CardTitle>
           ) : step === "form" && formType === "review" ? (
-            <CardTitle className="text-2xl text-slate-950 tracking-normal ">
+            <CardTitle className="text-xl tracking-normal text-slate-950 sm:text-2xl">
               Tell others about your experience
             </CardTitle>
           ) : step === "form" ? (
-            <CardTitle className="text-3xl text-slate-950">
+            <CardTitle className="text-2xl text-slate-950 sm:text-3xl">
               Help the team improve
             </CardTitle>
           ) : submittedState === "review" ? (
-            <CardTitle className="text-3xl text-slate-950">Thanks for your review!</CardTitle>
+            <CardTitle className="text-2xl text-slate-950 sm:text-3xl">Thanks for your review!</CardTitle>
           ) : (
-            <CardTitle className="text-3xl text-slate-950">
+            <CardTitle className="text-2xl text-slate-950 sm:text-3xl">
               Thanks for your honest feedback
             </CardTitle>
           )}
         </CardHeader>
 
-        <CardContent className="p-6 pt-4 sm:p-8 sm:pt-4">
+        <CardContent className="p-5 pt-4 sm:p-8 sm:pt-4">
           {step === "rating" ? (
             <div className="space-y-6">
               <p className="text-center text-sm font-medium text-slate-600">
                 Rate your experience with {businessName}.
               </p>
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2">
                 {Array.from({ length: 5 }).map((_, index) => {
                   const value = index + 1;
                   return (
@@ -317,8 +317,8 @@ export default function ReviewFormPage() {
                       },
                     })}
                   />
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <div className="min-h-[1.25rem]">
                       {errors.reviewText ? (
                         <p className="text-sm text-red-600">{errors.reviewText.message}</p>
                       ) : null}
@@ -356,8 +356,8 @@ export default function ReviewFormPage() {
                       },
                     })}
                   />
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                    <div className="min-h-[1.25rem]">
                       {errors.feedbackText ? (
                         <p className="text-sm text-red-600">{errors.feedbackText.message}</p>
                       ) : null}

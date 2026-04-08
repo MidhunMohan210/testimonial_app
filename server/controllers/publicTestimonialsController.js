@@ -1,14 +1,19 @@
 import Business from "../models/Business.js";
 import Testimonial from "../models/Testimonial.js";
+import { getBusinessSettings } from "../utils/businessSettings.js";
 import { createHttpError } from "../utils/httpError.js";
 
 export const getPublicTestimonials = async (req, res) => {
   const business = await Business.findOne({ slug: req.params.slug }).select(
-    "businessName slug",
+    "businessName slug settings isPublicEnabled",
   );
 
   if (!business) {
     throw createHttpError(404, "Business not found");
+  }
+
+  if (getBusinessSettings(business).isPublicEnabled === false) {
+    throw createHttpError(404, "Public testimonials page is disabled");
   }
 
   const requestedLimit = Number.parseInt(req.query.limit, 10);

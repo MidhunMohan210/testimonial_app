@@ -37,26 +37,33 @@ const webhookJsonParser = express.json({
 });
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-// Whitelist of allowed origins. Requests from unlisted origins are blocked.
-// credentials: true is required for cookies/session to work cross-origin.
-const allowedOrigins = [
-  "https://woice.it.com",
-  "https://www.woice.it.com",
-  "https://testimonial-app-sable.vercel.app",
-  "http://localhost:5173",
-  "http://192.168.20.5:5173",  // removed trailing slash — CORS matching is exact
-];
+// Previous restrictive allowlist kept here for reference while testing mobile:
+// const allowedOrigins = [
+//   "https://woice.it.com",
+//   "https://www.woice.it.com",
+//   "https://testimonial-app-sable.vercel.app",
+//   "http://localhost:5173",
+//   "http://192.168.20.3:5173",
+//   "http://192.168.20.5:5173",
+// ];
+//
+// app.use(
+//   cors({
+//     origin: function (origin, callback) {
+//       if (!origin || allowedOrigins.includes(origin)) {
+//         callback(null, true);
+//       } else {
+//         console.log("Blocked by CORS:", origin);
+//         callback(new Error("Not allowed by CORS"));
+//       }
+//     },
+//     credentials: true,
+//   })
+// );
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        console.log("Blocked by CORS:", origin);
-        callback(new Error("Not allowed by CORS"));
-      }
-    },
+    origin: true,
     credentials: true,
   })
 );

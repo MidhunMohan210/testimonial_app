@@ -1,8 +1,13 @@
 import api from "./axios";
 
-export const getTestimonials = async (status) => {
+export const getTestimonials = async (status, options = {}) => {
+  const { page, limit = 100 } = options;
   const response = await api.get("/api/testimonials", {
-    params: status && status !== "all" ? { status } : {},
+    params: {
+      ...(status && status !== "all" ? { status } : {}),
+      ...(page ? { page } : {}),
+      limit,
+    },
   });
   return response.data;
 };

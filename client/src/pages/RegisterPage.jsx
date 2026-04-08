@@ -43,7 +43,11 @@ export default function RegisterPage() {
       navigate("/dashboard");
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || "Registration failed");
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Registration failed",
+      );
     },
   });
 
@@ -54,15 +58,15 @@ export default function RegisterPage() {
   const passwordValue = watch("password");
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(250,204,21,0.1),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] px-4 py-10 sm:px-6">
+    <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.12),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(250,204,21,0.1),transparent_28%),linear-gradient(180deg,#f8fbff_0%,#eef4fb_100%)] px-4 py-6 sm:px-6 sm:py-10">
       <Card className="w-full max-w-lg border-white/80 bg-white/92 shadow-[0_32px_80px_-40px_rgba(15,23,42,0.3)] backdrop-blur">
-        <CardContent className="p-6 sm:p-8">
-          <div className="mb-8 text-center">
-            <img src={logo} alt="Woice" className="mx-auto h-14 w-auto" />
+        <CardContent className="p-5 sm:p-8">
+          <div className="mb-7 text-center">
+            <img src={logo} alt="Woice" className="mx-auto h-12 w-auto sm:h-14" />
             <p className="mt-5 text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
               Create account
             </p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-950">Start your Woice workspace</h1>
+            <h1 className="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">Start your Woice workspace</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Set up your business profile and begin collecting reviews in a few minutes.
             </p>

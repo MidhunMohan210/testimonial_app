@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
+import SettingsPage from "./pages/SettingsPage";
 import SendRequestPage from "./pages/SendRequestPage";
 import TestimonialsPage from "./pages/TestimonialsPage";
 import LandingPage from "./pages/LandingPage";
@@ -49,6 +50,7 @@ export default function App() {
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/send-request" element={<SendRequestPage />} />
+        <Route path="/settings" element={<SettingsPage />} />
       </Route>
       <Route
         path="*"

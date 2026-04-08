@@ -14,28 +14,28 @@ export default function SendRequestPage() {
       <div className="mx-auto max-w-7xl">
         <section className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.8fr)]">
           <Card className="overflow-hidden border-white/80 bg-slate-950 text-white">
-            <CardContent className="relative p-6 sm:p-8">
+            <CardContent className="relative p-5 sm:p-8">
               <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(34,197,94,0.18),transparent_26%),radial-gradient(circle_at_left,rgba(56,189,248,0.18),transparent_26%)]" />
               <div className="relative space-y-5">
                 <span className="inline-flex rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-200">
                   Collection workflow
                 </span>
                 <div className="space-y-3">
-                  <h2 className="text-3xl font-extrabold tracking-tight sm:text-4xl">
+                  <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">
                     Send more requests without cluttering the review queue.
                   </h2>
-                  <p className="max-w-2xl text-sm leading-7 text-slate-300 sm:text-base">
+                  <p className="max-w-2xl text-sm leading-6 text-slate-300 sm:text-base sm:leading-7">
                     Use WhatsApp when you want fresh customer feedback, or add verified offline testimonials manually when they already came in through another channel.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button className="gap-2 bg-white text-slate-950 hover:bg-slate-100" onClick={() => setSendOpen(true)}>
+                  <Button className="h-11 gap-2 bg-white text-slate-950 hover:bg-slate-100" onClick={() => setSendOpen(true)}>
                     <MessageCirclePlus className="h-4 w-4" />
                     Send WhatsApp request
                   </Button>
                   <Button
                     variant="outline"
-                    className="gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                    className="h-11 gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
                     onClick={() => setManualOpen(true)}
                   >
                     <PencilLine className="h-4 w-4" />

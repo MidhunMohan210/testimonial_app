@@ -31,9 +31,19 @@ export function DialogHeader({ className, ...props }) {
 }
 
 export function DialogTitle({ className, ...props }) {
-  return <h2 className={cn("text-xl font-bold", className)} {...props} />;
+  return (
+    <DialogPrimitive.Title
+      className={cn("text-xl font-bold", className)}
+      {...props}
+    />
+  );
 }
 
 export function DialogDescription({ className, ...props }) {
-  return <p className={cn("text-sm text-muted-foreground", className)} {...props} />;
+  return (
+    <DialogPrimitive.Description
+      className={cn("text-sm text-muted-foreground", className)}
+      {...props}
+    />
+  );
 }

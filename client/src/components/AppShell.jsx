@@ -7,6 +7,7 @@ import {
   Menu,
   MessagesSquare,
   Power,
+  Settings,
   X,
 } from "lucide-react";
 import logo from "../assets/logo2.svg";
@@ -29,6 +30,12 @@ const navigation = [
     description: "Review and moderate",
     icon: MessagesSquare,
   },
+  {
+    to: "/settings",
+    label: "Settings",
+    description: "Business preferences",
+    icon: Settings,
+  },
 ];
 
 const pageMeta = {
@@ -49,6 +56,12 @@ const pageMeta = {
     title: "Requests",
     description:
       "Launch new collection requests and add feedback manually from one focused page.",
+  },
+  "/settings": {
+    eyebrow: "Business configuration",
+    title: "Settings",
+    description:
+      "Manage your business profile, public page controls, and notification preferences.",
   },
 };
 
@@ -160,37 +173,39 @@ function SidebarContent({ onNavigate }) {
 // ── Mobile bottom tab bar ──────────────────────────────────────────────────────
 function BottomTabBar() {
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-40 flex h-16 items-stretch border-t border-white/10 bg-slate-950 lg:hidden">
-      {navigation.map((item) => {
-        const Icon = item.icon;
-        return (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              cn(
-                "flex flex-1 flex-col items-center justify-center gap-1 text-xs font-medium transition-colors",
-                isActive
-                  ? "text-yellow-400"
-                  : "text-slate-400 hover:text-slate-200",
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                <Icon
-                  className={cn(
-                    "h-5 w-5 transition-transform",
-                    isActive && "scale-110",
-                  )}
-                />
-                <span>{item.label}</span>
-              </>
-            )}
-          </NavLink>
-        );
-      })}
-    </nav>
+    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
+      <nav className="pointer-events-auto mx-auto flex h-14 max-w-[18.5rem] items-stretch rounded-[1.35rem] border border-slate-200/80 bg-white/92 p-1 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.32)] backdrop-blur-xl">
+        {navigation.map((item) => {
+          const Icon = item.icon;
+          return (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                cn(
+                  "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-[1rem] px-1.5 text-[10px] font-semibold transition-all duration-200",
+                  isActive
+                    ? "bg-slate-950 text-white shadow-[0_12px_24px_-18px_rgba(15,23,42,0.55)]"
+                    : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900",
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon
+                    className={cn(
+                      "h-4.5 w-4.5 transition-transform duration-200",
+                      isActive && "scale-105",
+                    )}
+                  />
+                  <span>{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          );
+        })}
+      </nav>
+    </div>
   );
 }
 
@@ -227,12 +242,12 @@ export default function AppShell() {
         </aside>
 
         {/* Content area — pb-16 reserves space for the mobile tab bar */}
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-16 lg:pb-0">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-24 lg:pb-0">
           {/* Header */}
-          <header className="sticky top-0 z-30 border-b shadow-lg py-5 border-black/[0.06] bg-white ">
-            <div className="flex items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-30 border-b border-black/[0.06] bg-white/95 py-3 shadow-lg backdrop-blur">
+            <div className="flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
               {/* Left — hamburger + page title */}
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 items-center gap-3">
                 <Button
                   variant="ghost"
                   size="icon"
@@ -241,8 +256,8 @@ export default function AppShell() {
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
-                <div>
-                  <h1 className="text-[1.1rem] font-bold leading-tight tracking-wide text-slate-950 sm:text-xl">
+                <div className="min-w-0">
+                  <h1 className="truncate text-base font-bold leading-tight tracking-wide text-slate-950 sm:text-xl">
                     {meta.title}
                   </h1>
                   <p className="hidden text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400 sm:block">
@@ -275,7 +290,7 @@ export default function AppShell() {
             </div>
           </header>
 
-          <main className="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+          <main className="min-w-0 flex-1  py-2 sm:px-6 sm:py-6 lg:px-8">
             <Outlet />
           </main>
 
@@ -293,11 +308,11 @@ export default function AppShell() {
           <button
             type="button"
             aria-label="Close sidebar"
-            className="absolute inset-0 bg-slate-950/50 backdrop-blur-sm"
+            className="absolute inset-0 bg-slate-950/42 backdrop-blur-sm animate-[sidebar-overlay-in_220ms_ease-out]"
             onClick={() => setSidebarOpen(false)}
           />
           {/* Drawer panel — slides in from left */}
-          <div className="absolute inset-y-0 left-0 flex w-[88vw] max-w-[320px] flex-col border-r border-white/10 bg-slate-950 shadow-2xl animate-in slide-in-from-left duration-200">
+          <div className="absolute inset-y-0 left-0 flex w-[84vw] max-w-[312px] flex-col border-r border-white/10 bg-slate-950 shadow-2xl animate-[sidebar-drawer-in_260ms_cubic-bezier(0.22,1,0.36,1)]">
             <div className="flex items-center justify-end px-4 py-4">
               <Button
                 variant="ghost"

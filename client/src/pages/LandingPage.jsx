@@ -1,6 +1,7 @@
 import LandingHeader from "../components/landing/LandingHeader";
 import HeroSection from "../components/landing/HeroSection";
 import WhatsAppShowcaseSection from "../components/landing/WhatsAppShowcaseSection";
+import TestimonialWidget from "../components/landing/TestimonialWidget";
 
 export default function LandingPage() {
   return (
@@ -9,6 +10,9 @@ export default function LandingPage() {
       <LandingHeader />
       <HeroSection />
       <WhatsAppShowcaseSection />
+       {/* Add widget here */}
+      <TestimonialWidget />
+      
     </main>
   );
 }

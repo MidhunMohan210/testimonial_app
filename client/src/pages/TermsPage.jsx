@@ -61,8 +61,8 @@ const sections = [
 
 function LegalSection({ title, content, list = false }) {
   return (
-    <section className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-6">
-      <h2 className="text-lg font-semibold text-slate-950">{title}</h2>
+    <section className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5 sm:p-6">
+      <h2 className="text-base font-semibold text-slate-950 sm:text-lg">{title}</h2>
       {list ? (
         <ul className="mt-3 space-y-2 text-sm leading-7 text-slate-600">
           {content.map((item) => (
@@ -93,7 +93,7 @@ export default function TermsPage() {
         <div className="mx-auto max-w-4xl">
           <Card className="border-white/80 bg-white/90 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.28)]">
             <CardHeader className="space-y-3">
-              <CardTitle className="text-3xl text-slate-950">Terms and Conditions</CardTitle>
+              <CardTitle className="text-2xl text-slate-950 sm:text-3xl">Terms and Conditions</CardTitle>
               <CardDescription className="max-w-3xl text-sm leading-7 text-slate-600">
                 These Terms explain the basic rules for using WOICE in clear, simple language.
               </CardDescription>

@@ -10,6 +10,16 @@ export const updateBusiness = async (data) => {
   return response.data;
 };
 
+export const getBusinessSettings = async () => {
+  const response = await api.get("/api/business/settings");
+  return response.data;
+};
+
+export const updateBusinessSettings = async (data) => {
+  const response = await api.put("/api/business/settings", data);
+  return response.data;
+};
+
 export const getPrivateFeedback = async () => {
   const response = await api.get("/api/feedback");
   return response.data;

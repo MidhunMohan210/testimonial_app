@@ -27,9 +27,34 @@ const businessSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+  settings: {
+    googleReviewLink: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    isPublicEnabled: {
+      type: Boolean,
+      default: true,
+    },
+    notificationsEnabled: {
+      type: Boolean,
+      default: true,
+    },
+  },
+  // Kept temporarily for backward compatibility with older documents.
   googleReviewLink: {
     type: String,
+    default: "",
     trim: true,
+  },
+  isPublicEnabled: {
+    type: Boolean,
+    default: true,
+  },
+  notificationsEnabled: {
+    type: Boolean,
+    default: true,
   },
   apiKey: {
     type: String,

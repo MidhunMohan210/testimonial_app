@@ -15,14 +15,14 @@ export default function ContactPage() {
         <div className="mx-auto max-w-4xl">
           <Card className="border-white/80 bg-white/90 shadow-[0_24px_60px_-36px_rgba(15,23,42,0.28)]">
             <CardHeader className="space-y-3 text-center sm:text-left">
-              <CardTitle className="text-3xl text-slate-950">Contact</CardTitle>
+              <CardTitle className="text-2xl text-slate-950 sm:text-3xl">Contact</CardTitle>
               <CardDescription className="max-w-2xl text-sm leading-7 text-slate-600">
                 Reach out for support, privacy-related questions, or verification inquiries about
                 Woice.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
-              <div className="space-y-5 rounded-[1.5rem] border border-slate-200/80 bg-slate-50/80 p-6">
+              <div className="space-y-5 rounded-[1.5rem] border border-slate-200/80 bg-slate-50/80 p-5 sm:p-6">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-500">
                     Owner
@@ -48,7 +48,7 @@ export default function ContactPage() {
                 </div>
               </div>
 
-              <form className="space-y-4 rounded-[1.5rem] border border-slate-200/80 bg-white p-6">
+              <form className="space-y-4 rounded-[1.5rem] border border-slate-200/80 bg-white p-5 sm:p-6">
                 <div className="space-y-2">
                   <Label htmlFor="contact-name">Name</Label>
                   <Input id="contact-name" placeholder="Your name" />

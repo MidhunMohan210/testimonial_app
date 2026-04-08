@@ -1,11 +1,12 @@
 import Business from "../models/Business.js";
 import PrivateFeedback from "../models/PrivateFeedback.js";
 import Testimonial from "../models/Testimonial.js";
+import { getBusinessSettings } from "../utils/businessSettings.js";
 import { createHttpError } from "../utils/httpError.js";
 
 export const getBusinessBySlug = async (req, res) => {
   const business = await Business.findOne({ slug: req.params.slug }).select(
-    "businessName googleReviewLink",
+    "businessName settings googleReviewLink",
   );
 
   if (!business) {
@@ -14,7 +15,7 @@ export const getBusinessBySlug = async (req, res) => {
 
   return res.json({
     businessName: business.businessName,
-    googleReviewLink: business.googleReviewLink || "",
+    googleReviewLink: getBusinessSettings(business).googleReviewLink,
   });
 };
 

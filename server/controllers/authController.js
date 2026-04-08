@@ -3,6 +3,7 @@ import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Business from "../models/Business.js";
+import { toBusinessResponse } from "../utils/businessSettings.js";
 import { createHttpError } from "../utils/httpError.js";
 
 const isEmail = (value) => /\S+@\S+\.\S+/.test(value);
@@ -18,13 +19,7 @@ const sanitizeUser = (user) => ({
   createdAt: user.createdAt,
 });
 
-const sanitizeBusiness = (business) => ({
-  _id: business._id,
-  businessName: business.businessName,
-  whatsappBusinessAccountId: business.whatsappBusinessAccountId,
-  whatsappPhoneNumberId: business.whatsappPhoneNumberId,
-  createdAt: business.createdAt,
-});
+const sanitizeBusiness = (business) => toBusinessResponse(business);
 
 const signToken = (userId) =>
   jwt.sign({ userId }, process.env.JWT_SECRET, {

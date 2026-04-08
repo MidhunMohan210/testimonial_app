@@ -115,11 +115,11 @@ function PaginationControls({ currentPage, totalPages, onPageChange }) {
           )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:w-auto">
           <Button
             type="button"
             variant="outline"
-            className="h-10 rounded-full border-slate-200 bg-white px-4 font-semibold text-slate-700 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.18)] hover:bg-slate-50"
+            className="h-10 flex-1 rounded-full border-slate-200 bg-white px-4 font-semibold text-slate-700 shadow-[0_10px_24px_-18px_rgba(15,23,42,0.18)] hover:bg-slate-50 sm:flex-none"
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
           >
@@ -127,7 +127,7 @@ function PaginationControls({ currentPage, totalPages, onPageChange }) {
           </Button>
           <Button
             type="button"
-            className="h-10 rounded-full bg-slate-900 px-4 font-semibold text-white shadow-[0_16px_30px_-18px_rgba(15,23,42,0.6)] hover:bg-slate-800"
+            className="h-10 flex-1 rounded-full bg-slate-900 px-4 font-semibold text-white shadow-[0_16px_30px_-18px_rgba(15,23,42,0.6)] hover:bg-slate-800 sm:flex-none"
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
           >
@@ -150,10 +150,10 @@ function PrivateFeedbackCard({ feedback, onOpen }) {
   );
 
   return (
-    <Card className="rounded-xl border-slate-200 bg-white shadow-[0_18px_50px_-40px_rgba(15,23,42,0.32)] transition hover:-translate-y-0.5 hover:border-slate-300">
-      <CardHeader className="flex flex-row items-start justify-between gap-4 pb-3">
+      <Card className="rounded-xl border-slate-200 bg-white shadow-[0_18px_50px_-40px_rgba(15,23,42,0.32)] transition hover:-translate-y-0.5 hover:border-slate-300">
+      <CardHeader className="flex flex-col items-start justify-between gap-3 pb-3 sm:flex-row">
         <div>
-          <CardTitle className="text-lg text-slate-950">
+          <CardTitle className="text-base text-slate-950 sm:text-lg">
             {feedback.customerName || "Anonymous customer"}
           </CardTitle>
           <p className="mt-1 text-sm text-slate-500">{createdDate}</p>
@@ -333,14 +333,14 @@ export default function TestimonialsPage() {
 
   return (
     <>
-      <div className="mx-auto max-w-7xl">
-        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)]">
+      <div className="mx-auto max-w-7xl px-3">
+        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Testimonials
               </span>
-              <h2 className="mt-4 text-xl font-bold tracking-tight text-slate-950">
+              <h2 className="mt-4 text-lg font-bold tracking-tight text-slate-950 sm:text-xl">
                 Manage every customer quote in one place.
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
@@ -349,7 +349,7 @@ export default function TestimonialsPage() {
               </p>
             </div>
             <Button
-              className="rounded-xl px-5"
+              className="w-full rounded-xl px-5 sm:w-auto"
               onClick={() => setManualOpen(true)}
             >
               Add testimonial
@@ -359,10 +359,10 @@ export default function TestimonialsPage() {
 
         <section>
           <Tabs value={activeStatus} onValueChange={setActiveStatus}>
-            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)]">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)]">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h3 className="text-lg font-semibold tracking-tight text-slate-950">
+                  <h3 className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
                     Moderation queue
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
@@ -489,7 +489,7 @@ export default function TestimonialsPage() {
           }
         }}
       >
-        <DialogContent className="rounded-xl sm:max-w-xl">
+        <DialogContent className="flex max-h-[min(78vh,42rem)] flex-col rounded-xl sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>
               {selectedEntry?.customerName || "Anonymous customer"}
@@ -506,12 +506,14 @@ export default function TestimonialsPage() {
                 : ""}
             </DialogDescription>
           </DialogHeader>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-            <p className="text-sm leading-7 text-slate-700">
+          <div className="min-h-0 overflow-y-auto">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+              <p className="break-words whitespace-pre-wrap text-sm leading-7 text-slate-700 [overflow-wrap:anywhere]">
               {selectedEntry?.feedbackText ||
                 selectedEntry?.testimonialText ||
                 "No feedback text provided."}
-            </p>
+              </p>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

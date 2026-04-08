@@ -2,6 +2,7 @@ import axios from "axios";
 import Business from "../models/Business.js";
 import WhatsappRequest from "../models/WhatsappRequest.js";
 import WhatsAppAccount from "../models/WhatsAppAccount.js";
+import { toBusinessResponse } from "../utils/businessSettings.js";
 import { createHttpError } from "../utils/httpError.js";
 
 const formatPhone = (phone) => String(phone).replace(/\s+/g, "");
@@ -156,13 +157,7 @@ export const saveEmbeddedSignupConnection = async (req, res) => {
 
   return res.json({
     message: "WhatsApp connection saved successfully",
-    business: {
-      _id: business._id,
-      businessName: business.businessName,
-      whatsappBusinessAccountId: business.whatsappBusinessAccountId,
-      whatsappPhoneNumberId: business.whatsappPhoneNumberId,
-      createdAt: business.createdAt,
-    },
+    business: toBusinessResponse(business),
   });
 };
 
