@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import logo from "../../assets/logo.svg";
+import logo from "../../assets/logo2.svg";
 
 function NavLink({ children, to = "#" }) {
   return (
@@ -31,7 +31,7 @@ export default function LandingHeader() {
     <header className="sticky top-0 z-50 px-4 pt-4 sm:px-6 lg:px-8 lg:pt-6">
       <div
         className={[
-          "mx-auto flex max-w-[650px] items-center justify-between gap-6 rounded-full px-5 py-2 sm:px-3 sm:pl-5",
+          "mx-auto flex max-w-[650px] items-center justify-between gap-6 rounded-full px-5 py- sm:px-3 sm:pl-5",
           "transition-all duration-300 ease-out",
           isScrolled
             ? "translate-y-0 border border-[#f2f2f2] bg-[#f2f2f2]/70 shadow-[0_22px_55px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl"
@@ -44,7 +44,7 @@ export default function LandingHeader() {
             alt="Woice"
             className={[
               "transition-all duration-300 ease-out",
-              isScrolled ? "w-[92px]" : "w-[100px]",
+              isScrolled ? "w-[92px]" : "w-[95px]",
             ].join(" ")}
           />
         </Link>
