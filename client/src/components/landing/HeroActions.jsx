@@ -8,10 +8,10 @@ export default function HeroActions() {
     <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
       <Link
         to="/register"
-        className="inline-flex h-16 min-w-[13rem] items-center justify-center rounded-full bg-black px-8 text-xl font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-900"
+        className="inline-flex h-16 min-w-[13rem] items-center justify-center rounded-full bg-[#191B1D] hover:bg-[#31445a] px-8 text-xl font-semibold text-white transition hover:-translate-y-0.5 hover:bg-slate-900"
       >
-        Try It on WhatsApp
-        <FaWhatsapp className="ml-2 h-6 w-6" />
+       Start Free
+
       </Link>
       <Link
         to="/login"

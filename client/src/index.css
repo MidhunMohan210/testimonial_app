@@ -77,6 +77,24 @@
   }
 }
 
+@keyframes trust-badge-float {
+  0%,
+  100% {
+    transform: translateY(0) scale(1);
+    box-shadow: 0 18px 40px -28px rgba(99, 102, 241, 0.4);
+  }
+
+  50% {
+    transform: translateY(-3px) scale(1.01);
+    box-shadow: 0 24px 48px -28px rgba(99, 102, 241, 0.5);
+  }
+}
+
+.woice-trust-badge {
+  animation: trust-badge-float 3.6s ease-in-out infinite;
+  will-change: transform;
+}
+
 .public-review-marquee {
   animation: public-review-marquee 32s linear infinite;
   will-change: transform;
