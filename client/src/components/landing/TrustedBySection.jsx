@@ -18,15 +18,19 @@ const audience = [
 
 export default function TrustedBySection() {
   return (
-    <div className="mt-20 flex w-full max-w-6xl flex-col items-center">
-      <p className="text-sm font-medium text-slate-400 sm:text-base">
-        Built for service businesses that rely on trust
+    <div className="mt-20 flex w-full max-w-5xl flex-col items-center text-center">
+      
+      {/* Trust line */}
+      <p className="text-sm font-medium text-slate-500 sm:text-base">
+        Trusted by service businesses that rely on trust
       </p>
+
+      {/* Audience chips */}
       <div className="mt-6 flex w-full flex-wrap items-center justify-center gap-3 sm:gap-4">
         {audience.map(({ name, icon: Icon }) => (
           <span
             key={name}
-            className="inline-flex items-center gap-2 rounded-full bg-white/75 px-4 py-2 text-sm font-semibold text-slate-500 shadow-[0_10px_30px_-24px_rgba(15,23,42,0.3)] backdrop-blur"
+            className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 transition hover:-translate-y-0.5 hover:border-slate-300"
           >
             <Icon className="h-4 w-4 text-slate-400" />
             {name}

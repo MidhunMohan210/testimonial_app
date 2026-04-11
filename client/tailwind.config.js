@@ -41,6 +41,7 @@ export default {
       backgroundImage: {
         grid: "linear-gradient(to right, rgba(15,23,42,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(15,23,42,0.06) 1px, transparent 1px)",
       },
+      
     },
   },
   plugins: [],

@@ -6,13 +6,16 @@ import TestimonialWidget from "../components/landing/TestimonialWidget";
 export default function LandingPage() {
   return (
     <main className="min-h-screen bg-white">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[34rem] bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.95),rgba(247,247,245,0.45)_58%,transparent_75%)]" />
-      <LandingHeader />
-      <HeroSection />
+      <div className="relative isolate overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-[44rem] bg-[radial-gradient(70%_58%_at_50%_0%,rgba(254,200,154,0.22),rgba(254,200,154,0.08)_45%,rgba(255,255,255,0)_78%)]" />
+        <div className="relative z-10">
+          <LandingHeader />
+          <HeroSection />
+        </div>
+      </div>
       <WhatsAppShowcaseSection />
-       {/* Add widget here */}
+      {/* Add widget here */}
       <TestimonialWidget />
-      
     </main>
   );
 }
