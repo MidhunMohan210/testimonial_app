@@ -1,5 +1,6 @@
 import LandingHeader from "../components/landing/LandingHeader";
 import HeroSection from "../components/landing/HeroSection";
+import HowItWorksSection from "../components/landing/HowItWorksSection";
 import WhatsAppShowcaseSection from "../components/landing/WhatsAppShowcaseSection";
 import TestimonialWidget from "../components/landing/TestimonialWidget";
 
@@ -13,6 +14,7 @@ export default function LandingPage() {
           <HeroSection />
         </div>
       </div>
+      <HowItWorksSection />
 
       <WhatsAppShowcaseSection />
       {/* Add widget here */}

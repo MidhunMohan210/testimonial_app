@@ -31,7 +31,7 @@ export default function LandingHeader() {
     <header className="fixed inset-x-0 top-0 z-50 px-2 pt-2 sm:px-6 sm:pt-4 lg:px-8 lg:pt-6">
       <div
         className={[
-          "mx-auto flex max-w-[650px] items-center justify-between gap-2 rounded-full px-3 py-1.5 sm:gap-6 sm:px-3 sm:py-2 sm:pl-5",
+          "mx-auto flex max-w-[650px] items-center justify-between gap-2 rounded-full px-3 py-1 sm:gap-6 sm:px-3  sm:pl-5",
           "transition-all duration-300 ease-out",
           isScrolled
             ? "translate-y-0 border border-[#f2f2f2] bg-[#f2f2f2]/70 shadow-[0_22px_55px_-30px_rgba(15,23,42,0.35)] backdrop-blur-xl"

@@ -1,347 +1,541 @@
-import {
-  CheckCheck,
-  Filter,
-  LayoutPanelTop,
-  Link2,
-  MessageCircleHeart,
-  MonitorSmartphone,
-  Star,
-} from "lucide-react";
-import { motion, useInView, useReducedMotion } from "framer-motion";
-import { useRef } from "react";
+"use client";
 
-const steps = [
-  {
-    title: "Share your review link",
-    description: "Send one short link right after a service or purchase.",
-    icon: Link2,
-    cardClass: "bg-gradient-to-br from-[#f8f5ff]/70 via-[#f3f0ff]/65 to-[#ede8ff]/70 border-[#ddd4ff]/80",
-    iconClass: "bg-[#cbc0ff] text-[#36216d]",
-    markerClass: "bg-[#cdc2ff] ring-[#e9e2ff]",
-    side: "left",
-  },
-  {
-    title: "Collect customer feedback",
-    description: "Customers submit a quick rating and message.",
-    icon: MessageCircleHeart,
-    cardClass: "bg-gradient-to-br from-[#ebfbf9]/75 via-[#e2f7f2]/70 to-[#d8f2eb]/75 border-[#bae7dc]/80",
-    iconClass: "bg-[#a8e7d8] text-[#0b4a3d]",
-    markerClass: "bg-[#96dccb] ring-[#d8f2eb]",
-    side: "right",
-  },
-  {
-    title: "Filter responses intelligently",
-    description: "Woice auto-splits 1-3 stars private and 4-5 stars public.",
-    icon: Filter,
-    cardClass: "bg-gradient-to-br from-[#f2fff8]/85 via-[#e8fff3]/80 to-[#deffe8]/85 border-[#8ee4b3]",
-    iconClass: "bg-[#66d992] text-[#0e5031]",
-    markerClass: "bg-[#53cf84] ring-[#d8f9e7]",
-    focus: true,
-    side: "left",
-  },
-  {
-    title: "Approve and manage testimonials",
-    description: "Approve or hold testimonials inside your dashboard queue.",
-    icon: LayoutPanelTop,
-    cardClass: "bg-gradient-to-br from-[#fff6eb]/75 via-[#fff0e0]/70 to-[#ffe9d2]/75 border-[#ffd5ad]/85",
-    iconClass: "bg-[#ffc896] text-[#6a3212]",
-    markerClass: "bg-[#ffc389] ring-[#ffe7cd]",
-    side: "right",
-  },
-  {
-    title: "Showcase on your website",
-    description: "Publish approved feedback to your page or embeddable widget.",
-    icon: MonitorSmartphone,
-    cardClass: "bg-gradient-to-br from-[#fff1f2]/75 via-[#ffe9ed]/70 to-[#ffe1e8]/75 border-[#ffc9d5]/85",
-    iconClass: "bg-[#ffb1c4] text-[#6e1d35]",
-    markerClass: "bg-[#ffadc2] ring-[#ffe1ea]",
-    side: "left",
-  },
-];
+import { useEffect, useRef } from "react";
+import { Star, CheckCheck, Filter } from "lucide-react";
+import { motion, useAnimationControls, useInView } from "framer-motion";
 
-function LinkStepVisual() {
+// ─── Mini UI components ────────────────────────────────────────────────────
+
+function CollectMiniUi() {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-2xl border border-white/75 bg-white/70 px-3 py-2">
-      <span className="rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-semibold text-white">
-        woice.it/review/cliq
-      </span>
-      <span className="rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700">
-        Copied
-      </span>
-    </div>
-  );
-}
-
-function CollectStepVisual() {
-  return (
-    <div className="rounded-2xl border border-white/75 bg-white/70 px-3 py-2">
-      <div className="flex items-center gap-1">
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.45),0_8px_18px_-14px_rgba(15,23,42,0.28)]">
+      <div className="flex items-center gap-1 mb-2">
         {Array.from({ length: 5 }).map((_, i) => (
-          <Star
-            key={i}
-            className={`h-3.5 w-3.5 ${
-              i < 4 ? "fill-amber-400 text-amber-400" : "text-slate-300"
-            }`}
-          />
+          <Star key={i} className={`h-3.5 w-3.5 ${i < 4 ? "fill-amber-400 text-amber-400" : "text-slate-200 fill-slate-200"}`} />
         ))}
       </div>
-      <p className="mt-1 text-[11px] text-slate-600">
-        "Fast reply and smooth experience."
-      </p>
+      <p className="text-[11px] italic text-slate-400 mb-2">"Fast reply, smooth experience."</p>
+      <div className="border-t border-slate-100 pt-2 flex items-center gap-1.5">
+        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-violet-100 text-[8px] font-semibold text-violet-700 flex-shrink-0">JD</span>
+        <span className="text-[10px] text-slate-400">James D. · just now</span>
+      </div>
     </div>
   );
 }
 
-function FilterStepVisual() {
+function FilterMiniUi() {
   return (
-    <div className="rounded-2xl border border-emerald-200 bg-white/90 p-3 shadow-[0_18px_36px_-24px_rgba(16,185,129,0.45)]">
-      <div className="mb-2 flex items-center justify-center">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.13em] text-emerald-800">
-          <Filter className="h-3 w-3" />
-          Smart Split
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.45),0_8px_18px_-14px_rgba(15,23,42,0.28)]">
+      <div className="flex items-center justify-center mb-2">
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+          <Filter className="h-2.5 w-2.5" /> Smart split
         </span>
       </div>
-      <div className="grid gap-2 sm:grid-cols-2">
-        <div className="rounded-xl border border-rose-200 bg-rose-50 p-2.5">
-          <div className="flex items-center gap-0.5">
+      <div className="grid grid-cols-2 gap-1.5">
+        <div className="rounded-lg bg-rose-50 border border-rose-100 p-2">
+          <div className="flex gap-0.5 mb-1">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Star
-                key={i}
-                className={`h-3 w-3 ${
-                  i < 2 ? "fill-rose-400 text-rose-400" : "text-rose-200"
-                }`}
-              />
+              <Star key={i} className={`h-2.5 w-2.5 ${i < 2 ? "fill-rose-400 text-rose-400" : "fill-rose-200 text-rose-200"}`} />
             ))}
           </div>
-          <p className="mt-1 text-[10px] font-semibold text-rose-700">1-3 stars</p>
-          <p className="mt-1 rounded-full bg-rose-100 px-2 py-1 text-[10px] font-semibold text-rose-700">
-            Private feedback
-          </p>
+          <p className="text-[9px] font-semibold text-rose-700 mb-1">1–3 stars</p>
+          <span className="rounded-full bg-rose-100 px-1.5 py-0.5 text-[9px] font-semibold text-rose-700">Private</span>
         </div>
-        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-2.5">
-          <div className="flex items-center gap-0.5">
+        <div className="rounded-lg bg-emerald-50 border border-emerald-100 p-2">
+          <div className="flex gap-0.5 mb-1">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Star key={i} className="h-3 w-3 fill-emerald-400 text-emerald-400" />
+              <Star key={i} className="h-2.5 w-2.5 fill-emerald-400 text-emerald-400" />
             ))}
           </div>
-          <p className="mt-1 text-[10px] font-semibold text-emerald-700">4-5 stars</p>
-          <p className="mt-1 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-semibold text-emerald-700">
-            Public testimonial
-          </p>
+          <p className="text-[9px] font-semibold text-emerald-700 mb-1">4–5 stars</p>
+          <span className="rounded-full bg-emerald-100 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">Public</span>
         </div>
       </div>
     </div>
   );
 }
 
-function ApproveStepVisual() {
+function PublishMiniUi() {
   return (
-    <div className="rounded-2xl border border-white/75 bg-white/70 p-2.5">
-      <div className="flex items-center justify-between rounded-xl bg-slate-100 px-2.5 py-2 text-[11px]">
-        <span className="text-slate-600">Great communication</span>
-        <span className="rounded-full bg-emerald-100 px-2 py-0.5 font-semibold text-emerald-700">
-          Approve
+    <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.45),0_8px_18px_-14px_rgba(15,23,42,0.28)]">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[11px] font-semibold text-slate-700">Live widget</span>
+        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[9px] font-semibold text-emerald-700">
+          <CheckCheck className="h-2.5 w-2.5" /> Published
         </span>
       </div>
-    </div>
-  );
-}
-
-function ShowcaseStepVisual() {
-  return (
-    <div className="rounded-2xl border border-white/75 bg-white/70 p-2.5">
-      <div className="rounded-xl border border-slate-200 bg-white px-2.5 py-2">
-        <div className="flex items-center justify-between">
-          <p className="text-[11px] font-semibold text-slate-700">Live widget</p>
-          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-700">
-            <CheckCheck className="h-3 w-3" />
-            Published
-          </span>
-        </div>
-        <div className="mt-1 flex items-center gap-0.5">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Star key={i} className="h-3 w-3 fill-amber-400 text-amber-400" />
-          ))}
-        </div>
+      <div className="flex items-center gap-0.5 mb-1">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+        ))}
       </div>
+      <p className="text-[10px] text-slate-400">4.9 · 128 reviews</p>
     </div>
   );
 }
 
-const visuals = [
-  <LinkStepVisual key="link" />,
-  <CollectStepVisual key="collect" />,
-  <FilterStepVisual key="filter" />,
-  <ApproveStepVisual key="approve" />,
-  <ShowcaseStepVisual key="showcase" />,
+// ─── Step data ─────────────────────────────────────────────────────────────
+
+const CARD_W = 208;
+
+const STEPS = [
+  {
+    num: "1", title: "Collect",
+    desc: "Customers submit a star rating and a short message via your link.",
+    ui: <CollectMiniUi />,
+    px: 8, py: 78, labelPos: "below", labelAlign: "left",
+    mSide: "right",
+  },
+  {
+    num: "2", title: "Filter",
+    desc: "1–3 stars stay private. 4–5 stars go public automatically.",
+    ui: <FilterMiniUi />,
+    px: 40, py: 50, labelPos: "above", labelAlign: "center",
+    mSide: "left",
+  },
+  {
+    num: "3", title: "Publish",
+    desc: "Approved testimonials go live on your site or embeddable widget.",
+    ui: <PublishMiniUi />,
+    px: 90, py: 16, labelPos: "above", labelAlign: "left",
+    mSide: "right",
+  },
 ];
 
-function StepCard({ step, index, reduceMotion }) {
-  const isRight = step.side === "right";
-  const Icon = step.icon;
+// smooth easing used everywhere
+const EASE = [0.16, 1, 0.3, 1];
+
+// ─── Mobile: vertical wave ─────────────────────────────────────────────────
+
+function MobileWave() {
+  const containerRef = useRef(null);
+  const svgRef       = useRef(null);
+  const rowRefs      = useRef([]);
+  const isInView     = useInView(containerRef, { once: true, amount: 0.15 });
+
+  // one control per segment + dot
+  const pathCtrls = [useAnimationControls(), useAnimationControls()];
+  const dotCtrls  = [useAnimationControls(), useAnimationControls(), useAnimationControls()];
+  const numCtrls  = [useAnimationControls(), useAnimationControls(), useAnimationControls()];
+  const cardCtrls = [useAnimationControls(), useAnimationControls(), useAnimationControls()];
+
+  // draw geometry
+  useEffect(() => {
+    function draw() {
+      const container = containerRef.current;
+      const svg       = svgRef.current;
+      if (!container || !svg) return;
+
+      const cRect = container.getBoundingClientRect();
+      const W = cRect.width;
+      const H = cRect.height;
+
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+      svg.style.width  = W + "px";
+      svg.style.height = H + "px";
+
+      const CENTER = W / 2;
+      const SWING  = W * 0.24;
+
+      const pts = rowRefs.current.map((rowEl, i) => {
+        if (!rowEl) return { x: CENTER, y: H / 2 };
+        const rRect = rowEl.getBoundingClientRect();
+        const y = rRect.top - cRect.top + rRect.height * 0.15;
+        const x = STEPS[i].mSide === "right" ? CENTER - SWING : CENTER + SWING;
+        return { x, y };
+      });
+
+      // two separate path segments so we can animate each independently
+      const seg = (a, b) => {
+        const mid = (a.y + b.y) / 2;
+        return `M ${a.x} ${a.y} C ${a.x} ${mid}, ${b.x} ${mid}, ${b.x} ${b.y}`;
+      };
+      svg.querySelector("#mp-12")?.setAttribute("d", seg(pts[0], pts[1]));
+      svg.querySelector("#mp-23")?.setAttribute("d", seg(pts[1], pts[2]));
+
+      svg.querySelectorAll("[data-mdot]").forEach((el, i) => {
+        el.setAttribute("cx", pts[i].x);
+        el.setAttribute("cy", pts[i].y);
+      });
+      svg.querySelectorAll("[data-mnum]").forEach((el, i) => {
+        const off = STEPS[i].mSide === "right" ? 10 : -52;
+        el.setAttribute("x", pts[i].x + off);
+        el.setAttribute("y", pts[i].y + 58);
+      });
+    }
+
+    draw();
+    window.addEventListener("resize", draw);
+    return () => window.removeEventListener("resize", draw);
+  }, []);
+
+  // animate once in-view
+  useEffect(() => {
+    if (!isInView) return;
+
+    const run = async () => {
+      // reset
+      pathCtrls.forEach(c => c.set({ pathLength: 0, opacity: 0 }));
+      dotCtrls.forEach(c  => c.set({ scale: 0, opacity: 0 }));
+      numCtrls.forEach(c  => c.set({ opacity: 0, y: 8 }));
+      cardCtrls.forEach(c => c.set({ opacity: 0, y: 18 }));
+
+      // step 0 card + dot together
+      await Promise.all([
+        dotCtrls[0].start({ scale: 1, opacity: 1, transition: { duration: 0.4, ease: EASE } }),
+        cardCtrls[0].start({ opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } }),
+        numCtrls[0].start({ opacity: 0.3, y: 0, transition: { duration: 0.45, ease: EASE } }),
+      ]);
+
+      // draw seg 1 while step 1 card fades in slightly behind
+      await Promise.all([
+        pathCtrls[0].start({ pathLength: 1, opacity: 0.85, transition: { duration: 0.8, ease: EASE } }),
+        new Promise(r => setTimeout(() => {
+          Promise.all([
+            dotCtrls[1].start({ scale: 1, opacity: 1, transition: { duration: 0.35, ease: EASE } }),
+            numCtrls[1].start({ opacity: 0.3, y: 0, transition: { duration: 0.35, ease: EASE } }),
+          ]).then(r);
+        }, 600)),
+      ]);
+
+      cardCtrls[1].start({ opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } });
+
+      // draw seg 2
+      await Promise.all([
+        pathCtrls[1].start({ pathLength: 1, opacity: 0.85, transition: { duration: 0.75, ease: EASE } }),
+        new Promise(r => setTimeout(() => {
+          Promise.all([
+            dotCtrls[2].start({ scale: 1, opacity: 1, transition: { duration: 0.35, ease: EASE } }),
+            numCtrls[2].start({ opacity: 0.3, y: 0, transition: { duration: 0.35, ease: EASE } }),
+          ]).then(r);
+        }, 580)),
+      ]);
+
+      cardCtrls[2].start({ opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } });
+    };
+
+    run();
+  }, [isInView]);
 
   return (
-    <motion.li
-      className="relative"
-      variants={{
-        hidden: { opacity: 0, y: reduceMotion ? 0 : 24 },
-        show: {
-          opacity: 1,
-          y: 0,
-          transition: {
-            duration: 0.58,
-            ease: [0.22, 1, 0.36, 1],
-          },
-        },
-      }}
-    >
-      <motion.span
-        className={`absolute left-[1.45rem] top-14 z-20 h-4 w-4 rounded-full ring-8 lg:left-1/2 lg:-translate-x-1/2 ${step.markerClass}`}
-        aria-hidden="true"
-        animate={
-          reduceMotion
-            ? undefined
-            : {
-                y: [0, -2, 0],
-                opacity: [0.9, 1, 0.9],
-              }
-        }
-        transition={{ duration: 2.8, repeat: Infinity, ease: "easeInOut", delay: index * 0.15 }}
-      />
-
-      <article
-        className={`ml-12 rounded-[1.85rem] border px-6 py-6 shadow-[0_18px_42px_-32px_rgba(15,23,42,0.4)] backdrop-blur-[2px] sm:px-7 sm:py-7 lg:ml-0 lg:max-w-[31rem] ${
-          isRight ? "lg:ml-auto lg:mr-12" : "lg:mr-auto lg:ml-12"
-        } ${step.cardClass} ${
-          step.focus
-            ? "ring-1 ring-[#7dd7a4]/60 shadow-[0_30px_58px_-34px_rgba(16,185,129,0.48)] lg:scale-[1.035]"
-            : ""
-        }`}
+    <div ref={containerRef} className="relative w-full">
+      <svg
+        ref={svgRef}
+        className="pointer-events-none absolute inset-0 z-10"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <div className="flex items-center justify-between gap-4">
-          <p className="inline-flex rounded-full bg-white/75 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-600">
-            Step {index + 1}
-          </p>
-          <motion.span
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl shadow-[0_12px_24px_-18px_rgba(15,23,42,0.48)] ${step.iconClass}`}
-            animate={
-              reduceMotion
-                ? undefined
-                : { rotate: [0, -3, 0, 3, 0], y: [0, -1, 0] }
-            }
-            transition={{ duration: 4.5, repeat: Infinity, ease: "easeInOut" }}
-          >
-            <Icon className="h-4 w-4" />
-          </motion.span>
-        </div>
+        <defs>
+          <linearGradient id="mobileCurveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fdba74" stopOpacity="0.72" />
+            <stop offset="55%" stopColor="#f97316" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#c2410c" stopOpacity="1" />
+          </linearGradient>
+          <filter id="mobileCurveGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feDropShadow dx="0" dy="0" stdDeviation="2.2" floodColor="#ea580c" floodOpacity="0.22" />
+            <feGaussianBlur stdDeviation="3.2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <motion.path id="mp-12" stroke="url(#mobileCurveGradient)" strokeWidth="3.5" strokeLinecap="round" filter="url(#mobileCurveGlow)"
+          initial={{ pathLength: 0, opacity: 0 }} animate={pathCtrls[0]} />
+        <motion.path id="mp-23" stroke="url(#mobileCurveGradient)" strokeWidth="3.5" strokeLinecap="round" filter="url(#mobileCurveGlow)"
+          initial={{ pathLength: 0, opacity: 0 }} animate={pathCtrls[1]} />
+        {STEPS.map((_, i) => (
+          <motion.circle key={i} data-mdot={i} r="7" fill="#c0bab5"
+            initial={{ scale: 0, opacity: 0 }} animate={dotCtrls[i]}
+            style={{ transformOrigin: "center" }} />
+        ))}
+        {STEPS.map((s, i) => (
+          <motion.text key={i} data-mnum={i} x="0" y="0"
+            fontSize="72" fontWeight="700" fill="#758A93" fontFamily="inherit"
+            initial={{ opacity: 0, y: 8 }} animate={numCtrls[i]}>
+            {s.num}
+          </motion.text>
+        ))}
+      </svg>
 
-        <h3 className="mt-3 text-xl font-semibold leading-tight text-slate-900">
-          {step.title}
-        </h3>
-        <p
-          className={`mt-1.5 text-sm leading-relaxed sm:text-[0.95rem] ${
-            step.focus ? "text-slate-700" : "text-slate-600"
-          }`}
+      {STEPS.map((s, i) => (
+        <motion.div
+          key={i}
+          ref={(el) => (rowRefs.current[i] = el)}
+          className="flex items-start gap-3 pb-12 last:pb-0"
+          initial={{ opacity: 0, y: 18 }}
+          animate={cardCtrls[i]}
         >
-          {step.description}
-        </p>
-        <div className="mt-3.5">{visuals[index]}</div>
-      </article>
-    </motion.li>
+          <div className="flex-1">
+            {s.mSide === "left" && (
+              <div className="pt-1">
+                <p className="text-sm font-semibold text-slate-900 mb-1">{s.title}</p>
+                <p className="text-[11px] leading-relaxed text-slate-500 mb-2.5">{s.desc}</p>
+                {s.ui}
+              </div>
+            )}
+          </div>
+          <div className="flex-shrink-0" style={{ width: "44px" }} />
+          <div className="flex-1">
+            {s.mSide === "right" && (
+              <div className="pt-1">
+                <p className="text-sm font-semibold text-slate-900 mb-1">{s.title}</p>
+                <p className="text-[11px] leading-relaxed text-slate-500 mb-2.5">{s.desc}</p>
+                {s.ui}
+              </div>
+            )}
+          </div>
+        </motion.div>
+      ))}
+    </div>
   );
 }
 
-export default function HowItWorksSection() {
-  const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { once: true, amount: 0.15 });
-  const reduceMotion = useReducedMotion();
+// ─── Desktop wave panel ────────────────────────────────────────────────────
+
+function DesktopWave() {
+  const svgRef   = useRef(null);
+  const panelRef = useRef(null);
+  const isInView = useInView(panelRef, { once: true, amount: 0.25 });
+  const ranRef   = useRef(false);
+
+  const path12Ctrl = useAnimationControls();
+  const path23Ctrl = useAnimationControls();
+  const dotCtrls   = [useAnimationControls(), useAnimationControls(), useAnimationControls()];
+  const numCtrls   = [useAnimationControls(), useAnimationControls(), useAnimationControls()];
+  const lblCtrls   = [useAnimationControls(), useAnimationControls(), useAnimationControls()];
+
+  useEffect(() => {
+    function draw() {
+      const svg   = svgRef.current;
+      const panel = panelRef.current;
+      if (!svg || !panel) return;
+
+      const { width: W, height: H } = panel.getBoundingClientRect();
+      svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+      svg.style.width  = W + "px";
+      svg.style.height = H + "px";
+
+      const pts = STEPS.map((s) => ({ x: (s.px / 100) * W, y: (s.py / 100) * H }));
+
+      const seg = (a, b) => {
+        const mx = (a.x + b.x) / 2;
+        return `M ${a.x} ${a.y} C ${mx} ${a.y}, ${mx} ${b.y}, ${b.x} ${b.y}`;
+      };
+      svg.querySelector("#wv-12")?.setAttribute("d", seg(pts[0], pts[1]));
+      svg.querySelector("#wv-23")?.setAttribute("d", seg(pts[1], pts[2]));
+
+      svg.querySelectorAll("[data-dot]").forEach((el, i) => {
+        el.setAttribute("cx", pts[i].x);
+        el.setAttribute("cy", pts[i].y);
+      });
+      svg.querySelectorAll("[data-stepnum]").forEach((el, i) => {
+        el.setAttribute("x", pts[i].x + 14);
+        el.setAttribute("y", pts[i].y + 36);
+      });
+
+      STEPS.forEach((s, i) => {
+        const lbl = panel.querySelector(`[data-label="${i}"]`);
+        if (!lbl) return;
+        const { x, y } = pts[i];
+        if (s.labelAlign === "left")   lbl.style.left = x + "px";
+        if (s.labelAlign === "center") lbl.style.left = x - CARD_W / 2 + "px";
+        if (s.labelAlign === "right")  lbl.style.left = x - CARD_W + "px";
+        if (s.labelPos === "below") { lbl.style.top = y + 18 + "px"; lbl.style.bottom = ""; }
+        else { lbl.style.top = ""; lbl.style.bottom = H - y + 18 + "px"; }
+      });
+    }
+
+    draw();
+    window.addEventListener("resize", draw);
+    return () => window.removeEventListener("resize", draw);
+  }, []);
+
+  // reset on mount
+  useEffect(() => {
+    path12Ctrl.set({ pathLength: 0, opacity: 0 });
+    path23Ctrl.set({ pathLength: 0, opacity: 0 });
+    dotCtrls.forEach(c  => c.set({ scale: 0, opacity: 0 }));
+    numCtrls.forEach(c  => c.set({ opacity: 0, y: 10 }));
+    lblCtrls.forEach(c  => c.set({ opacity: 0, y: 22 }));
+  }, []);
+
+  // trigger once in view
+  useEffect(() => {
+    if (!isInView || ranRef.current) return;
+    ranRef.current = true;
+
+    const run = async () => {
+      // dot 0 + label 0 together — slightly staggered
+      await Promise.all([
+        dotCtrls[0].start({ scale: 1, opacity: 1,
+          transition: { type: "spring", stiffness: 380, damping: 22 } }),
+        numCtrls[0].start({ opacity: 0.75, y: 0,
+          transition: { duration: 0.4, ease: EASE } }),
+        lblCtrls[0].start({ opacity: 1, y: 0,
+          transition: { duration: 0.5, ease: EASE, delay: 0.08 } }),
+      ]);
+
+      // draw seg 1 — dot 1 pops at 65% of path draw
+      await Promise.all([
+        path12Ctrl.start({ pathLength: 1, opacity: 0.85,
+          transition: { duration: 0.85, ease: EASE } }),
+        new Promise(r => setTimeout(() => {
+          Promise.all([
+            dotCtrls[1].start({ scale: 1, opacity: 1,
+              transition: { type: "spring", stiffness: 360, damping: 20 } }),
+            numCtrls[1].start({ opacity: 0.75, y: 0,
+              transition: { duration: 0.35, ease: EASE } }),
+          ]).then(r);
+        }, 540)),
+      ]);
+
+      // label 1 fades in right after dot
+      lblCtrls[1].start({ opacity: 1, y: 0,
+        transition: { duration: 0.5, ease: EASE } });
+
+      await new Promise(r => setTimeout(r, 120));
+
+      // draw seg 2
+      await Promise.all([
+        path23Ctrl.start({ pathLength: 1, opacity: 0.85,
+          transition: { duration: 0.75, ease: EASE } }),
+        new Promise(r => setTimeout(() => {
+          Promise.all([
+            dotCtrls[2].start({ scale: 1, opacity: 1,
+              transition: { type: "spring", stiffness: 340, damping: 20 } }),
+            numCtrls[2].start({ opacity: 0.75, y: 0,
+              transition: { duration: 0.35, ease: EASE } }),
+          ]).then(r);
+        }, 490)),
+      ]);
+
+      lblCtrls[2].start({ opacity: 1, y: 0,
+        transition: { duration: 0.5, ease: EASE } });
+    };
+
+    run();
+  }, [isInView]);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative mt-8 overflow-hidden px-4 py-28 sm:mt-10 sm:px-6 sm:py-32 lg:px-8"
-    >
-      <div className="absolute inset-0 -z-10 bg-[linear-gradient(to_bottom,rgba(245,248,255,0.92),rgba(250,252,255,0.82)_25%,rgba(255,255,255,0.55)_100%)]" />
-      <div className="absolute inset-x-0 top-0 -z-10 h-[16rem] bg-[radial-gradient(circle_at_top,rgba(206,233,255,0.36),transparent_68%)]" />
-      <div className="absolute inset-x-0 top-24 -z-10 h-[34rem] bg-[radial-gradient(circle_at_center,rgba(255,244,227,0.45),transparent_65%)]" />
-      <div className="absolute inset-0 -z-10 bg-[radial-gradient(circle_at_12%_20%,rgba(228,240,255,0.48),transparent_30%),radial-gradient(circle_at_86%_34%,rgba(241,232,255,0.45),transparent_28%)]" />
+    <div ref={panelRef} className="relative flex-1 min-h-[600px]">
+      <motion.svg
+        ref={svgRef}
+        className="pointer-events-none absolute inset-0 z-20"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <defs>
+          <linearGradient id="desktopCurveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fdba74" stopOpacity="0.72" />
+            <stop offset="55%" stopColor="#f97316" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#c2410c" stopOpacity="1" />
+          </linearGradient>
+          <filter id="desktopCurveGlow" x="-40%" y="-40%" width="180%" height="180%">
+            <feDropShadow dx="0" dy="0" stdDeviation="2.6" floodColor="#ea580c" floodOpacity="0.24" />
+            <feGaussianBlur stdDeviation="3.6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+        <motion.path id="wv-12" stroke="url(#desktopCurveGradient)" strokeWidth="4" strokeLinecap="round" filter="url(#desktopCurveGlow)"
+          initial={{ pathLength: 0, opacity: 0 }} animate={path12Ctrl} />
+        <motion.path id="wv-23" stroke="url(#desktopCurveGradient)" strokeWidth="4" strokeLinecap="round" filter="url(#desktopCurveGlow)"
+          initial={{ pathLength: 0, opacity: 0 }} animate={path23Ctrl} />
+        {STEPS.map((_, i) => (
+          <motion.circle key={i} data-dot={i} r="8" fill="#c0bab5"
+            initial={{ scale: 0, opacity: 0 }} animate={dotCtrls[i]}
+            style={{ transformOrigin: "center" }} />
+        ))}
+        {STEPS.map((s, i) => (
+          <motion.text key={i} data-stepnum={i} x="0" y="0"
+            fontSize="96" fontWeight="700" fill="#758A93" fontFamily="inherit"
+            initial={{ opacity: 0, y: 10 }} animate={numCtrls[i]}>
+            {s.num}
+          </motion.text>
+        ))}
+      </motion.svg>
 
+      {STEPS.map((s, i) => (
+        <motion.div key={i} data-label={i}
+          style={{ position: "absolute", width: `${CARD_W}px` }}
+          className="z-10"
+          initial={{ opacity: 0, y: 22 }}
+          animate={lblCtrls[i]}
+        >
+          {s.labelPos === "above" && <div className="mb-3">{s.ui}</div>}
+          <p className="text-sm font-semibold text-slate-900 leading-snug">{s.title}</p>
+          <p className="mt-1 text-xs leading-relaxed text-slate-800">{s.desc}</p>
+          {s.labelPos === "below" && <div className="mt-3">{s.ui}</div>}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+// ─── Header block (reused on both layouts) ─────────────────────────────────
+
+function Header({ className = "" }) {
+  return (
+    <motion.div
+      className={className}
+      initial="hidden"
+      whileInView="visible"
+      viewport={{ once: true, amount: 0.4 }}
+      variants={{
+        hidden: {},
+        visible: { transition: { staggerChildren: 0.09, ease: EASE } },
+      }}
+    >
+      {[
+        <p key="eye" className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#e05a35]">Woice operation</p>,
+        <h2 key="h" className="mt-3 text-3xl font-semibold leading-[1.15] tracking-tight text-slate-900 sm:mt-4 sm:text-4xl lg:text-5xl">
+          Turn feedback <br />
+           into powerful testimonials
+        </h2>,
+        <p key="sub" className="mt-3 max-w-xs text-sm leading-6 text-slate-500 sm:mt-5 sm:text-base sm:leading-7">
+          Turn raw customer feedback into polished testimonials — automatically and in minutes.
+        </p>,
+        <motion.button key="btn" type="button"
+          className="mt-6 inline-flex h-10 items-center justify-center rounded-full bg-[#e05a35] px-6 text-sm font-semibold text-white sm:mt-8 sm:h-11 sm:px-7"
+          whileHover={{ scale: 1.03, transition: { duration: 0.2 } }}
+          whileTap={{ scale: 0.97 }}
+        >
+          Get Started
+        </motion.button>,
+      ].map((child, i) => (
+        <motion.div key={i} variants={{
+          hidden: { opacity: 0, y: 16 },
+          visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: EASE } },
+        }}>
+          {child}
+        </motion.div>
+      ))}
+    </motion.div>
+  );
+}
+
+// ─── Main section ──────────────────────────────────────────────────────────
+
+export default function HowItWorksSection() {
+  return (
+    <section className="relative overflow-hidden bg-gradient-to-t from-white to-[#ecf0f0] px-5 py-12 sm:px-10 sm:py-16 lg:px-16 lg:py-28">
       <div className="mx-auto max-w-6xl">
-        <div className="mx-auto max-w-3xl text-center">
-          <p className="inline-flex rounded-full border border-slate-200/90 bg-white/75 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 shadow-[0_16px_38px_-30px_rgba(15,23,42,0.45)] backdrop-blur">
-            Woice flow
-          </p>
-          <h2 className="mt-6 text-4xl font-semibold tracking-tight text-slate-900 sm:text-5xl">
-            How it works
-          </h2>
-          <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-600">
-            Collect feedback, filter responses, and showcase your best
-            testimonials in a few simple steps.
-          </p>
+
+        {/* ── Mobile (hidden on lg+) ── */}
+        <div className="lg:hidden">
+          <Header className="mb-8 sm:mb-10" />
+          <MobileWave />
         </div>
 
-        <motion.div
-          className="relative mt-20"
-          initial="hidden"
-          animate={isInView ? "show" : "hidden"}
-          variants={{
-            hidden: {},
-            show: {
-              transition: {
-                staggerChildren: reduceMotion ? 0 : 0.12,
-                delayChildren: reduceMotion ? 0 : 0.08,
-              },
-            },
-          }}
-        >
-          <motion.div
-            className="pointer-events-none absolute bottom-14 left-[1.94rem] top-14 w-0.5 rounded-full bg-gradient-to-b from-[#e8dcff] via-[#f2d8b2] to-[#ffd4de] lg:hidden"
-            aria-hidden="true"
-            initial={{ scaleY: 0, opacity: 0.2 }}
-            animate={isInView ? { scaleY: 1, opacity: 1 } : { scaleY: 0, opacity: 0.2 }}
-            transition={{ duration: reduceMotion ? 0 : 0.9, ease: [0.22, 1, 0.36, 1] }}
-            style={{ transformOrigin: "top" }}
-          />
+        {/* ── Desktop (hidden below lg) ── */}
+        <div className="hidden lg:flex lg:flex-row lg:items-start lg:gap-8">
+          <Header className="w-[300px] flex-shrink-0 pt-24" />
+          <DesktopWave />
+        </div>
 
-          <svg
-            aria-hidden="true"
-            className="pointer-events-none absolute left-1/2 top-8 hidden h-[51rem] w-[25rem] -translate-x-1/2 lg:block"
-            viewBox="0 0 400 820"
-            fill="none"
-          >
-            <motion.path
-              d="M200 20C140 70 140 130 200 182C260 234 260 294 200 346C140 398 140 458 200 510C260 562 260 622 200 674C140 726 140 776 200 806"
-              stroke="url(#woiceTimelinePath)"
-              strokeWidth="5"
-              strokeLinecap="round"
-              strokeDasharray="14 14"
-              opacity="0.9"
-              initial={{ pathLength: 0, opacity: 0.25 }}
-              animate={isInView ? { pathLength: 1, opacity: 0.9 } : { pathLength: 0, opacity: 0.25 }}
-              transition={{ duration: reduceMotion ? 0 : 1.2, ease: [0.22, 1, 0.36, 1] }}
-            />
-            <defs>
-              <linearGradient
-                id="woiceTimelinePath"
-                x1="200"
-                y1="20"
-                x2="200"
-                y2="806"
-                gradientUnits="userSpaceOnUse"
-              >
-                <stop stopColor="#d6caff" />
-                <stop offset="0.45" stopColor="#f6d6a8" />
-                <stop offset="1" stopColor="#ffc2d4" />
-              </linearGradient>
-            </defs>
-          </svg>
-
-          <ol className="space-y-9 lg:space-y-8">
-            {steps.map((step, index) => (
-              <StepCard key={step.title} step={step} index={index} reduceMotion={reduceMotion} />
-            ))}
-          </ol>
-        </motion.div>
       </div>
     </section>
   );
