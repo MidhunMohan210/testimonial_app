@@ -3,6 +3,7 @@ import HeroSection from "../components/landing/HeroSection";
 import HowItWorksSection from "../components/landing/HowItWorksSection";
 import TestimonialWidget from "../components/landing/TestimonialWidget";
 import ProductPreviewSection from "../components/landing/ProductPreviewSection";
+import LiveTestimonialsSection from "../components/landing/LiveTestimonialsSection";
 
 export default function LandingPage() {
   return (
@@ -18,6 +19,7 @@ export default function LandingPage() {
 
       <ProductPreviewSection />
       {/* Add widget here */}
+      <LiveTestimonialsSection />
       <TestimonialWidget />
     </main>
   );
