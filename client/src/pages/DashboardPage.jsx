@@ -12,7 +12,11 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
-import { getMyBusiness, updateBusiness } from "../api/businessApi";
+import {
+  getMyBusiness,
+  getPrivateFeedback,
+  updateBusiness,
+} from "../api/businessApi";
 import { getTestimonials } from "../api/testimonialApi";
 import SendRequestModal from "../components/SendRequestModal";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
@@ -174,6 +178,11 @@ export default function DashboardPage() {
     queryKey: ["business", "me"],
     queryFn: getMyBusiness,
   });
+  const privateFeedbackQuery = useQuery({
+    queryKey: ["private-feedback"],
+    queryFn: getPrivateFeedback,
+    placeholderData: [],
+  });
 
   useEffect(() => {
     setGoogleReviewLink(businessQuery.data?.googleReviewLink || "");
@@ -202,6 +211,7 @@ export default function DashboardPage() {
   };
 
   const businessName = businessQuery.data?.businessName || "Business";
+  const privateFeedbackCount = privateFeedbackQuery.data?.length || 0;
   // console.log(businessQuery.data);
   
   const reviewLink = businessQuery.data?.slug
@@ -442,18 +452,18 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Archived */}
+            {/* Private Feedback */}
             <div className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-amber-400 to-orange-400 p-5 text-white shadow-lg shadow-orange-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6">
               <div className="relative z-10 flex h-full items-end justify-between gap-4">
                 <div>
                   <h3 className="mb-2 text-sm font-medium text-white/90">
-                    Archived
+                    Private Feedback
                   </h3>
                   <p className="text-3xl font-bold tracking-tight sm:text-4xl">
-                    {summary.hidden}
+                    {privateFeedbackCount}
                   </p>
                   <p className="mt-1 text-xs text-white/75">
-                    Hidden from public
+                    Needs follow-up
                   </p>
                 </div>
                 <GridDecoration />

@@ -5,6 +5,7 @@ import DashboardPage from "./pages/DashboardPage";
 import SettingsPage from "./pages/SettingsPage";
 import SendRequestPage from "./pages/SendRequestPage";
 import TestimonialsPage from "./pages/TestimonialsPage";
+import PrivateFeedbackPage from "./pages/PrivateFeedbackPage";
 import LandingPage from "./pages/LandingPage";
 import ContactPage from "./pages/ContactPage";
 import PrivacyPage from "./pages/PrivacyPage";
@@ -50,6 +51,7 @@ export default function App() {
       >
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/testimonials" element={<TestimonialsPage />} />
+        <Route path="/private-feedback" element={<PrivateFeedbackPage />} />
         <Route path="/send-request" element={<SendRequestPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>

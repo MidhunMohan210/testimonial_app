@@ -7,20 +7,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { MessageSquareWarning } from "lucide-react";
-import { getPrivateFeedback } from "../api/businessApi";
 import { getTestimonials, updateStatus } from "../api/testimonialApi";
 import ManualAddModal from "../components/ManualAddModal";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
-import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "../components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -139,53 +130,6 @@ function PaginationControls({ currentPage, totalPages, onPageChange }) {
   );
 }
 
-function PrivateFeedbackCard({ feedback, onOpen }) {
-  const createdDate = new Date(feedback.createdAt).toLocaleDateString(
-    undefined,
-    {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    },
-  );
-
-  return (
-      <Card className="rounded-xl border-slate-200 bg-white shadow-[0_18px_50px_-40px_rgba(15,23,42,0.32)] transition hover:-translate-y-0.5 hover:border-slate-300">
-      <CardHeader className="flex flex-col items-start justify-between gap-3 pb-3 sm:flex-row">
-        <div>
-          <CardTitle className="text-base text-slate-950 sm:text-lg">
-            {feedback.customerName || "Anonymous customer"}
-          </CardTitle>
-          <p className="mt-1 text-sm text-slate-500">{createdDate}</p>
-        </div>
-        <Badge className="border-amber-200 bg-amber-50 text-amber-700">
-          {feedback.rating}/3
-        </Badge>
-      </CardHeader>
-      <CardContent>
-        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-          <div className="mb-3 flex items-center gap-2 text-slate-400">
-            <MessageSquareWarning className="h-4 w-4" />
-            <span className="text-xs font-semibold uppercase tracking-[0.22em]">
-              Private feedback
-            </span>
-          </div>
-          <p className="line-clamp-3 text-sm leading-7 text-slate-700">
-            {feedback.feedbackText || "No feedback text provided."}
-          </p>
-          <Button
-            variant="outline"
-            className="mt-4 rounded-lg"
-            onClick={() => onOpen(feedback)}
-          >
-            View full feedback
-          </Button>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
 export default function TestimonialsPage() {
   const navigate = useNavigate();
   const PAGE_SIZE = 6;
@@ -205,14 +149,7 @@ export default function TestimonialsPage() {
   const testimonialsQuery = useQuery({
     queryKey: ["testimonials", deferredStatus],
     queryFn: () => getTestimonials(deferredStatus),
-    enabled: deferredStatus !== "private-feedback",
     placeholderData: keepPreviousData,
-  });
-
-  const privateFeedbackQuery = useQuery({
-    queryKey: ["private-feedback"],
-    queryFn: getPrivateFeedback,
-    enabled: deferredStatus === "private-feedback",
   });
 
   const statusMutation = useMutation({
@@ -235,18 +172,18 @@ export default function TestimonialsPage() {
 
   const testimonials = testimonialsQuery.data?.data || [];
   const hasTestimonials = testimonials.length > 0;
-  const privateFeedback = privateFeedbackQuery.data || [];
-  const hasPrivateFeedback = privateFeedback.length > 0;
-  const isFeedbackView = deferredStatus === "private-feedback";
-  const activeItems = isFeedbackView ? privateFeedback : testimonials;
-  const totalPages = Math.max(1, Math.ceil(activeItems.length / PAGE_SIZE));
-  const paginatedItems = useMemo(() => {
+
+  const testimonialTotalPages = Math.max(
+    1,
+    Math.ceil(testimonials.length / PAGE_SIZE),
+  );
+  const paginatedTestimonials = useMemo(() => {
     const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return activeItems.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [activeItems, currentPage]);
+    return testimonials.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [testimonials, currentPage]);
 
   const handlePageChange = (page) => {
-    const nextPage = Math.min(Math.max(page, 1), totalPages);
+    const nextPage = Math.min(Math.max(page, 1), testimonialTotalPages);
     setCurrentPage(nextPage);
   };
 
@@ -255,37 +192,27 @@ export default function TestimonialsPage() {
   }, [deferredStatus]);
 
   useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
+    if (currentPage > testimonialTotalPages) {
+      setCurrentPage(testimonialTotalPages);
     }
-  }, [currentPage, totalPages]);
+  }, [currentPage, testimonialTotalPages]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
 
   const getEmptyStateConfig = () => {
-    if (isFeedbackView) {
-      return {
-        title: "No private feedback yet",
-        description:
-          "Customers who leave 1–3 star ratings will show up here so you can follow up and improve.",
-      };
-    }
-
     if (activeStatus === "pending") {
       return {
         title: "No pending testimonials",
-        description:
-          "New reviews that need approval will appear here.",
+        description: "New reviews that need approval will appear here.",
       };
     }
 
     if (activeStatus === "approved") {
       return {
         title: "No published testimonials yet",
-        description:
-          "Approve some from Pending to publish them.",
+        description: "Approve some from Pending to publish them.",
       };
     }
 
@@ -298,8 +225,7 @@ export default function TestimonialsPage() {
 
     return {
       title: "You don’t have any testimonials yet",
-      description:
-        "Send a request or add one manually.",
+      description: "Send a request or add one manually.",
       actionLabel: "Add testimonial",
       onAction: () => setManualOpen(true),
       secondaryActionLabel: "Send a request",
@@ -307,19 +233,15 @@ export default function TestimonialsPage() {
     };
   };
 
-  const activeQuery = isFeedbackView ? privateFeedbackQuery : testimonialsQuery;
   const emptyStateConfig = getEmptyStateConfig();
-  const activeErrorMessage = isFeedbackView
-    ? "We couldn’t load your private feedback."
-    : "We couldn’t load testimonials right now.";
 
-  if (activeQuery.isError) {
+  if (testimonialsQuery.isError) {
     return (
       <>
         <div className="mx-auto max-w-7xl">
           <ErrorStateCard
-            message={activeErrorMessage}
-            onRetry={() => activeQuery.refetch()}
+            message="We couldn’t load testimonials right now."
+            onRetry={() => testimonialsQuery.refetch()}
           />
         </div>
         <ManualAddModal
@@ -334,7 +256,7 @@ export default function TestimonialsPage() {
   return (
     <>
       <div className="mx-auto max-w-7xl px-3">
-        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 sm:p-6 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)]">
+        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)] sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
@@ -359,7 +281,7 @@ export default function TestimonialsPage() {
 
         <section>
           <Tabs value={activeStatus} onValueChange={setActiveStatus}>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)]">
+            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)] sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <h3 className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
@@ -375,9 +297,6 @@ export default function TestimonialsPage() {
                   <TabsTrigger value="pending">Pending</TabsTrigger>
                   <TabsTrigger value="approved">Approved</TabsTrigger>
                   <TabsTrigger value="hidden">Hidden</TabsTrigger>
-                  <TabsTrigger value="private-feedback">
-                    Private Feedback
-                  </TabsTrigger>
                 </TabsList>
               </div>
               <div className="mt-5 grid gap-3 sm:grid-cols-3">
@@ -386,7 +305,7 @@ export default function TestimonialsPage() {
                     Current view
                   </p>
                   <p className="mt-2 text-base font-semibold capitalize text-slate-950">
-                    {isFeedbackView ? "Private feedback" : activeStatus}
+                    {activeStatus}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
@@ -394,7 +313,7 @@ export default function TestimonialsPage() {
                     Items
                   </p>
                   <p className="mt-2 text-base font-semibold text-slate-950">
-                    {activeItems.length}
+                    {testimonials.length}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
@@ -402,47 +321,18 @@ export default function TestimonialsPage() {
                     Status
                   </p>
                   <p className="mt-2 text-base font-semibold text-slate-950">
-                    {testimonialsQuery.isFetching ||
-                    privateFeedbackQuery.isFetching
-                      ? "Refreshing..."
-                      : "Up to date"}
+                    {testimonialsQuery.isFetching ? "Refreshing..." : "Up to date"}
                   </p>
                 </div>
               </div>
             </div>
             <TabsContent value={activeStatus} className="mt-5">
-              {isFeedbackView ? (
-                privateFeedbackQuery.isLoading ? (
-                  <LoadingState />
-                ) : hasPrivateFeedback ? (
-                  <>
-                    <div className="space-y-4">
-                      {paginatedItems.map((feedback) => (
-                        <PrivateFeedbackCard
-                          key={feedback._id}
-                          feedback={feedback}
-                          onOpen={handleOpenEntry}
-                        />
-                      ))}
-                    </div>
-                    <PaginationControls
-                      currentPage={currentPage}
-                      totalPages={totalPages}
-                      onPageChange={handlePageChange}
-                    />
-                  </>
-                ) : (
-                  <EmptyStateCard
-                    title={emptyStateConfig.title}
-                    description={emptyStateConfig.description}
-                  />
-                )
-              ) : testimonialsQuery.isLoading ? (
+              {testimonialsQuery.isLoading ? (
                 <LoadingState />
               ) : hasTestimonials ? (
                 <>
                   <div className="space-y-4">
-                    {paginatedItems.map((testimonial) => (
+                    {paginatedTestimonials.map((testimonial) => (
                       <TestimonialCard
                         key={testimonial._id}
                         testimonial={testimonial}
@@ -456,7 +346,7 @@ export default function TestimonialsPage() {
                   </div>
                   <PaginationControls
                     currentPage={currentPage}
-                    totalPages={totalPages}
+                    totalPages={testimonialTotalPages}
                     onPageChange={handlePageChange}
                   />
                 </>
@@ -502,16 +392,16 @@ export default function TestimonialsPage() {
                     day: "numeric",
                     month: "short",
                     year: "numeric",
-                  })} • Rating ${selectedEntry.rating}/${selectedEntry.feedbackText ? "3" : "5"}`
+                  })} • Rating ${selectedEntry.rating}/5`
                 : ""}
             </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 overflow-y-auto">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
               <p className="break-words whitespace-pre-wrap text-sm leading-7 text-slate-700 [overflow-wrap:anywhere]">
-              {selectedEntry?.feedbackText ||
-                selectedEntry?.testimonialText ||
-                "No feedback text provided."}
+                {selectedEntry?.feedbackText ||
+                  selectedEntry?.testimonialText ||
+                  "No feedback text provided."}
               </p>
             </div>
           </div>

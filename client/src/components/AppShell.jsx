@@ -5,6 +5,7 @@ import {
   Ellipsis,
   LayoutDashboard,
   Menu,
+  MessageSquareWarning,
   MessagesSquare,
   Power,
   Settings,
@@ -31,6 +32,12 @@ const navigation = [
     icon: MessagesSquare,
   },
   {
+    to: "/private-feedback",
+    label: "Private Feedback",
+    description: "Low-rated feedback",
+    icon: MessageSquareWarning,
+  },
+  {
     to: "/settings",
     label: "Settings",
     description: "Business preferences",
@@ -50,6 +57,12 @@ const pageMeta = {
     title: "Testimonials",
     description:
       "Review, approve, hide, and organize customer feedback in a dedicated moderation view.",
+  },
+  "/private-feedback": {
+    eyebrow: "Customer support",
+    title: "Private Feedback",
+    description:
+      "Track low-rated private feedback in one focused queue and follow up quickly.",
   },
   "/send-request": {
     eyebrow: "Collection tools",
