@@ -12,7 +12,7 @@ export default function TestimonialWidget() {
 
     const iframe = document.createElement("iframe");
     iframe.src =
-      "https://www.woice.it.com/widget/slider/cliq-cmarq?embed=true";
+      "https://www.woice.it.com/widget/slider/woice-pxiuk?";
     iframe.width = "100%";
     iframe.height = "700";
     iframe.style.border = "0";
