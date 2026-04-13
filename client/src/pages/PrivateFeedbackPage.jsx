@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageSquareWarning } from "lucide-react";
-import { getPrivateFeedback } from "../api/businessApi";
+import {
+  getPrivateFeedback,
+  markAllPrivateFeedbackAsRead,
+} from "../api/businessApi";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
@@ -172,6 +175,7 @@ function PrivateFeedbackCard({ feedback, onOpen }) {
 
 export default function PrivateFeedbackPage() {
   const PAGE_SIZE = 6;
+  const queryClient = useQueryClient();
   const [currentPage, setCurrentPage] = useState(1);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -209,6 +213,21 @@ export default function PrivateFeedbackPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
+
+  useEffect(() => {
+    const markUnreadAsRead = async () => {
+      try {
+        await markAllPrivateFeedbackAsRead();
+        queryClient.invalidateQueries({
+          queryKey: ["unread-count", "private-feedback"],
+        });
+      } catch {
+        // Keep page functional even if unread sync fails.
+      }
+    };
+
+    markUnreadAsRead();
+  }, [queryClient]);
 
   if (privateFeedbackQuery.isError) {
     return (

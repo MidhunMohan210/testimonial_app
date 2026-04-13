@@ -21,3 +21,13 @@ export const addManual = async (data) => {
   const response = await api.post("/api/testimonials/manual", data);
   return response.data;
 };
+
+export const getUnreadTestimonialCount = async () => {
+  const response = await api.get("/api/testimonials/unread-count");
+  return response.data;
+};
+
+export const markAllTestimonialsAsRead = async () => {
+  const response = await api.post("/api/testimonials/mark-read");
+  return response.data;
+};

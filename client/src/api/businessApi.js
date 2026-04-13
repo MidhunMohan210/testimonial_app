@@ -24,3 +24,13 @@ export const getPrivateFeedback = async () => {
   const response = await api.get("/api/feedback");
   return response.data;
 };
+
+export const getUnreadPrivateFeedbackCount = async () => {
+  const response = await api.get("/api/feedback/unread-count");
+  return response.data;
+};
+
+export const markAllPrivateFeedbackAsRead = async () => {
+  const response = await api.post("/api/feedback/mark-read");
+  return response.data;
+};

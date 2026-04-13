@@ -7,7 +7,11 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { getTestimonials, updateStatus } from "../api/testimonialApi";
+import {
+  getTestimonials,
+  markAllTestimonialsAsRead,
+  updateStatus,
+} from "../api/testimonialApi";
 import ManualAddModal from "../components/ManualAddModal";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
@@ -200,6 +204,21 @@ export default function TestimonialsPage() {
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [currentPage]);
+
+  useEffect(() => {
+    const markUnreadAsRead = async () => {
+      try {
+        await markAllTestimonialsAsRead();
+        queryClient.invalidateQueries({
+          queryKey: ["unread-count", "testimonials"],
+        });
+      } catch {
+        // Keep page functional even if unread sync fails.
+      }
+    };
+
+    markUnreadAsRead();
+  }, [queryClient]);
 
   const getEmptyStateConfig = () => {
     if (activeStatus === "pending") {

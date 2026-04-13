@@ -6,12 +6,16 @@ import {
   getTestimonials,
   updateStatus,
   addManualTestimonial,
+  getUnreadTestimonialCount,
+  markAllTestimonialsAsRead,
 } from "../controllers/testimonialController.js";
 import { manualAddSchema } from "../schemas/reviewSchema.js";
 
 const router = express.Router();
 
 router.get("/", authMiddleware, asyncHandler(getTestimonials));
+router.get("/unread-count", authMiddleware, asyncHandler(getUnreadTestimonialCount));
+router.post("/mark-read", authMiddleware, asyncHandler(markAllTestimonialsAsRead));
 router.patch("/:id/status", authMiddleware, asyncHandler(updateStatus));
 router.post("/manual", authMiddleware, validate(manualAddSchema), asyncHandler(addManualTestimonial));
 

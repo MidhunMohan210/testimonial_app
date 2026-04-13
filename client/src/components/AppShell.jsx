@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   ChevronRight,
   Ellipsis,
@@ -13,6 +14,8 @@ import {
 } from "lucide-react";
 import logo from "../assets/logo2.svg";
 import { useAuth } from "../hooks/useAuth";
+import { getUnreadPrivateFeedbackCount } from "../api/businessApi";
+import { getUnreadTestimonialCount } from "../api/testimonialApi";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 import Footer from "./Footer";
@@ -78,8 +81,13 @@ const pageMeta = {
   },
 };
 
-function SidebarContent({ onNavigate }) {
-  const { business, logout } = useAuth();
+const formatUnreadCount = (count) => (count > 9 ? "9+" : String(count));
+
+function SidebarContent({
+  onNavigate,
+  unreadCounts = { testimonials: 0, privateFeedback: 0 },
+}) {
+  const { logout } = useAuth();
 
   return (
     <div className="flex h-full flex-col">
@@ -113,6 +121,14 @@ function SidebarContent({ onNavigate }) {
         <div className="space-y-1">
           {navigation.map((item) => {
             const Icon = item.icon;
+            const unreadCount =
+              item.to === "/testimonials"
+                ? unreadCounts.testimonials
+                : item.to === "/private-feedback"
+                  ? unreadCounts.privateFeedback
+                  : 0;
+            const hasUnread = unreadCount > 0;
+
             return (
               <NavLink
                 key={item.to}
@@ -152,14 +168,28 @@ function SidebarContent({ onNavigate }) {
                         {item.description}
                       </p>
                     </div>
-                    <ChevronRight
-                      className={cn(
-                        "h-4 w-4 transition",
-                        isActive
-                          ? "text-slate-400"
-                          : "text-slate-500 group-hover:text-slate-300",
+                    <div className="flex shrink-0 items-center gap-2">
+                      {hasUnread && (
+                        <span
+                          className={cn(
+                            "inline-flex min-w-6 items-center justify-center rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                            item.to === "/private-feedback"
+                              ? "border border-amber-200 bg-amber-100 text-amber-800"
+                              : "border border-slate-500/40 bg-slate-700/70 text-slate-100",
+                          )}
+                        >
+                          {formatUnreadCount(unreadCount)}
+                        </span>
                       )}
-                    />
+                      <ChevronRight
+                        className={cn(
+                          "h-4 w-4 transition",
+                          isActive
+                            ? "text-slate-400"
+                            : "text-slate-500 group-hover:text-slate-300",
+                        )}
+                      />
+                    </div>
                   </>
                 )}
               </NavLink>
@@ -227,6 +257,14 @@ export default function AppShell() {
   const location = useLocation();
   const { business, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const testimonialsUnreadQuery = useQuery({
+    queryKey: ["unread-count", "testimonials"],
+    queryFn: getUnreadTestimonialCount,
+  });
+  const privateFeedbackUnreadQuery = useQuery({
+    queryKey: ["unread-count", "private-feedback"],
+    queryFn: getUnreadPrivateFeedbackCount,
+  });
 
   const meta = useMemo(
     () =>
@@ -245,13 +283,17 @@ export default function AppShell() {
       .slice(0, 2)
       .map((part) => part.charAt(0).toUpperCase())
       .join("") || "W";
+  const unreadCounts = {
+    testimonials: testimonialsUnreadQuery.data?.unreadCount || 0,
+    privateFeedback: privateFeedbackUnreadQuery.data?.unreadCount || 0,
+  };
 
   return (
     <div className="min-h-screen bg-transparent text-slate-950">
       <div className="mx-auto flex min-h-screen ">
         {/* Desktop sidebar */}
         <aside className="hidden h-screen w-[308px] shrink-0 border-r border-white/10 bg-slate-950 lg:sticky lg:top-0 lg:block lg:overflow-y-auto">
-          <SidebarContent />
+          <SidebarContent unreadCounts={unreadCounts} />
         </aside>
 
         {/* Content area — pb-16 reserves space for the mobile tab bar */}
@@ -337,7 +379,10 @@ export default function AppShell() {
               </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <SidebarContent onNavigate={() => setSidebarOpen(false)} />
+              <SidebarContent
+                onNavigate={() => setSidebarOpen(false)}
+                unreadCounts={unreadCounts}
+              />
             </div>
           </div>
         </div>

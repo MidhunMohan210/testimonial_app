@@ -92,3 +92,29 @@ export const addManualTestimonial = async (req, res) => {
 
   return res.status(201).json(testimonial);
 };
+
+export const getUnreadTestimonialCount = async (req, res) => {
+  const unreadCount = await Testimonial.countDocuments({
+    businessId: req.user.businessId,
+    isRead: { $ne: true },
+  });
+
+  return res.json({ unreadCount });
+};
+
+export const markAllTestimonialsAsRead = async (req, res) => {
+  const result = await Testimonial.updateMany(
+    {
+      businessId: req.user.businessId,
+      isRead: { $ne: true },
+    },
+    {
+      $set: { isRead: true },
+    }
+  );
+
+  return res.json({
+    success: true,
+    modifiedCount: result.modifiedCount || 0,
+  });
+};
