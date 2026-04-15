@@ -37,6 +37,8 @@ export default function ReviewFormPage() {
   const [formType, setFormType] = useState("review");
   const [rating, setRating] = useState(0);
   const [submittedState, setSubmittedState] = useState(null);
+  const [submittedReviewText, setSubmittedReviewText] = useState("");
+  const [copyState, setCopyState] = useState("idle");
   const [formAlert, setFormAlert] = useState("");
   const {
     register,
@@ -65,8 +67,10 @@ export default function ReviewFormPage() {
 
   const reviewMutation = useMutation({
     mutationFn: (payload) => submitReview(slug, payload),
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       setSubmittedState("review");
+      setSubmittedReviewText(variables?.reviewText || "");
+      setCopyState("idle");
       setStep("done");
       setFormAlert("");
     },
@@ -137,6 +141,8 @@ export default function ReviewFormPage() {
     setStep("form");
     setFormAlert("");
     setSubmittedState(null);
+    setSubmittedReviewText("");
+    setCopyState("idle");
     clearErrors();
     reset(
       {
@@ -175,6 +181,47 @@ export default function ReviewFormPage() {
       rating,
       feedbackText: trimmedFeedbackText,
     });
+  };
+
+  const handleCopyReviewText = async () => {
+    if (!submittedReviewText?.trim()) {
+      return;
+    }
+
+    const textToCopy = submittedReviewText.trim();
+
+    const setTimedState = (state) => {
+      setCopyState(state);
+      window.setTimeout(() => setCopyState("idle"), 2200);
+    };
+
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setTimedState("copied");
+      return;
+    } catch {
+      // Fallback for browsers/environments where clipboard API is blocked.
+    }
+
+    try {
+      const textarea = document.createElement("textarea");
+      textarea.value = textToCopy;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "absolute";
+      textarea.style.left = "-9999px";
+      document.body.appendChild(textarea);
+      textarea.select();
+      const success = document.execCommand("copy");
+      document.body.removeChild(textarea);
+
+      if (success) {
+        setTimedState("copied");
+      } else {
+        setTimedState("error");
+      }
+    } catch {
+      setTimedState("error");
+    }
   };
 
   if (businessQuery.isLoading) {
@@ -384,6 +431,31 @@ export default function ReviewFormPage() {
                   ? "Your testimonial was submitted and may appear after approval."
                   : "Your feedback has been sent privately to the team."}
               </p>
+              {submittedState === "review" ? (
+                <>
+                  <p className="text-sm text-slate-500">
+                    Want to share this on Google too? Copy your review text and
+                    paste it into the Google review form.
+                  </p>
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
+                    <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
+                      {submittedReviewText?.trim() || "Review text unavailable."}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleCopyReviewText}
+                    disabled={!submittedReviewText?.trim()}
+                  >
+                    {copyState === "copied"
+                      ? "Copied to clipboard"
+                      : copyState === "error"
+                        ? "Copy failed, try again"
+                        : "Copy review text"}
+                  </Button>
+                </>
+              ) : null}
               {submittedState === "review" && googleReviewUrl ? (
                 <Button
                   variant="outline"
