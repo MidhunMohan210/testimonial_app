@@ -20,6 +20,19 @@ const privateFeedbackSchema = new mongoose.Schema({
     type: String,
     trim: true,
   },
+  contactEmail: {
+    type: String,
+    trim: true,
+    lowercase: true,
+  },
+  contactPhone: {
+    type: String,
+    trim: true,
+  },
+  allowFollowUp: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

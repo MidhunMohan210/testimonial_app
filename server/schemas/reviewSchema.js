@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const submitReviewSchema = z.object({
   rating: z.number().int().min(1).max(5),
-  customerName: z.string().trim().min(1, "Name is required").max(100, "Name is too long"),
+  customerName: z.string().trim().max(100, "Name is too long").optional().or(z.literal("")),
   reviewText: z
     .string()
     .trim()
@@ -23,4 +23,13 @@ export const privateFeedbackSchema = z.object({
   customerName: z.string().trim().max(100, "Name is too long").optional(),
   rating: z.number().int().min(1).max(3),
   feedbackText: z.string().trim().min(3, "Feedback is too short").max(500, "Feedback is too long"),
+  contactEmail: z
+    .string()
+    .trim()
+    .max(160, "Email is too long")
+    .email("Please enter a valid email")
+    .optional()
+    .or(z.literal("")),
+  contactPhone: z.string().trim().max(30, "Phone is too long").optional().or(z.literal("")),
+  allowFollowUp: z.boolean().optional(),
 });

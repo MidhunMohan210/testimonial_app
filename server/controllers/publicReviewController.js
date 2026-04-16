@@ -64,7 +64,7 @@ export const submitPublicReview = async (req, res) => {
 };
 
 export const submitPrivateFeedback = async (req, res) => {
-  const { customerName, rating, feedbackText } = req.body;
+  const { customerName, rating, feedbackText, contactEmail, contactPhone, allowFollowUp } = req.body;
   const numericRating = Number(rating);
 
   if (![1, 2, 3].includes(numericRating)) {
@@ -86,6 +86,9 @@ export const submitPrivateFeedback = async (req, res) => {
     customerName: customerName?.trim(),
     rating: numericRating,
     feedbackText: feedbackText.trim(),
+    contactEmail: contactEmail?.trim() || undefined,
+    contactPhone: contactPhone?.trim() || undefined,
+    allowFollowUp: Boolean(allowFollowUp),
   });
 
   return res.json({ success: true });
