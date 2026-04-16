@@ -659,7 +659,7 @@ export default function PrivateFeedbackPage() {
           }
         }}
       >
-        <DialogContent className="flex max-h-[min(88vh,56rem)] flex-col rounded-2xl border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] sm:max-w-4xl lg:max-w-5xl">
+        <DialogContent className="flex max-h-[min(88vh,56rem)] flex-col rounded-2xl border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] sm:max-w-xl">
           <DialogHeader className="space-y-3 rounded-xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_14px_34px_-26px_rgba(15,23,42,0.35)]">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
