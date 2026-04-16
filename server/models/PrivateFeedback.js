@@ -33,6 +33,24 @@ const privateFeedbackSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  status: {
+    type: String,
+    enum: ["new", "in_progress", "resolved", "closed"],
+    default: "new",
+  },
+  businessResponse: {
+    type: String,
+    trim: true,
+    default: "",
+  },
+  respondedAt: {
+    type: Date,
+    default: null,
+  },
+  resolvedAt: {
+    type: Date,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,

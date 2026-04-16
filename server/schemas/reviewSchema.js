@@ -33,3 +33,16 @@ export const privateFeedbackSchema = z.object({
   contactPhone: z.string().trim().max(30, "Phone is too long").optional().or(z.literal("")),
   allowFollowUp: z.boolean().optional(),
 });
+
+export const updatePrivateFeedbackSchema = z
+  .object({
+    status: z.enum(["new", "in_progress", "resolved", "closed"]).optional(),
+    businessResponse: z.string().trim().max(2000, "Response must be 2000 characters or less").optional(),
+  })
+  .refine(
+    (payload) => payload.status !== undefined || payload.businessResponse !== undefined,
+    {
+      message: "At least one field is required",
+      path: ["status"],
+    },
+  );

@@ -34,3 +34,8 @@ export const markAllPrivateFeedbackAsRead = async () => {
   const response = await api.post("/api/feedback/mark-read");
   return response.data;
 };
+
+export const updatePrivateFeedback = async (id, data) => {
+  const response = await api.patch(`/api/feedback/${id}`, data);
+  return response.data;
+};
