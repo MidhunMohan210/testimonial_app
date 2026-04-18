@@ -1,5 +1,5 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   keepPreviousData,
   useMutation,
@@ -136,9 +136,16 @@ function PaginationControls({ currentPage, totalPages, onPageChange }) {
 
 export default function TestimonialsPage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const PAGE_SIZE = 6;
   const queryClient = useQueryClient();
-  const [activeStatus, setActiveStatus] = useState("all");
+  const getValidStatus = (status) => {
+    const allowedStatuses = new Set(["all", "pending", "approved", "hidden"]);
+    return allowedStatuses.has(status) ? status : "all";
+  };
+  const [activeStatus, setActiveStatus] = useState(() =>
+    getValidStatus(searchParams.get("status")),
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [manualOpen, setManualOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
@@ -194,6 +201,20 @@ export default function TestimonialsPage() {
   useEffect(() => {
     setCurrentPage(1);
   }, [deferredStatus]);
+
+  useEffect(() => {
+    const statusFromQuery = getValidStatus(searchParams.get("status"));
+    if (statusFromQuery !== activeStatus) {
+      setActiveStatus(statusFromQuery);
+    }
+  }, [activeStatus, searchParams]);
+
+  useEffect(() => {
+    const currentQueryStatus = getValidStatus(searchParams.get("status"));
+    if (currentQueryStatus !== activeStatus) {
+      setSearchParams(activeStatus === "all" ? {} : { status: activeStatus });
+    }
+  }, [activeStatus, searchParams, setSearchParams]);
 
   useEffect(() => {
     if (currentPage > testimonialTotalPages) {
@@ -299,7 +320,12 @@ export default function TestimonialsPage() {
         </section>
 
         <section>
-          <Tabs value={activeStatus} onValueChange={setActiveStatus}>
+          <Tabs
+            value={activeStatus}
+            onValueChange={(nextStatus) => {
+              setActiveStatus(getValidStatus(nextStatus));
+            }}
+          >
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)] sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>

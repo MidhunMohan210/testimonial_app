@@ -336,6 +336,10 @@ export default function DashboardPage() {
     businessQuery.refetch();
   };
 
+  const handleKpiCardNavigation = (destination) => {
+    navigate(destination);
+  };
+
   if (isDashboardLoading) {
     return <DashboardLoadingState />;
   }
@@ -403,7 +407,11 @@ export default function DashboardPage() {
           {/* Gradient KPI Cards */}
           <div className="grid grid-cols-1 gap-5 md:col-span-3 md:grid-cols-2 lg:col-span-4 lg:grid-cols-4">
             {/* Total */}
-            <div className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 p-5 text-white shadow-lg shadow-pink-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6">
+            <button
+              type="button"
+              className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 p-5 text-left text-white shadow-lg shadow-pink-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6"
+              onClick={() => handleKpiCardNavigation("/testimonials")}
+            >
               <div className="relative z-10 flex h-full justify-between items-end">
                 <div className="flex h-full flex-col justify-between">
                   <h3 className="text-sm font-medium text-white/90">
@@ -418,10 +426,16 @@ export default function DashboardPage() {
                   <p className="text-xs text-white/80">All collected</p>
                 </div>
               </div>
-            </div>
+            </button>
 
             {/* Approved */}
-            <div className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-5 text-white shadow-lg shadow-purple-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6">
+            <button
+              type="button"
+              className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 p-5 text-left text-white shadow-lg shadow-purple-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6"
+              onClick={() =>
+                handleKpiCardNavigation("/testimonials?status=approved")
+              }
+            >
               <div className="relative z-10">
                 <h3 className="mb-2 text-sm font-medium text-white/90">
                   Approved
@@ -432,10 +446,16 @@ export default function DashboardPage() {
                 <p className="mt-1 text-xs text-white/75">Ready to publish</p>
               </div>
               <CurveDecoration />
-            </div>
+            </button>
 
             {/* Pending */}
-            <div className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-sky-400 to-blue-500 p-5 text-white shadow-lg shadow-blue-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6">
+            <button
+              type="button"
+              className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-sky-400 to-blue-500 p-5 text-left text-white shadow-lg shadow-blue-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6"
+              onClick={() =>
+                handleKpiCardNavigation("/testimonials?status=pending")
+              }
+            >
               <div className="relative z-10 flex h-full items-end justify-between gap-4">
                 <div>
                   <h3 className="mb-2 text-sm font-medium text-white/90">
@@ -450,10 +470,14 @@ export default function DashboardPage() {
                 </div>
                 <BarsDecoration />
               </div>
-            </div>
+            </button>
 
             {/* Private Feedback */}
-            <div className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-amber-400 to-orange-400 p-5 text-white shadow-lg shadow-orange-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6">
+            <button
+              type="button"
+              className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-green-400 to-green-500 p-5 text-left text-white shadow-lg shadow-orange-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6"
+              onClick={() => handleKpiCardNavigation("/private-feedback")}
+            >
               <div className="relative z-10 flex h-full items-end justify-between gap-4">
                 <div>
                   <h3 className="mb-2 text-sm font-medium text-white/90">
@@ -468,7 +492,7 @@ export default function DashboardPage() {
                 </div>
                 <GridDecoration />
               </div>
-            </div>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 items-start">
