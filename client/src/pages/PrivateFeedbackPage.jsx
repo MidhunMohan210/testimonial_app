@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Mail, MessageSquareWarning, Phone } from "lucide-react";
+import { Mail, MessageSquareWarning, Phone, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import {
   getPrivateFeedback,
@@ -18,6 +18,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "../components/ui/dialog";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "../components/ui/sheet";
 import { Skeleton } from "../components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../components/ui/tabs";
 import { Textarea } from "../components/ui/textarea";
@@ -56,6 +66,96 @@ const RESPONSE_TEMPLATES = [
     body: "Hi{{namePart}}, thank you for your honest feedback. We truly value it and will use it to improve our service.",
   },
 ];
+
+const DEFAULT_FILTERS = {
+  datePreset: "all_time",
+  fromDate: "",
+  toDate: "",
+  ratingSort: "none",
+  wordPreset: "any",
+  minWords: "",
+  maxWords: "",
+};
+
+const parseFilterNumber = (value) => {
+  if (value === "") return null;
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? null : parsed;
+};
+
+const getStartOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+};
+
+const getEndOfDay = (date) => {
+  const next = new Date(date);
+  next.setHours(23, 59, 59, 999);
+  return next;
+};
+
+const addDays = (date, days) => {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+};
+
+const getWeekStart = (date) => {
+  const day = date.getDay();
+  const diffToMonday = day === 0 ? -6 : 1 - day;
+  return getStartOfDay(addDays(date, diffToMonday));
+};
+
+const getDateRangeFromPreset = (preset, customFromDate, customToDate) => {
+  const today = new Date();
+
+  if (preset === "today") {
+    return { fromDate: getStartOfDay(today), toDate: getEndOfDay(today) };
+  }
+
+  if (preset === "yesterday") {
+    const yesterday = addDays(today, -1);
+    return { fromDate: getStartOfDay(yesterday), toDate: getEndOfDay(yesterday) };
+  }
+
+  if (preset === "this_week") {
+    return { fromDate: getWeekStart(today), toDate: getEndOfDay(today) };
+  }
+
+  if (preset === "previous_week") {
+    const thisWeekStart = getWeekStart(today);
+    const previousWeekStart = addDays(thisWeekStart, -7);
+    const previousWeekEnd = addDays(thisWeekStart, -1);
+    return { fromDate: previousWeekStart, toDate: getEndOfDay(previousWeekEnd) };
+  }
+
+  if (preset === "this_month") {
+    const fromDate = new Date(today.getFullYear(), today.getMonth(), 1);
+    return { fromDate: getStartOfDay(fromDate), toDate: getEndOfDay(today) };
+  }
+
+  if (preset === "prev_month") {
+    const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+    const end = new Date(today.getFullYear(), today.getMonth(), 0);
+    return { fromDate: getStartOfDay(start), toDate: getEndOfDay(end) };
+  }
+
+  if (preset === "prev_three_month") {
+    const start = new Date(today.getFullYear(), today.getMonth() - 3, 1);
+    const end = new Date(today.getFullYear(), today.getMonth(), 0);
+    return { fromDate: getStartOfDay(start), toDate: getEndOfDay(end) };
+  }
+
+  if (preset === "custom") {
+    return {
+      fromDate: customFromDate ? new Date(`${customFromDate}T00:00:00`) : null,
+      toDate: customToDate ? new Date(`${customToDate}T23:59:59.999`) : null,
+    };
+  }
+
+  return { fromDate: null, toDate: null };
+};
 
 function getStatusMeta(status) {
   switch (status) {
@@ -337,6 +437,9 @@ export default function PrivateFeedbackPage() {
   const [responseDraft, setResponseDraft] = useState("");
   const [statusDraft, setStatusDraft] = useState("new");
   const [selectedTemplateId, setSelectedTemplateId] = useState(RESPONSE_TEMPLATES[0].id);
+  const [filterSheetOpen, setFilterSheetOpen] = useState(false);
+  const [filters, setFilters] = useState(DEFAULT_FILTERS);
+  const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
 
   const privateFeedbackQuery = useQuery({
     queryKey: ["private-feedback"],
@@ -344,13 +447,66 @@ export default function PrivateFeedbackPage() {
   });
 
   const privateFeedback = privateFeedbackQuery.data || [];
-  const filteredFeedback = useMemo(() => {
+  const statusScopedFeedback = useMemo(() => {
     if (activeStatus === "all") {
       return privateFeedback;
     }
     return privateFeedback.filter((item) => (item.status || "new") === activeStatus);
   }, [activeStatus, privateFeedback]);
+  const filteredFeedback = useMemo(() => {
+    const { fromDate, toDate } = getDateRangeFromPreset(
+      filters.datePreset,
+      filters.fromDate,
+      filters.toDate,
+    );
+    const customMinWords = parseFilterNumber(filters.minWords);
+    const customMaxWords = parseFilterNumber(filters.maxWords);
+
+    let minWords = customMinWords;
+    let maxWords = customMaxWords;
+    if (filters.wordPreset === "below_10") {
+      minWords = null;
+      maxWords = 9;
+    } else if (filters.wordPreset === "10_20") {
+      minWords = 10;
+      maxWords = 20;
+    } else if (filters.wordPreset === "20_50") {
+      minWords = 20;
+      maxWords = 50;
+    } else if (filters.wordPreset === "50_100") {
+      minWords = 50;
+      maxWords = 100;
+    } else if (filters.wordPreset === "above_100") {
+      minWords = 101;
+      maxWords = null;
+    }
+
+    const next = statusScopedFeedback.filter((item) => {
+      const createdAt = new Date(item.createdAt || Date.now());
+      if (fromDate && createdAt < fromDate) return false;
+      if (toDate && createdAt > toDate) return false;
+
+      const text = String(item.feedbackText || "").trim();
+      const wordCount = text ? text.split(/\s+/).length : 0;
+      if (minWords !== null && wordCount < minWords) return false;
+      if (maxWords !== null && wordCount > maxWords) return false;
+
+      return true;
+    });
+
+    if (filters.ratingSort === "high_to_low") {
+      next.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    } else if (filters.ratingSort === "low_to_high") {
+      next.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+    }
+
+    return next;
+  }, [filters, statusScopedFeedback]);
   const hasPrivateFeedback = filteredFeedback.length > 0;
+  const hasActiveFilters = useMemo(
+    () => Object.entries(filters).some(([key, value]) => value !== DEFAULT_FILTERS[key]),
+    [filters],
+  );
 
   const totalPages = Math.max(1, Math.ceil(filteredFeedback.length / PAGE_SIZE));
   const paginatedItems = useMemo(() => {
@@ -508,7 +664,13 @@ export default function PrivateFeedbackPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeStatus]);
+  }, [activeStatus, filters]);
+
+  useEffect(() => {
+    if (filterSheetOpen) {
+      setDraftFilters(filters);
+    }
+  }, [filterSheetOpen, filters]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -614,6 +776,22 @@ export default function PrivateFeedbackPage() {
               </div>
             </div>
             <TabsContent value={activeStatus} className="mt-5">
+              <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="text-sm text-slate-600">
+                  {hasActiveFilters
+                    ? `Showing ${filteredFeedback.length} filtered feedback entries`
+                    : "No filters applied"}
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="h-10 rounded-xl border-slate-200 bg-white px-4"
+                  onClick={() => setFilterSheetOpen(true)}
+                >
+                  <SlidersHorizontal className="mr-2 h-4 w-4" />
+                  Filter
+                </Button>
+              </div>
               {privateFeedbackQuery.isLoading ? (
                 <LoadingState />
               ) : hasPrivateFeedback ? (
@@ -811,6 +989,177 @@ export default function PrivateFeedbackPage() {
           </Tabs>
         </DialogContent>
       </Dialog>
+
+      <Sheet open={filterSheetOpen} onOpenChange={setFilterSheetOpen}>
+        <SheetContent side="right" className="w-full max-w-md overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle>Filter Private Feedback</SheetTitle>
+            <SheetDescription>
+              Filter by date, rating order, and message word count.
+            </SheetDescription>
+          </SheetHeader>
+
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="feedback-filter-date-preset">Date</Label>
+              <select
+                id="feedback-filter-date-preset"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-offset-white transition focus-visible:ring-2 focus-visible:ring-slate-300"
+                value={draftFilters.datePreset}
+                onChange={(event) =>
+                  setDraftFilters((current) => ({
+                    ...current,
+                    datePreset: event.target.value,
+                  }))
+                }
+              >
+                <option value="all_time">All Time</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="this_week">This Week</option>
+                <option value="previous_week">Previous Week</option>
+                <option value="this_month">This Month</option>
+                <option value="prev_month">Previous Month</option>
+                <option value="prev_three_month">Previous Three Months</option>
+                <option value="custom">Custom Date</option>
+              </select>
+            </div>
+
+            {draftFilters.datePreset === "custom" ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="feedback-filter-from">From date</Label>
+                  <Input
+                    id="feedback-filter-from"
+                    type="date"
+                    value={draftFilters.fromDate}
+                    onChange={(event) =>
+                      setDraftFilters((current) => ({
+                        ...current,
+                        fromDate: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="feedback-filter-to">To date</Label>
+                  <Input
+                    id="feedback-filter-to"
+                    type="date"
+                    value={draftFilters.toDate}
+                    onChange={(event) =>
+                      setDraftFilters((current) => ({
+                        ...current,
+                        toDate: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            ) : null}
+
+            <div className="space-y-2">
+              <Label htmlFor="feedback-filter-rating">Rating</Label>
+              <select
+                id="feedback-filter-rating"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-offset-white transition focus-visible:ring-2 focus-visible:ring-slate-300"
+                value={draftFilters.ratingSort}
+                onChange={(event) =>
+                  setDraftFilters((current) => ({
+                    ...current,
+                    ratingSort: event.target.value,
+                  }))
+                }
+              >
+                <option value="none">Default</option>
+                <option value="high_to_low">Higher to Lower</option>
+                <option value="low_to_high">Lower to Higher</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="feedback-filter-word-preset">Words</Label>
+              <select
+                id="feedback-filter-word-preset"
+                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none ring-offset-white transition focus-visible:ring-2 focus-visible:ring-slate-300"
+                value={draftFilters.wordPreset}
+                onChange={(event) =>
+                  setDraftFilters((current) => ({
+                    ...current,
+                    wordPreset: event.target.value,
+                  }))
+                }
+              >
+                <option value="any">Any length</option>
+                <option value="below_10">Below 10</option>
+                <option value="10_20">10-20</option>
+                <option value="20_50">20-50</option>
+                <option value="50_100">50-100</option>
+                <option value="above_100">Above 100</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+
+            {draftFilters.wordPreset === "custom" ? (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="feedback-filter-min-words">Min words</Label>
+                  <Input
+                    id="feedback-filter-min-words"
+                    type="number"
+                    min="0"
+                    value={draftFilters.minWords}
+                    onChange={(event) =>
+                      setDraftFilters((current) => ({
+                        ...current,
+                        minWords: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="feedback-filter-max-words">Max words</Label>
+                  <Input
+                    id="feedback-filter-max-words"
+                    type="number"
+                    min="0"
+                    value={draftFilters.maxWords}
+                    onChange={(event) =>
+                      setDraftFilters((current) => ({
+                        ...current,
+                        maxWords: event.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <SheetFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setFilters(DEFAULT_FILTERS);
+                setDraftFilters(DEFAULT_FILTERS);
+              }}
+            >
+              Reset
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                setFilters(draftFilters);
+                setFilterSheetOpen(false);
+                setCurrentPage(1);
+              }}
+            >
+              Apply Filters
+            </Button>
+          </SheetFooter>
+        </SheetContent>
+      </Sheet>
     </>
   );
 }
