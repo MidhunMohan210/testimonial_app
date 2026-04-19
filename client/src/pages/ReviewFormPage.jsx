@@ -704,25 +704,25 @@ export default function ReviewFormPage() {
                 </p>
                 {submittedState === "review" ? (
                   <div className="space-y-3">
+                    {googleReviewUrl ? (
+                      <>
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-left">
                       <p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-700">
                         {submittedReviewPreview}
                       </p>
                     </div>
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      onClick={handleCopyReviewText}
-                      disabled={!submittedReviewText?.trim()}
-                    >
-                      {copyState === "copied"
-                        ? "Copied to clipboard"
-                        : copyState === "error"
-                          ? "Copy failed, try again"
-                          : "Copy review text"}
-                    </Button>
-                    {googleReviewUrl ? (
-                      <>
+                        <Button
+                          variant="outline"
+                          className="w-full"
+                          onClick={handleCopyReviewText}
+                          disabled={!submittedReviewText?.trim()}
+                        >
+                          {copyState === "copied"
+                            ? "Copied to clipboard"
+                            : copyState === "error"
+                              ? "Copy failed, try again"
+                              : "Copy review text"}
+                        </Button>
                         <p className="text-sm text-slate-500">
                           If you have a moment, sharing it on Google really helps.
                         </p>
