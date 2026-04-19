@@ -1,14 +1,16 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { Star } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useParams } from "react-router-dom";
+import { toast } from "sonner";
 import {
   getBusinessBySlug,
   submitFeedback,
   submitReview,
 } from "../api/publicReviewApi";
+import { getCooldownStatus, setCooldown } from "../lib/reviewCooldown";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Input } from "../components/ui/input";
@@ -48,6 +50,7 @@ export default function ReviewFormPage() {
   const [copyState, setCopyState] = useState("idle");
   const [submittedFollowUpAcknowledgement, setSubmittedFollowUpAcknowledgement] = useState(false);
   const [formAlert, setFormAlert] = useState("");
+  const [cooldownBlocked, setCooldownBlocked] = useState(false);
   const {
     register,
     handleSubmit,
@@ -79,6 +82,7 @@ export default function ReviewFormPage() {
   const reviewMutation = useMutation({
     mutationFn: (payload) => submitReview(slug, payload),
     onSuccess: (_, variables) => {
+      setCooldown(businessId);
       setSubmittedState("review");
       setSubmittedReviewText(variables?.reviewText || "");
       setCopyState("idle");
@@ -94,6 +98,7 @@ export default function ReviewFormPage() {
   const feedbackMutation = useMutation({
     mutationFn: (payload) => submitFeedback(slug, payload),
     onSuccess: (_, variables) => {
+      setCooldown(businessId);
       setSubmittedState("feedback");
       setSubmittedReviewText("");
       setCopyState("idle");
@@ -109,10 +114,20 @@ export default function ReviewFormPage() {
 
   const isSubmitting = reviewMutation.isPending || feedbackMutation.isPending;
   const businessName = businessQuery.data?.businessName || "Business";
+  const businessId = businessQuery.data?.businessId || "";
   const googleReviewUrl = businessQuery.data?.googleReviewLink || "";
   const reviewTextValue = watch("reviewText") || "";
   const feedbackTextValue = watch("feedbackText") || "";
   const allowFollowUpValue = watch("allowFollowUp");
+
+  useEffect(() => {
+    if (!businessId) {
+      setCooldownBlocked(false);
+      return;
+    }
+
+    setCooldownBlocked(getCooldownStatus(businessId).isActive);
+  }, [businessId]);
 
   const selectedStarsLabel = useMemo(() => {
     if (!rating) {
@@ -189,6 +204,14 @@ export default function ReviewFormPage() {
     contactPhone,
     allowFollowUp,
   }) => {
+    if (businessId && getCooldownStatus(businessId).isActive) {
+      const cooldownMessage =
+        "This browser has already submitted feedback for this business. Please try again after 24 hours.";
+      setFormAlert(cooldownMessage);
+      toast.error(cooldownMessage);
+      return;
+    }
+
     const trimmedName = customerName.trim();
     const trimmedReviewText = reviewText.trim();
     const trimmedFeedbackText = feedbackText.trim();
@@ -278,6 +301,43 @@ export default function ReviewFormPage() {
             <p className="mt-2 text-sm text-slate-500">
               This business link is invalid or no longer available.
             </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (cooldownBlocked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4 py-6 sm:py-10">
+        <Card className="w-full max-w-[480px] border-slate-200 bg-white shadow-[0_24px_60px_-36px_rgba(15,23,42,0.45)]">
+          <CardHeader className="space-y-3 pb-2 text-center">
+            <p className="text-sm font-medium uppercase tracking-[0.24em] text-slate-400">
+              {businessName}
+            </p>
+            <CardTitle className="text-2xl text-slate-950 sm:text-3xl">
+              You&apos;ve already submitted feedback
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-5 p-5 pt-4 text-center sm:p-8 sm:pt-4">
+            <p className="text-sm leading-7 text-slate-500">
+              This browser has already submitted feedback for this business. Please try again after
+              24 hours.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full"
+              onClick={() => {
+                if (window.history.length > 1) {
+                  window.history.back();
+                  return;
+                }
+                window.location.assign("/");
+              }}
+            >
+              Go back
+            </Button>
           </CardContent>
         </Card>
       </div>
