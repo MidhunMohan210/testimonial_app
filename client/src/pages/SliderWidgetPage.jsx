@@ -1,11 +1,12 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, Quote, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getPublicTestimonials } from "../api/publicTestimonialsApi";
-import { Skeleton } from "../components/ui/skeleton";
+import WidgetLoader from "../components/WidgetLoader";
 
-const DISPLAY_LIMIT = 12;
+const DISPLAY_LIMIT = 5;
+const LOADING_HINT_DELAY_MS = 5000;
 
 function RatingStars({ rating }) {
   return (
@@ -67,50 +68,51 @@ function ReviewCard({ testimonial, index }) {
   return (
     <article
       aria-label={`Testimonial from ${testimonial.customerName || "Anonymous"}`}
-      className={`group relative flex h-full w-[calc(100vw-2.25rem)] max-w-[320px] shrink-0 cursor-pointer flex-col rounded-2xl border bg-white p-6 transition-all duration-300 hover:-translate-y-1 sm:w-[calc(50vw-2.75rem)] hover:shadow-lg sm:max-w-[340px] lg:w-[300px] xl:w-[320px] ${
+      className={`group relative flex h-full w-[75vw] max-w-[300px] shrink-0 cursor-pointer flex-col rounded-2xl border bg-white p-4 transition-all duration-300 hover:-translate-y-1 hover:shadow-lg sm:w-[300px] sm:max-w-none sm:p-6 xl:w-[320px] ${
         isHighlighted
           ? "scale-[1.02] border-slate-300 shadow-xl hover:shadow-2xl"
           : "border-slate-200/70 shadow-[0_12px_34px_rgba(148,163,184,0.12)]"
       }`}
     >
-      <Quote className="pointer-events-none absolute right-5 top-5 h-12 w-12 text-slate-100 transition-colors duration-300 group-hover:text-slate-200" strokeWidth={1.5} />
+      <Quote className="pointer-events-none absolute right-4 top-4 h-9 w-9 text-slate-100 transition-colors duration-300 group-hover:text-slate-200 sm:right-5 sm:top-5 sm:h-12 sm:w-12" strokeWidth={1.5} />
 
       <div className="relative z-10 flex h-full flex-col justify-between">
-        <div className="flex items-start gap-4">
+        <div className="flex items-start gap-3 sm:gap-4">
+          {/* Avatar */}
           <div
-            className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full text-sm font-semibold ${
-            testimonial.avatarUrl
-              ? "bg-slate-200 text-slate-600 ring-2 ring-white shadow-md"
-              : `bg-gradient-to-br ${getInitialsTone(index)} text-white ring-2 ring-white shadow-md`
-          }`}
-        >
-          {testimonial.avatarUrl ? (
-            <img
-              src={testimonial.avatarUrl}
-              alt={testimonial.customerName}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <span>{getInitials(testimonial.customerName)}</span>
-          )}
-        </div>
+            className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold sm:h-14 sm:w-14 sm:text-sm ${
+              testimonial.avatarUrl
+                ? "bg-slate-200 text-slate-600 ring-2 ring-white shadow-md"
+                : `bg-gradient-to-br ${getInitialsTone(index)} text-white ring-2 ring-white shadow-md`
+            }`}
+          >
+            {testimonial.avatarUrl ? (
+              <img
+                src={testimonial.avatarUrl}
+                alt={testimonial.customerName}
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <span>{getInitials(testimonial.customerName)}</span>
+            )}
+          </div>
 
           <div className="min-w-0 flex-1">
             <div>
-              <p className="max-w-[140px] truncate text-base font-semibold text-slate-800 sm:max-w-[160px]">
+              <p className="max-w-[120px] truncate text-sm font-semibold text-slate-800 sm:max-w-[160px] sm:text-base">
                 {testimonial.customerName || "Anonymous"}
               </p>
-              <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                <BadgeCheck className="h-3.5 w-3.5" />
+              <span className="mt-1.5 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-700 sm:mt-2 sm:text-[11px]">
+                <BadgeCheck className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 Verified review
               </span>
             </div>
 
-            <p className="mt-2 text-sm text-slate-500">{secondaryText}</p>
+            <p className="mt-1.5 text-xs text-slate-500 sm:mt-2 sm:text-sm">{secondaryText}</p>
 
-            <div className="mt-3 flex items-center gap-2.5">
+            <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-2.5">
               <RatingStars rating={testimonial.rating || 0} />
-              <span className="text-sm font-semibold text-slate-800">
+              <span className="text-xs font-semibold text-slate-800 sm:text-sm">
                 {Number(testimonial.rating || 0).toFixed(1)}
               </span>
             </div>
@@ -118,12 +120,12 @@ function ReviewCard({ testimonial, index }) {
         </div>
 
         <blockquote
-          className={`mt-6 flex-1 ${
+          className={`mt-4 flex-1 sm:mt-6 ${
             isCompactReview ? "flex items-center justify-center" : ""
           }`}
         >
           <p
-            className={`text-sm italic leading-7 text-slate-600 ${
+            className={`text-xs italic leading-6 text-slate-600 sm:text-sm sm:leading-7 ${
               isCompactReview
                 ? "text-center"
                 : "line-clamp-3 text-left"
@@ -137,14 +139,100 @@ function ReviewCard({ testimonial, index }) {
   );
 }
 
+function SkeletonCard({ compact = false, keyId }) {
+  return (
+    <article
+      key={keyId}
+      className={`widget-fade-in flex h-full w-[75vw] max-w-[300px] shrink-0 flex-col rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_12px_34px_rgba(148,163,184,0.12)] sm:w-[300px] sm:max-w-none sm:p-6 xl:w-[320px] ${compact ? "min-h-[220px]" : "min-h-[260px]"}`}
+      aria-hidden="true"
+    >
+      <div className="flex items-start gap-3 sm:gap-4">
+        <div className="widget-skeleton-shimmer h-11 w-11 rounded-full sm:h-14 sm:w-14" />
+        <div className="min-w-0 flex-1 space-y-2">
+          <div className="widget-skeleton-shimmer h-4 w-40 max-w-full rounded-md" />
+          <div className="widget-skeleton-shimmer h-3 w-24 rounded-full" />
+          <div className="widget-skeleton-shimmer h-3 w-16 rounded-md" />
+        </div>
+      </div>
+      <div className="mt-5 space-y-2">
+        <div className="widget-skeleton-shimmer h-3.5 w-full rounded-md" />
+        <div className="widget-skeleton-shimmer h-3.5 w-[92%] rounded-md" />
+        <div className="widget-skeleton-shimmer h-3.5 w-[78%] rounded-md" />
+      </div>
+      <div className="mt-5 space-y-2">
+        <div className="widget-skeleton-shimmer h-3 w-full rounded-md" />
+        <div className="widget-skeleton-shimmer h-3 w-[90%] rounded-md" />
+        <div className="widget-skeleton-shimmer h-3 w-[86%] rounded-md" />
+      </div>
+    </article>
+  );
+}
+
+function WidgetSkeleton({ showSlowHint }) {
+  return (
+    <div className="widget-fade-in">
+      <div className="mb-10 px-4 text-center sm:mb-14 sm:px-0">
+        <div className="mx-auto h-10 w-56 widget-skeleton-shimmer rounded-lg sm:h-12 sm:w-72" />
+        <div className="mx-auto mt-4 h-4 w-32 widget-skeleton-shimmer rounded-md" />
+      </div>
+      <div className="overflow-hidden" role="status" aria-live="polite">
+        <div className="flex items-stretch gap-3 py-3 pl-4 pr-4 sm:gap-6 sm:pl-0 sm:pr-4">
+          <SkeletonCard keyId="s1" />
+          <SkeletonCard keyId="s2" compact />
+          <SkeletonCard keyId="s3" />
+        </div>
+      </div>
+      {showSlowHint ? (
+        <p className="mt-4 px-4 text-center text-sm text-slate-500">
+          Still loading... please wait
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+function EmptyState() {
+  return (
+    <div className="mx-auto max-w-md rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center sm:px-8 sm:py-12 widget-fade-in">
+      <p className="text-base font-semibold text-slate-700">
+        No testimonials yet
+      </p>
+      <p className="mt-2 text-sm text-slate-400">
+        Public testimonials will appear here automatically.
+      </p>
+    </div>
+  );
+}
+
+function ErrorState({ onRetry }) {
+  return (
+    <div className="mx-auto max-w-md rounded-[24px] border border-rose-100 bg-white px-6 py-10 text-center shadow-[0_20px_45px_rgba(241,245,249,0.8)] sm:px-8 sm:py-12 widget-fade-in">
+      <p className="text-base font-semibold text-slate-800">
+        Unable to load testimonials
+      </p>
+      <p className="mt-2 text-sm text-slate-500">
+        Please check your connection and try again.
+      </p>
+      <button
+        type="button"
+        className="mt-5 inline-flex items-center justify-center rounded-full bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-900"
+        onClick={onRetry}
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
 export default function SliderWidgetPage() {
   const { slug = "" } = useParams();
   const [searchParams] = useSearchParams();
   const embedMode = searchParams.get("embed") === "true";
+  const [showSlowLoadingHint, setShowSlowLoadingHint] = useState(false);
 
   const testimonialsQuery = useQuery({
     queryKey: ["public-testimonials", slug],
-    queryFn: () => getPublicTestimonials(slug),
+    queryFn: () => getPublicTestimonials(slug, { limit: DISPLAY_LIMIT }),
     enabled: Boolean(slug),
     retry: false,
   });
@@ -189,6 +277,21 @@ export default function SliderWidgetPage() {
   );
 
   useEffect(() => {
+    if (!testimonialsQuery.isLoading) {
+      setShowSlowLoadingHint(false);
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setShowSlowLoadingHint(true);
+    }, LOADING_HINT_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [testimonialsQuery.isLoading]);
+
+  useEffect(() => {
     let timeoutId;
 
     const postHeight = () => {
@@ -223,111 +326,92 @@ export default function SliderWidgetPage() {
       window.removeEventListener("resize", debouncedPostHeight);
       window.removeEventListener("load", debouncedPostHeight);
     };
-  }, [duplicatedTestimonials.length, embedMode, testimonialsQuery.isLoading]);
+  }, [duplicatedTestimonials.length, embedMode, testimonialsQuery.isLoading, testimonialsQuery.isError]);
 
-  if (testimonialsQuery.isLoading) {
-    return (
-      <main
-        className={`min-h-screen bg-[#edf5ff] ${embedMode ? "px-3 py-4" : "px-4 py-6 sm:px-6 sm:py-8"}`}
-      >
-        <div className="mx-auto max-w-6xl rounded-[32px] bg-white/50 p-6 shadow-[0_30px_90px_rgba(191,213,239,0.35)]">
-          <Skeleton className="mx-auto h-[400px] w-full rounded-[28px] bg-white/70" />
-        </div>
-      </main>
-    );
-  }
-
-  if (testimonialsQuery.isError) {
-    return (
-      <main className="flex min-h-screen items-center justify-center bg-[#edf5ff] px-4">
-        <div className="rounded-[28px] bg-white px-8 py-14 text-center shadow-[0_30px_90px_rgba(191,213,239,0.35)]">
-          <p className="text-lg font-semibold text-slate-900">
-            Business not found
-          </p>
-          <p className="mt-2 text-sm text-slate-500">
-            We couldn&apos;t load this public review page.
-          </p>
-        </div>
-      </main>
-    );
-  }
+  const isLoading = testimonialsQuery.isLoading;
+  const isError = testimonialsQuery.isError;
 
   const data = testimonialsQuery.data;
 
   return (
     <main
-      className={`min-h-screen overflow-hidden bg-white ${embedMode ? "px-3 py-4" : "px-4 py-6 sm:px-6 sm:py-8"}`}
+      className={` overflow-hidden bg-white ${embedMode ? "px-2 py-3" : "px-3 py-5 sm:px-6 sm:py-8"}`}
+      aria-busy={isLoading ? "true" : "false"}
     >
       <div className={`mx-auto ${embedMode ? "max-w-5xl" : "max-w-6xl"}`}>
-        <section className="relative overflow-hidden rounded-[28px] bg-white px-6 py-12 sm:px-10 sm:py-16">
-      
-       
+        <section className="relative  rounded-[20px] bg-white px-0 py-8 sm:rounded-[28px] sm:px-10 sm:py-16">
+
           {/* ── Header ── */}
-          <div className="relative mb-14 text-center">
-            <span className="pointer-events-none absolute left-6 top-0 select-none font-serif text-[11rem] leading-none text-slate-100 sm:left-10 sm:text-[14rem]">
-              &ldquo;
-            </span>
-
-            <div className="relative z-10 inline-block">
-              <h1 className="text-3xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                What our Clients say!
-              </h1>
-              <div className="mx-auto mt-3 flex items-center justify-center gap-1">
-                <div className="h-[5px] w-36 rounded-full bg-[#f4a59a]" />
-                <div className="h-[5px] w-3 rounded-full bg-[#f4a59a] opacity-50" />
-              </div>
-            </div>
-
-            <p className="mt-5 text-sm font-medium tracking-widest text-slate-400 uppercase">
-              {data.businessName}
-            </p>
-            <div className="mt-3 flex items-center justify-center gap-2 text-sm text-slate-500">
-              <RatingStars rating={data.averageRating} />
-              <span className="font-semibold text-slate-800">
-                {Number(data.averageRating || 0).toFixed(1)} / 5
+          {!isLoading ? (
+            <div className="relative mb-10 px-4 text-center sm:mb-14 sm:px-0 widget-fade-in">
+              <span className="pointer-events-none absolute left-2 top-0 select-none font-serif text-[7rem] leading-none text-slate-100 sm:left-10 sm:text-[14rem]">
+                &ldquo;
               </span>
-              {/* <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
-                {data.totalCount} verified reviews
-              </span> */}
-            </div>
-          </div>
 
-          {testimonials.length === 0 ? (
-            <div className="mx-auto max-w-md rounded-[24px] bg-slate-50 px-8 py-12 text-center">
-              <p className="text-base font-semibold text-slate-700">
-                No reviews yet
-              </p>
-              <p className="mt-2 text-sm text-slate-400">
-                Public testimonials will appear here automatically.
-              </p>
-            </div>
-          ) : (
-            <div className="relative">
-              <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20 bg-gradient-to-r from-white via-white/90 to-transparent" />
-              <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20 bg-gradient-to-l from-white via-white/90 to-transparent" />
-
-              <div className="overflow-hidden" aria-label="Customer testimonials" role="region">
-                <div
-                  className="public-review-marquee group flex w-max items-stretch gap-4 py-2 pr-4 will-change-transform sm:gap-6"
-                >
-                  {duplicatedTestimonials.map((testimonial, index) => (
-                    <div key={`${testimonial.id ?? testimonial.customerName ?? "review"}-${index}`}>
-                      <ReviewCard
-                        testimonial={testimonial}
-                        index={index}
-                      />
-                    </div>
-                  ))}
+              <div className="relative z-10 inline-block">
+                <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
+                  What our Clients say!
+                </h1>
+                <div className="mx-auto mt-2 flex items-center justify-center gap-1 sm:mt-3">
+                  <div className="h-[5px] w-28 rounded-full bg-[#f4a59a] sm:w-36" />
+                  <div className="h-[5px] w-3 rounded-full bg-[#f4a59a] opacity-50" />
                 </div>
               </div>
-            </div>
-          )}
 
-          {testimonials.length > 0 ? (
-            <div className="mt-10 text-center">
+              <p className="mt-4 text-xs font-medium tracking-widest text-slate-400 uppercase sm:mt-5 sm:text-sm">
+                {data.businessName}
+              </p>
+              <div className="mt-2 flex items-center justify-center gap-2 text-sm text-slate-500 sm:mt-3">
+                <RatingStars rating={data?.averageRating || 0} />
+                <span className="font-semibold text-slate-800">
+                  {Number(data?.averageRating || 0).toFixed(1)} / 5
+                </span>
+              </div>
+            </div>
+          ) : null}
+
+          <div className="transition-opacity duration-300">
+            {isLoading ? (
+              // <WidgetSkeleton showSlowHint={showSlowLoadingHint} />
+              <WidgetLoader/> 
+            ) : null}
+
+            {isError ? (
+              <ErrorState onRetry={() => testimonialsQuery.refetch()} />
+            ) : null}
+
+            {!isLoading && !isError && testimonials.length === 0 ? (
+              <EmptyState />
+            ) : null}
+
+            {!isLoading && !isError && testimonials.length > 0 ? (
+              <div className="relative widget-fade-in">
+                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-20" />
+                <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-gradient-to-l from-white via-white/80 to-transparent sm:w-20" />
+
+                <div className="overflow-hidden" aria-label="Customer testimonials" role="region">
+                  <div
+                    className="public-review-marquee group flex w-max items-stretch gap-3 py-3 pl-4 pr-4 will-change-transform sm:gap-6 sm:pl-0 sm:pr-4"
+                  >
+                    {duplicatedTestimonials.map((testimonial, index) => (
+                      <div key={`${testimonial.id ?? testimonial.customerName ?? "review"}-${index}`}>
+                        <ReviewCard
+                          testimonial={testimonial}
+                          index={index}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          {!isLoading && !isError && testimonials.length > 0 ? (
+            <div className="mt-8 px-4 text-center sm:mt-10 sm:px-0 widget-fade-in">
               <button
                 type="button"
-                className="inline-flex items-center justify-center rounded-full bg-slate-800 px-6 py-3 text-sm font-semibold text-white shadow-sm transition duration-200 hover:scale-105 hover:bg-slate-900 active:scale-95 focus:outline-none ring-2 ring-slate-300 ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
+                className="inline-flex items-center justify-center rounded-full bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:scale-105 hover:bg-slate-900 active:scale-95 focus:outline-none ring-2 ring-slate-300 ring-offset-1 disabled:pointer-events-none disabled:opacity-50 sm:px-6 sm:py-3"
                 onClick={() =>
                   window.open(`/p/${slug}`, "_blank", "noopener,noreferrer")
                 }
