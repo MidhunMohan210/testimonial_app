@@ -72,22 +72,21 @@ function WavesDecoration() {
 function CurveDecoration() {
   return (
     <svg
-      className="absolute bottom-0 left-0 h-20 w-full opacity-60"  // reduced height
+      className="absolute bottom-0 left-0 h-20 w-full opacity-60" // reduced height
       viewBox="0 0 400 100"
       preserveAspectRatio="xMidYMax slice"
     >
       <path
-        d="M0 91 C 170 60, 246 112, 400 25 L 400 100 L 0 100 Z"  // curve starts lower
+        d="M0 91 C 170 60, 246 112, 400 25 L 400 100 L 0 100 Z" // curve starts lower
         fill="rgba(255,255,255,0.14)"
       />
       <path
-      d="M0 91 C 178 60, 246 112, 400 25"  // matching dashed line
+        d="M0 91 C 178 60, 246 112, 400 25" // matching dashed line
         fill="none"
         stroke="white"
         strokeWidth="2"
         strokeDasharray="6 6"
         strokeLinecap="round"
-
       />
     </svg>
   );
@@ -173,7 +172,6 @@ export default function DashboardPage() {
   });
 
   // console.log(business);
-  
 
   const businessQuery = useQuery({
     queryKey: ["business", "me"],
@@ -214,7 +212,7 @@ export default function DashboardPage() {
   const businessName = businessQuery.data?.businessName || "Business";
   const privateFeedbackCount = privateFeedbackQuery.data?.length || 0;
   // console.log(businessQuery.data);
-  
+
   const reviewLink = businessQuery.data?.slug
     ? `${window.location.origin}/r/${businessQuery.data.slug}`
     : "";
@@ -375,7 +373,8 @@ export default function DashboardPage() {
                 </div>
 
                 <h1 className="text-2xl font-bold text-slate-700 sm:text-4xl">
-                  Welcome back  <span className="text-black">{businessName}</span>
+                  Welcome back{" "}
+                  <span className="text-black">{businessName}</span>
                 </h1>
 
                 <p className="mt-2 max-w-lg text-sm leading-6 text-slate-500 sm:text-base sm:leading-7">
@@ -469,6 +468,7 @@ export default function DashboardPage() {
                     Awaiting moderation
                   </p>
                 </div>
+
                 <BarsDecoration />
               </div>
             </button>
@@ -476,7 +476,9 @@ export default function DashboardPage() {
             {/* Private Feedback */}
             <button
               type="button"
-              className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-green-400 to-green-500 p-5 text-left text-white shadow-lg shadow-orange-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6"
+              className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-br from-[#11998e] to-[#38ef7d]
+
+             p-5 text-left text-white shadow-lg shadow-orange-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6"
               onClick={() => handleKpiCardNavigation("/private-feedback")}
             >
               <div className="relative z-10 flex h-full items-end justify-between gap-4">
@@ -487,9 +489,7 @@ export default function DashboardPage() {
                   <p className="text-3xl font-bold tracking-tight sm:text-4xl">
                     {privateFeedbackCount}
                   </p>
-                  <p className="mt-1 text-xs text-white/75">
-                    Needs follow-up
-                  </p>
+                  <p className="mt-1 text-xs text-white/75">Needs follow-up</p>
                 </div>
                 <GridDecoration />
               </div>
@@ -541,7 +541,8 @@ export default function DashboardPage() {
                       Recent testimonials
                     </h3>
                     <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
-                      Review the latest customer responses coming into your workspace.
+                      Review the latest customer responses coming into your
+                      workspace.
                     </p>
                   </div>
                   {hasTestimonials ? (
@@ -559,7 +560,10 @@ export default function DashboardPage() {
                   {hasTestimonials ? (
                     <div className="space-y-4">
                       {recentTestimonials.map((testimonial) => (
-                        <TestimonialCard key={testimonial._id} testimonial={testimonial} />
+                        <TestimonialCard
+                          key={testimonial._id}
+                          testimonial={testimonial}
+                        />
                       ))}
                     </div>
                   ) : (
@@ -575,88 +579,86 @@ export default function DashboardPage() {
             </Card>
           </div>
 
-     <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 lg:grid-cols-[1fr_1.4fr] items-start">
-  
-  {/* Share Link Card */}
-<div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm transition hover:shadow-md sm:p-6">
-    
-    <div className="relative z-10 flex h-full flex-col justify-between">
-      <div>
-        <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-          <ArrowUpRight className="h-5 w-5" />
-        </div>
+          <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 lg:grid-cols-[1fr_1.4fr] items-start">
+            {/* Share Link Card */}
+            <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm transition hover:shadow-md sm:p-6">
+              <div className="relative z-10 flex h-full flex-col justify-between">
+                <div>
+                  <div className="mb-5 flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                    <ArrowUpRight className="h-5 w-5" />
+                  </div>
 
-        <h3 className="mb-1 text-lg font-semibold text-slate-900">
-          Share Link
-        </h3>
+                  <h3 className="mb-1 text-lg font-semibold text-slate-900">
+                    Share Link
+                  </h3>
 
-        <p className="mb-3 text-sm text-slate-500">
-          Send this link to customers to collect reviews instantly.
-        </p>
+                  <p className="mb-3 text-sm text-slate-500">
+                    Send this link to customers to collect reviews instantly.
+                  </p>
 
-        {/* Preview Link */}
-        <p className="text-xs text-slate-400 truncate">
-          {reviewLink || "Review link will appear here once your page is ready."}
-        </p>
-      </div>
+                  {/* Preview Link */}
+                  <p className="text-xs text-slate-400 truncate">
+                    {reviewLink ||
+                      "Review link will appear here once your page is ready."}
+                  </p>
+                </div>
 
-      <Button
-        className="mt-5 h-11 w-full rounded-xl bg-slate-900 px-4 font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-slate-800 hover:shadow-[0_18px_36px_rgba(15,23,42,0.2)] active:translate-y-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
-        onClick={handleCopyLink}
-      >
-        {copied ? (
-          <>
-            <CheckCircle2 className="mr-2 h-4 w-4" />
-            Copied!
-          </>
-        ) : (
-          <>
-            <Copy className="mr-2 h-4 w-4" />
-            Copy review link
-          </>
-        )}
-      </Button>
-    </div>
-  </div>
+                <Button
+                  className="mt-5 h-11 w-full rounded-xl bg-slate-900 px-4 font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-slate-800 hover:shadow-[0_18px_36px_rgba(15,23,42,0.2)] active:translate-y-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                  onClick={handleCopyLink}
+                >
+                  {copied ? (
+                    <>
+                      <CheckCircle2 className="mr-2 h-4 w-4" />
+                      Copied!
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy review link
+                    </>
+                  )}
+                </Button>
+              </div>
+            </div>
 
-  {/* Embed Card */}
-  <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-    
-    <h3 className="text-base font-semibold text-slate-900">
-      Embed on your website
-    </h3>
+            {/* Embed Card */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+              <h3 className="text-base font-semibold text-slate-900">
+                Embed on your website
+              </h3>
 
-    <p className="mt-2 text-sm leading-6 text-slate-500">
-      Add this slider to your homepage to showcase your latest reviews.
-    </p>
+              <p className="mt-2 text-sm leading-6 text-slate-500">
+                Add this slider to your homepage to showcase your latest
+                reviews.
+              </p>
 
-    <Textarea
-      readOnly
-      value={iframeCode}
-      className="mt-4 min-h-[140px] rounded-xl border-slate-200 bg-slate-50 font-mono text-xs leading-6 text-slate-700"
-    />
+              <Textarea
+                readOnly
+                value={iframeCode}
+                className="mt-4 min-h-[140px] rounded-xl border-slate-200 bg-slate-50 font-mono text-xs leading-6 text-slate-700"
+              />
 
-    <Button
-      variant="outline"
-      className="mt-4 h-11 rounded-2xl border-slate-300 bg-white px-4 font-semibold text-slate-700 shadow-[0_8px_24px_rgba(148,163,184,0.12)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 hover:shadow-[0_14px_30px_rgba(148,163,184,0.16)] active:translate-y-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
-      onClick={handleCopyEmbedCode}
-      disabled={!iframeCode}
-    >
-      {embedCopied ? (
-        <>
-          <CheckCircle2 className="mr-2 h-4 w-4" />
-          Copied!
-        </>
-      ) : (
-        <>
-          <Copy className="mr-2 h-4 w-4" />
-          Copy code
-        </>
-      )}
-    </Button>
-  </div>
-
-</div>
+              <Button
+                variant="outline"
+                className="mt-4 h-11 rounded-2xl border-slate-300 bg-white px-4 font-semibold text-slate-700 shadow-[0_8px_24px_rgba(148,163,184,0.12)] transition-all duration-200 hover:-translate-y-0.5 hover:border-slate-400 hover:bg-slate-50 hover:text-slate-900 hover:shadow-[0_14px_30px_rgba(148,163,184,0.16)] active:translate-y-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
+                onClick={handleCopyEmbedCode}
+                disabled={!iframeCode}
+              >
+                {embedCopied ? (
+                  <>
+                    <CheckCircle2 className="mr-2 h-4 w-4" />
+                    Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy code
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
 

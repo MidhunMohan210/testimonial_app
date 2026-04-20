@@ -262,6 +262,16 @@ export default function TestimonialsPage() {
   const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
   const deferredStatus = useDeferredValue(activeStatus);
 
+  const handleStatusChange = (nextStatus) => {
+    const normalizedStatus = getValidStatus(nextStatus);
+    setActiveStatus(normalizedStatus);
+
+    const queryStatus = getValidStatus(searchParams.get("status"));
+    if (queryStatus !== normalizedStatus) {
+      setSearchParams(normalizedStatus === "all" ? {} : { status: normalizedStatus });
+    }
+  };
+
   const handleOpenEntry = (entry) => {
     setSelectedEntry(entry);
     setDetailDialogOpen(true);
@@ -371,14 +381,7 @@ export default function TestimonialsPage() {
     if (statusFromQuery !== activeStatus) {
       setActiveStatus(statusFromQuery);
     }
-  }, [activeStatus, searchParams]);
-
-  useEffect(() => {
-    const currentQueryStatus = getValidStatus(searchParams.get("status"));
-    if (currentQueryStatus !== activeStatus) {
-      setSearchParams(activeStatus === "all" ? {} : { status: activeStatus });
-    }
-  }, [activeStatus, searchParams, setSearchParams]);
+  }, [searchParams]);
 
   useEffect(() => {
     if (currentPage > testimonialTotalPages) {
@@ -493,7 +496,7 @@ export default function TestimonialsPage() {
           <Tabs
             value={activeStatus}
             onValueChange={(nextStatus) => {
-              setActiveStatus(getValidStatus(nextStatus));
+              handleStatusChange(nextStatus);
             }}
           >
             <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)] sm:p-5">
