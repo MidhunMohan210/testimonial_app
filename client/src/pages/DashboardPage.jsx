@@ -72,21 +72,22 @@ function WavesDecoration() {
 function CurveDecoration() {
   return (
     <svg
-      className="absolute bottom-0 left-0 h-24 w-full opacity-60"
+      className="absolute bottom-0 left-0 h-20 w-full opacity-60"  // reduced height
       viewBox="0 0 400 100"
       preserveAspectRatio="xMidYMax slice"
     >
       <path
-        d="M0 60 C 100 20, 200 100, 400 40 L 400 100 L 0 100 Z"
+        d="M0 91 C 170 60, 246 112, 400 25 L 400 100 L 0 100 Z"  // curve starts lower
         fill="rgba(255,255,255,0.14)"
       />
       <path
-        d="M0 60 C 100 20, 200 100, 400 40"
+      d="M0 91 C 178 60, 246 112, 400 25"  // matching dashed line
         fill="none"
         stroke="white"
         strokeWidth="2"
         strokeDasharray="6 6"
         strokeLinecap="round"
+
       />
     </svg>
   );
@@ -436,7 +437,7 @@ export default function DashboardPage() {
                 handleKpiCardNavigation("/testimonials?status=approved")
               }
             >
-              <div className="relative z-10">
+              <div className="relative z-10 mt-5">
                 <h3 className="mb-2 text-sm font-medium text-white/90">
                   Approved
                 </h3>
