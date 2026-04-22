@@ -13,6 +13,7 @@ import TermsPage from "./pages/TermsPage";
 import ReviewFormPage from "./pages/ReviewFormPage";
 import PublicTestimonialsPage from "./pages/PublicTestimonialsPage";
 import SliderWidgetPage from "./pages/SliderWidgetPage";
+import WidgetPage from "./pages/WidgetPage";
 import { useAuth } from "./hooks/useAuth";
 import AppShell from "./components/AppShell";
 import PublicLayout from "./components/PublicLayout";
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/r/:slug" element={<ReviewFormPage />} />
       </Route>
       <Route path="/p/:slug" element={<PublicTestimonialsPage />} />
+      <Route path="/widget/:businessSlug" element={<WidgetPage />} />
       <Route path="/widget/slider/:slug" element={<SliderWidgetPage />} />
       <Route
         element={
