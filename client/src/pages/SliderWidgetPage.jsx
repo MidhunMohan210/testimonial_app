@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BadgeCheck, Quote, Star } from "lucide-react";
+import { BadgeCheck, CloudAlert, Quote, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getPublicTestimonials } from "../api/publicTestimonialsApi";
 import WidgetLoader from "../components/WidgetLoader";
@@ -78,7 +78,6 @@ function ReviewCard({ testimonial, index }) {
 
       <div className="relative z-10 flex h-full flex-col justify-between">
         <div className="flex items-start gap-3 sm:gap-4">
-          {/* Avatar */}
           <div
             className={`flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full text-xs font-semibold sm:h-14 sm:w-14 sm:text-sm ${
               testimonial.avatarUrl
@@ -126,9 +125,7 @@ function ReviewCard({ testimonial, index }) {
         >
           <p
             className={`text-xs italic leading-6 text-slate-600 sm:text-sm sm:leading-7 ${
-              isCompactReview
-                ? "text-center"
-                : "line-clamp-3 text-left"
+              isCompactReview ? "text-center" : "line-clamp-3 text-left"
             }`}
           >
             {text || "No written review provided."}
@@ -206,12 +203,13 @@ function EmptyState() {
 
 function ErrorState({ onRetry }) {
   return (
-    <div className="mx-auto max-w-md rounded-[24px] border border-rose-100 bg-white px-6 py-10 text-center shadow-[0_20px_45px_rgba(241,245,249,0.8)] sm:px-8 sm:py-12 widget-fade-in">
-      <p className="text-base font-semibold text-slate-800">
+    <div className="mx-auto  rounded-[24px] h-[420px] flex items-center justify-center flex-col px-6 py-10 text-center  sm:px-8 sm:py-12 widget-fade-in">
+      <CloudAlert size={40} color="gray" />
+      <p className="text-base font-semibold text-slate-800 mt-3">
         Unable to load testimonials
       </p>
       <p className="mt-2 text-sm text-slate-500">
-        Please check your connection and try again.
+       Please try again in a moment
       </p>
       <button
         type="button"
@@ -228,16 +226,28 @@ export default function SliderWidgetPage() {
   const { slug = "" } = useParams();
   const [searchParams] = useSearchParams();
   const embedMode = searchParams.get("embed") === "true";
+  const widgetRootRef = useRef(null);
+  const widgetContentRef = useRef(null);
   const [showSlowLoadingHint, setShowSlowLoadingHint] = useState(false);
 
   const testimonialsQuery = useQuery({
     queryKey: ["public-testimonials", slug],
     queryFn: () => getPublicTestimonials(slug, { limit: DISPLAY_LIMIT }),
     enabled: Boolean(slug),
-    retry: false,
+    retry: 1,
   });
 
-  const testimonials = testimonialsQuery.data?.testimonials || [];
+  const isLoading = testimonialsQuery.isLoading;
+  const isError = testimonialsQuery.isError;
+  // const isError = true;
+  const data = testimonialsQuery.data;
+
+  const testimonials = Array.isArray(data?.testimonials)
+    ? data.testimonials
+    : [];
+
+  const isInvalidData = !isLoading && !isError && !data;
+
   const visibleTestimonials = useMemo(() => {
     const filteredTestimonials = testimonials.filter(
       (testimonial) => (testimonial.testimonialText || "").trim().length > 20
@@ -273,7 +283,7 @@ export default function SliderWidgetPage() {
 
   const duplicatedTestimonials = useMemo(
     () => [...marqueeTestimonials, ...marqueeTestimonials],
-    [marqueeTestimonials],
+    [marqueeTestimonials]
   );
 
   useEffect(() => {
@@ -299,10 +309,34 @@ export default function SliderWidgetPage() {
         return;
       }
 
+      const contentEl = widgetContentRef.current;
+      const rootEl = widgetRootRef.current;
+      const measuredEl = contentEl || rootEl;
+      const measuredHeight = measuredEl
+        ? Math.max(
+            measuredEl.scrollHeight,
+            Math.ceil(measuredEl.getBoundingClientRect().height)
+          )
+        : 0;
+      const fallbackHeight = Math.max(
+        document.documentElement?.scrollHeight || 0,
+        document.body?.scrollHeight || 0
+      );
+      const height = measuredHeight || fallbackHeight || 400;
+
       window.parent.postMessage(
         {
           type: "RESIZE_IFRAME",
-          height: document.body.scrollHeight,
+          height,
+        },
+        "*"
+      );
+
+      window.parent.postMessage(
+        {
+          type: "WOICE_WIDGET_HEIGHT",
+          height,
+          slug,
         },
         "*"
       );
@@ -326,23 +360,33 @@ export default function SliderWidgetPage() {
       window.removeEventListener("resize", debouncedPostHeight);
       window.removeEventListener("load", debouncedPostHeight);
     };
-  }, [duplicatedTestimonials.length, embedMode, testimonialsQuery.isLoading, testimonialsQuery.isError]);
+  }, [
+    duplicatedTestimonials.length,
+    embedMode,
+    testimonialsQuery.isLoading,
+    testimonialsQuery.isError,
+    isInvalidData,
+    slug,
+  ]);
 
-  const isLoading = testimonialsQuery.isLoading;
-  const isError = testimonialsQuery.isError;
-
-  const data = testimonialsQuery.data;
+  if (!slug) {
+    return <ErrorState onRetry={() => window.location.reload()} />;
+  }
 
   return (
     <main
-      className={` overflow-hidden bg-white ${embedMode ? "px-2 py-3" : "px-3 py-5 sm:px-6 sm:py-8"}`}
+      ref={widgetRootRef}
+      className={`overflow-hidden bg-white ${
+        embedMode ? "px-2 py-3" : "px-3 py-5 sm:px-6 sm:py-8"
+      }`}
       aria-busy={isLoading ? "true" : "false"}
     >
       <div className={`mx-auto ${embedMode ? "max-w-5xl" : "max-w-6xl"}`}>
-        <section className="relative  rounded-[20px] bg-white px-0 py-8 sm:rounded-[28px] sm:px-10 sm:py-16">
-
-          {/* ── Header ── */}
-          {!isLoading ? (
+        <section
+          ref={widgetContentRef}
+          className="relative rounded-[20px] bg-white px-0 py-8 sm:rounded-[28px] sm:px-10 sm:py-16"
+        >
+          {!isLoading && !isError && !isInvalidData ? (
             <div className="relative mb-10 px-4 text-center sm:mb-14 sm:px-0 widget-fade-in">
               <span className="pointer-events-none absolute left-2 top-0 select-none font-serif text-[7rem] leading-none text-slate-100 sm:left-10 sm:text-[14rem]">
                 &ldquo;
@@ -359,7 +403,7 @@ export default function SliderWidgetPage() {
               </div>
 
               <p className="mt-4 text-xs font-medium tracking-widest text-slate-400 uppercase sm:mt-5 sm:text-sm">
-                {data.businessName}
+                {data?.businessName}
               </p>
               <div className="mt-2 flex items-center justify-center gap-2 text-sm text-slate-500 sm:mt-3">
                 <RatingStars rating={data?.averageRating || 0} />
@@ -371,34 +415,26 @@ export default function SliderWidgetPage() {
           ) : null}
 
           <div className="transition-opacity duration-300">
-            {isLoading ? (
-              // <WidgetSkeleton showSlowHint={showSlowLoadingHint} />
-              <WidgetLoader/> 
-            ) : null}
+            {isLoading ? <WidgetLoader /> : null}
 
-            {isError ? (
+            {isError || isInvalidData ? (
               <ErrorState onRetry={() => testimonialsQuery.refetch()} />
             ) : null}
 
-            {!isLoading && !isError && testimonials.length === 0 ? (
+            {!isLoading && !isError && !isInvalidData && testimonials.length === 0 ? (
               <EmptyState />
             ) : null}
 
-            {!isLoading && !isError && testimonials.length > 0 ? (
+            {!isLoading && !isError && !isInvalidData && testimonials.length > 0 ? (
               <div className="relative widget-fade-in">
                 <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-20" />
                 <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-gradient-to-l from-white via-white/80 to-transparent sm:w-20" />
 
                 <div className="overflow-hidden" aria-label="Customer testimonials" role="region">
-                  <div
-                    className="public-review-marquee group flex w-max items-stretch gap-3 py-3 pl-4 pr-4 will-change-transform sm:gap-6 sm:pl-0 sm:pr-4"
-                  >
+                  <div className="public-review-marquee group flex w-max items-stretch gap-3 py-3 pl-4 pr-4 will-change-transform sm:gap-6 sm:pl-0 sm:pr-4">
                     {duplicatedTestimonials.map((testimonial, index) => (
                       <div key={`${testimonial.id ?? testimonial.customerName ?? "review"}-${index}`}>
-                        <ReviewCard
-                          testimonial={testimonial}
-                          index={index}
-                        />
+                        <ReviewCard testimonial={testimonial} index={index} />
                       </div>
                     ))}
                   </div>
@@ -407,7 +443,7 @@ export default function SliderWidgetPage() {
             ) : null}
           </div>
 
-          {!isLoading && !isError && testimonials.length > 0 ? (
+          {!isLoading && !isError && !isInvalidData && testimonials.length > 0 ? (
             <div className="mt-8 px-4 text-center sm:mt-10 sm:px-0 widget-fade-in">
               <button
                 type="button"

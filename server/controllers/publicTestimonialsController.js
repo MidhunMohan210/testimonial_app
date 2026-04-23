@@ -1,9 +1,12 @@
+import { th } from "zod/v4/locales";
 import Business from "../models/Business.js";
 import Testimonial from "../models/Testimonial.js";
 import { getBusinessSettings } from "../utils/businessSettings.js";
 import { createHttpError } from "../utils/httpError.js";
 
 export const getPublicTestimonials = async (req, res) => {
+  
+
   const business = await Business.findOne({ slug: req.params.slug }).select(
     "businessName slug settings isPublicEnabled",
   );

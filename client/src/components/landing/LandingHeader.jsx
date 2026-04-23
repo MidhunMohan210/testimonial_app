@@ -100,8 +100,12 @@
               <NavLink className="font-bold tracking-wide " style={{ fontFamily: "'saans', 'saans Fallback', sans-serif" }}>
                 Pricing
               </NavLink>
-              <NavLink className="font-bold" style={{ fontFamily: "'saans', 'saans Fallback', sans-serif" }}>
-                Blog
+              <NavLink
+                to="/embed-docs"
+                className="font-bold"
+                style={{ fontFamily: "'saans', 'saans Fallback', sans-serif" }}
+              >
+                Docs
               </NavLink>
               <NavLink
                 to="/login"

@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useSearchParams } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -14,6 +14,7 @@ import ReviewFormPage from "./pages/ReviewFormPage";
 import PublicTestimonialsPage from "./pages/PublicTestimonialsPage";
 import SliderWidgetPage from "./pages/SliderWidgetPage";
 import WidgetPage from "./pages/WidgetPage";
+import EmbedDocsPage from "./pages/EmbedDocsPage";
 import { useAuth } from "./hooks/useAuth";
 import AppShell from "./components/AppShell";
 import PublicLayout from "./components/PublicLayout";
@@ -28,6 +29,17 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+function NotFoundRoute() {
+  const [searchParams] = useSearchParams();
+  const embedMode = searchParams.get("embed") === "true";
+
+  if (embedMode) {
+    return <main className="min-h-screen bg-transparent" aria-hidden="true" />;
+  }
+
+  return <Navigate to="/" replace />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -37,6 +49,7 @@ export default function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route path="/terms" element={<TermsPage />} />
+        <Route path="/embed-docs" element={<EmbedDocsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
         <Route path="/r/:slug" element={<ReviewFormPage />} />
@@ -55,14 +68,10 @@ export default function App() {
         <Route path="/testimonials" element={<TestimonialsPage />} />
         <Route path="/private-feedback" element={<PrivateFeedbackPage />} />
         <Route path="/send-request" element={<SendRequestPage />} />
+        <Route path="/docs" element={<EmbedDocsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
       </Route>
-      <Route
-        path="*"
-        element={
-          <Navigate to="/" replace />
-        }
-      />
+      <Route path="*" element={<NotFoundRoute />} />
     </Routes>
   );
 }

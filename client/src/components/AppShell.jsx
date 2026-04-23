@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
+  BookOpen,
   ChevronRight,
   Ellipsis,
   LayoutDashboard,
@@ -41,6 +42,12 @@ const navigation = [
     icon: MessageSquareWarning,
   },
   {
+    to: "/docs",
+    label: "Docs",
+    description: "Embed and integration",
+    icon: BookOpen,
+  },
+  {
     to: "/settings",
     label: "Settings",
     description: "Business preferences",
@@ -72,6 +79,12 @@ const pageMeta = {
     title: "Requests",
     description:
       "Launch new collection requests and add feedback manually from one focused page.",
+  },
+  "/docs": {
+    eyebrow: "Developer documentation",
+    title: "Docs",
+    description:
+      "Copy production-ready embed snippets and implementation guides for every platform.",
   },
   "/settings": {
     eyebrow: "Business configuration",

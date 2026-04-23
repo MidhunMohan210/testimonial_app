@@ -219,29 +219,18 @@ export default function DashboardPage() {
   const widgetSlug = businessQuery.data?.slug || "";
   const widgetOrigin = window.location.origin;
   const iframeCode = widgetSlug
-    ? `<div id="testimonial-widget-${widgetSlug}"></div>
-<script>
-  (function () {
-    var container = document.getElementById("testimonial-widget-${widgetSlug}");
-    if (!container) return;
-
-    var iframe = document.createElement("iframe");
-    iframe.src = "${widgetOrigin}/widget/slider/${widgetSlug}?embed=true";
-    iframe.width = "100%";
-    iframe.height = "500";
-    iframe.style.border = "0";
-    iframe.style.display = "block";
-    iframe.style.transition = "height 0.3s ease";
-    iframe.setAttribute("scrolling", "no");
-    container.appendChild(iframe);
-
-    window.addEventListener("message", function (event) {
-      if (event.origin !== "${widgetOrigin}") return;
-      if (!event.data || event.data.type !== "RESIZE_IFRAME") return;
-      iframe.style.height = event.data.height + "px";
-    });
-  })();
-</script>`
+    ? `<div
+  class="woice-testimonial-widget"
+  data-business-slug="${widgetSlug}"
+  data-theme="light"
+  data-layout="slider"
+  data-height="420"
+></div>
+<script
+  src="${widgetOrigin}/embed.js"
+  data-base-url="${widgetOrigin}"
+  defer
+></script>`
     : "";
   const recentTestimonials = (allTestimonialsQuery.data?.data || []).slice(
     0,
