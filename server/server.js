@@ -24,7 +24,13 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(helmet());
+// ─── Helmet (security headers, CORP disabled for public widget API) ────────────
+app.use(
+  helmet({
+    crossOriginResourcePolicy: false,  // Allow cross-origin resource loading for widget
+    crossOriginOpenerPolicy: false,
+  })
+);
 
 // Important for Railway / reverse proxies so req.ip works properly
 app.set("trust proxy", 1);
@@ -77,14 +83,8 @@ function getBusinessKey(req) {
 }
 
 // ─── Rate Limiters ────────────────────────────────────────────────────────────
-
-// Public review submission limiter
-// Safer for shared Wi-Fi / classroom cases:
-// - shorter window
-// - higher limit
-// - counts per IP + business instead of only IP
 const publicReviewLimiter = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
+  windowMs: 5 * 60 * 1000,
   max: 40,
   standardHeaders: true,
   legacyHeaders: false,
@@ -96,10 +96,8 @@ const publicReviewLimiter = rateLimit({
   },
 });
 
-// Public testimonials read limiter
-// Slightly more generous for embedded widgets
 const publicReadLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: 60 * 1000,
   max: 120,
   standardHeaders: true,
   legacyHeaders: false,
@@ -126,7 +124,14 @@ app.get("/api/health", (req, res) => {
 // Public unauthenticated routes
 app.use("/whatsapp", whatsappCallbackRoutes);
 app.use("/api/r", publicReviewLimiter, publicReviewRouter);
-app.use("/api/p", publicReadLimiter, publicTestimonialsRouter);
+
+// Public testimonials — wide-open CORS for embedded widget support
+app.use(
+  "/api/p",
+  publicReadLimiter,
+  cors({ origin: "*", credentials: false }),
+  publicTestimonialsRouter
+);
 
 // Auth routes
 app.use("/api/auth", authRoutes);
