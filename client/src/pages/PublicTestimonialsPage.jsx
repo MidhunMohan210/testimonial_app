@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CloudAlert, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
@@ -7,6 +7,9 @@ import WidgetLoader from "../components/WidgetLoader";
 
 const INITIAL_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
+const MIN_LOADING_SCREEN_MS = 500;
+const PUBLIC_TESTIMONIALS_STALE_TIME_MS = 5 * 60 * 1000;
+const PUBLIC_TESTIMONIALS_GC_TIME_MS = 30 * 60 * 1000;
 
 function StarRating({ rating, muted = false }) {
   return (
@@ -347,12 +350,17 @@ export default function PublicTestimonialsPage() {
   const embedMode = searchParams.get("embed") === "true";
   const [visibleCount, setVisibleCount] = useState(INITIAL_COUNT);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showLoadingScreen, setShowLoadingScreen] = useState(Boolean(slug));
+  const loadingStartedAtRef = useRef(null);
+  const hideLoadingTimeoutRef = useRef(null);
 
   const testimonialsQuery = useQuery({
-    queryKey: ["public-testimonials", slug],
+    queryKey: ["public-testimonials", "full", slug],
     queryFn: () => getPublicTestimonials(slug),
     enabled: Boolean(slug),
     retry: false,
+    staleTime: PUBLIC_TESTIMONIALS_STALE_TIME_MS,
+    gcTime: PUBLIC_TESTIMONIALS_GC_TIME_MS,
   });
 
   const data = testimonialsQuery.data;
@@ -379,6 +387,59 @@ export default function PublicTestimonialsPage() {
     () => Number(data?.averageRating || 0).toFixed(1),
     [data?.averageRating]
   );
+
+  useEffect(() => {
+    return () => {
+      if (hideLoadingTimeoutRef.current) {
+        window.clearTimeout(hideLoadingTimeoutRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!slug) {
+      if (hideLoadingTimeoutRef.current) {
+        window.clearTimeout(hideLoadingTimeoutRef.current);
+        hideLoadingTimeoutRef.current = null;
+      }
+      loadingStartedAtRef.current = null;
+      setShowLoadingScreen(false);
+      return;
+    }
+
+    if (testimonialsQuery.isLoading) {
+      if (hideLoadingTimeoutRef.current) {
+        window.clearTimeout(hideLoadingTimeoutRef.current);
+        hideLoadingTimeoutRef.current = null;
+      }
+      if (loadingStartedAtRef.current === null) {
+        loadingStartedAtRef.current = Date.now();
+      }
+      setShowLoadingScreen(true);
+      return;
+    }
+
+    const loadingStartedAt = loadingStartedAtRef.current;
+    if (loadingStartedAt === null) {
+      setShowLoadingScreen(false);
+      return;
+    }
+
+    const elapsedMs = Date.now() - loadingStartedAt;
+    const remainingMs = Math.max(0, MIN_LOADING_SCREEN_MS - elapsedMs);
+
+    if (remainingMs === 0) {
+      setShowLoadingScreen(false);
+      loadingStartedAtRef.current = null;
+      return;
+    }
+
+    hideLoadingTimeoutRef.current = window.setTimeout(() => {
+      setShowLoadingScreen(false);
+      loadingStartedAtRef.current = null;
+      hideLoadingTimeoutRef.current = null;
+    }, remainingMs);
+  }, [slug, testimonialsQuery.isLoading]);
 
   useEffect(() => {
     setVisibleCount(INITIAL_COUNT);
@@ -481,7 +542,7 @@ export default function PublicTestimonialsPage() {
     return <ErrorState onRetry={() => window.location.reload()} />;
   }
 
-  if (testimonialsQuery.isLoading) {
+  if (showLoadingScreen) {
     return (
       <main
         className={`min-h-screen overflow-x-hidden bg-[#edf3fb] flex items-center justify-center ${

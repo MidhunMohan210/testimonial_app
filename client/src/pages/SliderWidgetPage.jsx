@@ -7,6 +7,8 @@ import WidgetLoader from "../components/WidgetLoader";
 
 const DISPLAY_LIMIT = 5;
 const LOADING_HINT_DELAY_MS = 5000;
+const PUBLIC_TESTIMONIALS_STALE_TIME_MS = 5 * 60 * 1000;
+const PUBLIC_TESTIMONIALS_GC_TIME_MS = 30 * 60 * 1000;
 
 function RatingStars({ rating }) {
   return (
@@ -231,10 +233,12 @@ export default function SliderWidgetPage() {
   const [showSlowLoadingHint, setShowSlowLoadingHint] = useState(false);
 
   const testimonialsQuery = useQuery({
-    queryKey: ["public-testimonials", slug],
+    queryKey: ["public-testimonials", "slider", slug, DISPLAY_LIMIT],
     queryFn: () => getPublicTestimonials(slug, { limit: DISPLAY_LIMIT }),
     enabled: Boolean(slug),
     retry: 1,
+    staleTime: PUBLIC_TESTIMONIALS_STALE_TIME_MS,
+    gcTime: PUBLIC_TESTIMONIALS_GC_TIME_MS,
   });
 
   const isLoading = testimonialsQuery.isLoading;
