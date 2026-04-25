@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Star } from "lucide-react";
+import { CloudAlert, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getPublicTestimonials } from "../api/publicTestimonialsApi";
-import { Skeleton } from "../components/ui/skeleton";
+import WidgetLoader from "../components/WidgetLoader";
 
 const INITIAL_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
@@ -320,6 +320,27 @@ function ReviewBoardCard({ testimonial, index }) {
   );
 }
 
+function ErrorState({ onRetry }) {
+  return (
+    <div className="min-h-screen w-full px-6 py-10 text-center widget-fade-in sm:px-8 sm:py-12 flex items-center justify-center flex-col">
+      <CloudAlert size={40} color="gray" />
+      <p className="mt-3 text-base font-semibold text-slate-800">
+        Unable to load testimonials
+      </p>
+      <p className="mt-2 text-sm text-slate-500">
+        Please try again in a moment
+      </p>
+      <button
+        type="button"
+        className="mt-5 inline-flex items-center justify-center rounded-full bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-900"
+        onClick={onRetry}
+      >
+        Retry
+      </button>
+    </div>
+  );
+}
+
 export default function PublicTestimonialsPage() {
   const { slug = "" } = useParams();
   const [searchParams] = useSearchParams();
@@ -456,15 +477,19 @@ export default function PublicTestimonialsPage() {
     });
   };
 
+  if (!slug) {
+    return <ErrorState onRetry={() => window.location.reload()} />;
+  }
+
   if (testimonialsQuery.isLoading) {
     return (
       <main
-        className={`min-h-screen overflow-x-hidden bg-[#edf3fb] ${
+        className={`min-h-screen overflow-x-hidden bg-[#edf3fb] flex items-center justify-center ${
           embedMode ? "px-3 py-4" : "px-4 py-6 sm:px-6 sm:py-8"
         }`}
       >
-        <div className="mx-auto max-w-6xl rounded-[22px] p-2">
-          <Skeleton className="h-[640px] w-full rounded-[20px] bg-white/70" />
+        <div className="w-full">
+          <WidgetLoader />
         </div>
       </main>
     );
@@ -472,13 +497,12 @@ export default function PublicTestimonialsPage() {
 
   if (testimonialsQuery.isError) {
     return (
-      <main className="min-h-screen bg-[#edf3fb] px-4 py-6 sm:px-6 sm:py-8">
-        <div className="mx-auto max-w-2xl rounded-[20px] bg-white px-8 py-14 text-center shadow-[0_24px_60px_rgba(148,163,184,0.12)]">
-          <p className="text-lg font-semibold text-slate-900">Business not found</p>
-          <p className="mt-2 text-sm text-slate-500">
-            We couldn&apos;t load this public review page.
-          </p>
-        </div>
+      <main
+        className={`h-screen overflow-hidden bg-[#edf3fb] ${
+          embedMode ? "px-3 py-4" : "px-4 py-6 sm:px-6 sm:py-8"
+        }`}
+      >
+        <ErrorState onRetry={() => testimonialsQuery.refetch()} />
       </main>
     );
   }
