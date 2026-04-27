@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import {
+  CircleCheckBig,
   CheckCircle2,
   Copy,
   ArrowUpRight,
@@ -17,8 +18,9 @@ import {
   updateBusiness,
 } from "../api/businessApi";
 import { getTestimonials } from "../api/testimonialApi";
+import DashboardOnboarding from "../components/DashboardOnboarding";
 import ManualAddModal from "../components/ManualAddModal";
-import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
+import { ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
 import { Button } from "../components/ui/button";
 import { Card, CardContent } from "../components/ui/card";
@@ -208,16 +210,16 @@ export default function DashboardPage() {
   };
 
   const businessName = businessQuery.data?.businessName || "Business";
+  const businessSlug = businessQuery.data?.slug || "";
   const privateFeedbackCount = privateFeedbackQuery.data?.summary?.total || 0;
-  // console.log(businessQuery.data);
 
-  const reviewLink = businessQuery.data?.slug
-    ? `${window.location.origin}/r/${businessQuery.data.slug}`
+  const reviewLink = businessSlug
+    ? `${window.location.origin}/r/${businessSlug}`
     : "";
-  const publicTestimonialsLink = businessQuery.data?.slug
-    ? `${window.location.origin}/p/${businessQuery.data.slug}`
+  const publicTestimonialsLink = businessSlug
+    ? `${window.location.origin}/p/${businessSlug}`
     : "";
-  const widgetSlug = businessQuery.data?.slug || "";
+  const widgetSlug = businessSlug || "";
   const widgetOrigin = window.location.origin;
   const iframeCode = widgetSlug
     ? `<div
@@ -295,7 +297,7 @@ export default function DashboardPage() {
     try {
       await navigator.clipboard.writeText(reviewLink);
       setCopied(true);
-      toast.success("Link copied!");
+      toast.success("Review link copied");
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
       toast.error("Failed to copy link");
@@ -534,6 +536,45 @@ export default function DashboardPage() {
             </div>
           </div>
 
+          {!hasTestimonials ? (
+            <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 items-start">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-[linear-gradient(135deg,#fff7ed_0%,#ffffff_48%,#eff6ff_100%)] p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:p-6">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="max-w-2xl">
+                    <div className="inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-slate-500 ring-1 ring-slate-200">
+                      <CircleCheckBig className="h-3.5 w-3.5 text-emerald-500" />
+                      First testimonial
+                    </div>
+                    <h3 className="mt-4 text-lg font-semibold text-slate-950">
+                      No testimonials yet
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Copy your review link and send it to a few customers to
+                      collect your first testimonial.
+                    </p>
+                  </div>
+                  <Button
+                    className="h-11 rounded-xl bg-slate-900 px-5 font-semibold text-white hover:bg-slate-800"
+                    onClick={handleCopyLink}
+                    disabled={!reviewLink}
+                  >
+                    {copied ? (
+                      <>
+                        <CheckCircle2 className="mr-2 h-4 w-4" />
+                        Copied
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy review link
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          ) : null}
+
           <div className="grid grid-cols-1 gap-5 md:col-span-3 lg:col-span-4 items-start">
             <Card className="border-white/80 bg-white p-5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] sm:p-6">
               <CardContent className="p-0">
@@ -569,14 +610,15 @@ export default function DashboardPage() {
                       ))}
                     </div>
                   ) : (
-                    <EmptyStateCard
-                      title="No testimonials yet"
-                      description="Copy your review link or add a testimonial manually to get started."
-                      actionLabel={copied ? "Copied" : "Copy review link"}
-                      onAction={handleCopyLink}
-                      secondaryActionLabel="Add testimonial"
-                      onSecondaryAction={() => setManualOpen(true)}
-                    />
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50/70 p-6 text-center sm:p-8">
+                      <h3 className="text-lg font-semibold text-slate-950">
+                        Waiting for your first testimonial
+                      </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-500">
+                        Once customers submit feedback, it will show up here
+                        for review and approval.
+                      </p>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -670,6 +712,12 @@ export default function DashboardPage() {
         open={manualOpen}
         onOpenChange={setManualOpen}
         activeStatus="all"
+      />
+      <DashboardOnboarding
+        businessSlug={businessSlug}
+        reviewLink={reviewLink}
+        copied={copied}
+        onCopyLink={handleCopyLink}
       />
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
