@@ -35,6 +35,7 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Skeleton } from "../components/ui/skeleton";
 import { Textarea } from "../components/ui/textarea";
+import { getPublicAppUrl } from "../lib/publicUrl";
 
 function WavesDecoration() {
   return (
@@ -212,15 +213,16 @@ export default function DashboardPage() {
   const businessName = businessQuery.data?.businessName || "Business";
   const businessSlug = businessQuery.data?.slug || "";
   const privateFeedbackCount = privateFeedbackQuery.data?.summary?.total || 0;
+  const publicAppUrl = getPublicAppUrl();
 
   const reviewLink = businessSlug
-    ? `${window.location.origin}/r/${businessSlug}`
+    ? `${publicAppUrl}/r/${businessSlug}`
     : "";
   const publicTestimonialsLink = businessSlug
-    ? `${window.location.origin}/p/${businessSlug}`
+    ? `${publicAppUrl}/p/${businessSlug}`
     : "";
   const widgetSlug = businessSlug || "";
-  const widgetOrigin = window.location.origin;
+  const widgetOrigin = publicAppUrl;
   const iframeCode = widgetSlug
     ? `<div
   class="woice-testimonial-widget"

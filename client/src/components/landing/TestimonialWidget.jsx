@@ -1,11 +1,13 @@
 import { useEffect } from "react";
+import { getPublicAppUrl } from "../../lib/publicUrl";
 
 export default function TestimonialsWidget() {
   useEffect(() => {
+    const publicAppUrl = getPublicAppUrl();
     const script = document.createElement("script");
-    script.src = "https://www.woice.it.com/embed.js";
+    script.src = `${publicAppUrl}/embed.js`;
     script.defer = true;
-    script.setAttribute("data-base-url", "https://www.woice.it.com");
+    script.setAttribute("data-base-url", publicAppUrl);
     document.body.appendChild(script);
 
     return () => {

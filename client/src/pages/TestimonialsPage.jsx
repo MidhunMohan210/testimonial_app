@@ -23,6 +23,7 @@ import { getMyBusiness } from "../api/businessApi";
 import ManualAddModal from "../components/ManualAddModal";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
+import { getPublicAppUrl } from "../lib/publicUrl";
 import { clearCachedPublicTestimonials } from "../lib/publicTestimonialsCache";
 import { Button } from "../components/ui/button";
 import {
@@ -386,7 +387,7 @@ export default function TestimonialsPage() {
     [filters],
   );
   const publicTestimonialsLink = businessQuery.data?.slug
-    ? `${window.location.origin}/p/${businessQuery.data.slug}`
+    ? `${getPublicAppUrl()}/p/${businessQuery.data.slug}`
     : "";
 
   const testimonialTotalPages = Math.max(

@@ -22,6 +22,7 @@ import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Skeleton } from "../components/ui/skeleton";
+import { getPublicAppUrl } from "../lib/publicUrl";
 import { cn } from "../lib/utils";
 import { useAuth } from "../hooks/useAuth";
 
@@ -148,7 +149,7 @@ export default function SettingsPage() {
 
   const slug = settingsQuery.data?.slug || "";
   const publicReviewLink = useMemo(
-    () => (slug ? `${window.location.origin}/r/${slug}` : ""),
+    () => (slug ? `${getPublicAppUrl()}/r/${slug}` : ""),
     [slug],
   );
 
