@@ -4,8 +4,8 @@ import { useNavigate } from "react-router-dom";
 import {
   CheckCircle2,
   Copy,
-  Inbox,
   ArrowUpRight,
+  ExternalLink,
   TrendingUp,
   Star,
   MessageCircle,
@@ -17,7 +17,7 @@ import {
   updateBusiness,
 } from "../api/businessApi";
 import { getTestimonials } from "../api/testimonialApi";
-import SendRequestModal from "../components/SendRequestModal";
+import ManualAddModal from "../components/ManualAddModal";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
 import { Button } from "../components/ui/button";
@@ -159,7 +159,7 @@ function DashboardLoadingState() {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [sendOpen, setSendOpen] = useState(false);
+  const [manualOpen, setManualOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [googleReviewLink, setGoogleReviewLink] = useState("");
   const [copied, setCopied] = useState(false);
@@ -213,6 +213,9 @@ export default function DashboardPage() {
 
   const reviewLink = businessQuery.data?.slug
     ? `${window.location.origin}/r/${businessQuery.data.slug}`
+    : "";
+  const publicTestimonialsLink = businessQuery.data?.slug
+    ? `${window.location.origin}/p/${businessQuery.data.slug}`
     : "";
   const widgetSlug = businessQuery.data?.slug || "";
   const widgetOrigin = window.location.origin;
@@ -374,6 +377,22 @@ export default function DashboardPage() {
                 <Button
                   variant="outline"
                   className="h-10 w-full rounded-xl border-slate-200 bg-white px-4 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+                  onClick={() =>
+                    window.open(
+                      publicTestimonialsLink,
+                      "_blank",
+                      "noopener,noreferrer",
+                    )
+                  }
+                  disabled={!publicTestimonialsLink}
+                >
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Public page
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="h-10 w-full rounded-xl border-slate-200 bg-white px-4 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
                   onClick={handleCopyLink}
                   disabled={!reviewLink}
                 >
@@ -385,13 +404,6 @@ export default function DashboardPage() {
                   {copied ? "Copied" : "Copy review link"}
                 </Button>
 
-                {/* <Button
-                  className="h-10 rounded-xl bg-slate-900 px-5 font-semibold text-white shadow-sm hover:bg-slate-800"
-                  onClick={() => setSendOpen(true)}
-                >
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Request
-                </Button> */}
               </div>
             </div>
           </div>
@@ -404,19 +416,17 @@ export default function DashboardPage() {
               className="relative min-h-[160px] overflow-hidden rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 p-5 text-left text-white shadow-lg shadow-pink-500/25 transition-transform duration-300 hover:-translate-y-1 sm:min-h-[170px] sm:p-6"
               onClick={() => handleKpiCardNavigation("/testimonials")}
             >
-              <div className="relative z-10 flex h-full justify-between items-end">
-                <div className="flex h-full flex-col justify-between">
-                  <h3 className="text-sm font-medium text-white/90">
+              <div className="relative z-10 flex h-full items-end justify-between gap-4">
+                <div>
+                  <h3 className="mb-2 text-sm font-medium text-white/90">
                     Total Feedback
                   </h3>
-                  <WavesDecoration />
-                </div>
-                <div className="text-right">
-                  <p className="mb-1 text-3xl font-bold tracking-tight sm:text-4xl">
+                  <p className="text-3xl font-bold tracking-tight sm:text-4xl">
                     {summary.total}
                   </p>
-                  <p className="text-xs text-white/80">All collected</p>
+                  <p className="mt-1 text-xs text-white/80">All collected</p>
                 </div>
+                <WavesDecoration />
               </div>
             </button>
 
@@ -561,9 +571,11 @@ export default function DashboardPage() {
                   ) : (
                     <EmptyStateCard
                       title="No testimonials yet"
-                      description="Send your first request to start collecting testimonials from your customers."
-                      actionLabel="Send a request"
-                      onAction={() => navigate("/send-request")}
+                      description="Copy your review link or add a testimonial manually to get started."
+                      actionLabel={copied ? "Copied" : "Copy review link"}
+                      onAction={handleCopyLink}
+                      secondaryActionLabel="Add testimonial"
+                      onSecondaryAction={() => setManualOpen(true)}
                     />
                   )}
                 </div>
@@ -654,7 +666,11 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <SendRequestModal open={sendOpen} onOpenChange={setSendOpen} />
+      <ManualAddModal
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        activeStatus="all"
+      />
 
       <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
         <DialogContent className="sm:max-w-md rounded-2xl border-none shadow-2xl">

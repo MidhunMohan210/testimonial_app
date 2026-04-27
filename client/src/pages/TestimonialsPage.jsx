@@ -1,6 +1,11 @@
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
-import { SlidersHorizontal } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import {
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+  SlidersHorizontal,
+} from "lucide-react";
+import { useSearchParams } from "react-router-dom";
 import {
   keepPreviousData,
   useMutation,
@@ -13,6 +18,7 @@ import {
   markAllTestimonialsAsRead,
   updateStatus,
 } from "../api/testimonialApi";
+import { getMyBusiness } from "../api/businessApi";
 import ManualAddModal from "../components/ManualAddModal";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
@@ -236,7 +242,6 @@ const getDateRangeFromPreset = (preset, customFromDate, customToDate) => {
 };
 
 export default function TestimonialsPage() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const PAGE_SIZE = 6;
   const queryClient = useQueryClient();
@@ -254,6 +259,7 @@ export default function TestimonialsPage() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
+  const [publicLinkCopied, setPublicLinkCopied] = useState(false);
   const deferredStatus = useDeferredValue(activeStatus);
 
   const handleStatusChange = (nextStatus) => {
@@ -280,6 +286,11 @@ export default function TestimonialsPage() {
         ...getServerFilterParams(filters),
       }),
     placeholderData: keepPreviousData,
+  });
+
+  const businessQuery = useQuery({
+    queryKey: ["business", "me"],
+    queryFn: getMyBusiness,
   });
 
   const statusMutation = useMutation({
@@ -311,6 +322,9 @@ export default function TestimonialsPage() {
     () => Object.entries(filters).some(([key, value]) => value !== DEFAULT_FILTERS[key]),
     [filters],
   );
+  const publicTestimonialsLink = businessQuery.data?.slug
+    ? `${window.location.origin}/p/${businessQuery.data.slug}`
+    : "";
 
   const testimonialTotalPages = Math.max(
     1,
@@ -359,6 +373,19 @@ export default function TestimonialsPage() {
   const handlePageChange = (page) => {
     const nextPage = Math.min(Math.max(page, 1), testimonialTotalPages);
     setCurrentPage(nextPage);
+  };
+
+  const handleCopyPublicLink = async () => {
+    if (!publicTestimonialsLink) return;
+
+    try {
+      await navigator.clipboard.writeText(publicTestimonialsLink);
+      setPublicLinkCopied(true);
+      toast.success("Public testimonials link copied");
+      window.setTimeout(() => setPublicLinkCopied(false), 2000);
+    } catch {
+      toast.error("Failed to copy public link");
+    }
   };
 
   useEffect(() => {
@@ -427,11 +454,11 @@ export default function TestimonialsPage() {
 
     return {
       title: "You don’t have any testimonials yet",
-      description: "Send a request or add one manually.",
-      actionLabel: "Add testimonial",
-      onAction: () => setManualOpen(true),
-      secondaryActionLabel: "Send a request",
-      onSecondaryAction: () => navigate("/send-request"),
+      description: "Copy your public testimonials link or add one manually.",
+      actionLabel: publicLinkCopied ? "Copied" : "Copy link",
+      onAction: handleCopyPublicLink,
+      secondaryActionLabel: "Add testimonial",
+      onSecondaryAction: () => setManualOpen(true),
     };
   };
 
@@ -472,12 +499,53 @@ export default function TestimonialsPage() {
                 focused moderation workspace.
               </p>
             </div>
-            <Button
-              className="w-full rounded-xl px-5 sm:w-auto"
-              onClick={() => setManualOpen(true)}
-            >
-              Add testimonial
-            </Button>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+                onClick={() =>
+                  window.open(
+                    publicTestimonialsLink,
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
+                }
+                disabled={!publicTestimonialsLink}
+              >
+                <ExternalLink className="mr-2 h-4 w-4" />
+                Public page
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+                onClick={handleCopyPublicLink}
+                disabled={!publicTestimonialsLink}
+              >
+                {publicLinkCopied ? (
+                  <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
+                ) : (
+                  <Copy className="mr-2 h-4 w-4" />
+                )}
+                {publicLinkCopied ? "Copied" : "Copy link"}
+              </Button>
+              <Button
+                className="w-full rounded-xl px-5 sm:w-auto"
+                onClick={() => setManualOpen(true)}
+              >
+                Add testimonial
+              </Button>
+            </div>
+          </div>
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
+              Public testimonials link
+            </p>
+            <p className="mt-2 truncate text-sm font-medium text-slate-700">
+              {publicTestimonialsLink ||
+                "Public testimonials link will appear once your business slug is ready."}
+            </p>
           </div>
         </section>
 

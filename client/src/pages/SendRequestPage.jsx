@@ -1,12 +1,10 @@
 import { useState } from "react";
-import { MessageCirclePlus, PencilLine, Sparkles } from "lucide-react";
-import SendRequestModal from "../components/SendRequestModal";
+import { PencilLine, Sparkles } from "lucide-react";
 import ManualAddModal from "../components/ManualAddModal";
 import { Button } from "../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 
 export default function SendRequestPage() {
-  const [sendOpen, setSendOpen] = useState(false);
   const [manualOpen, setManualOpen] = useState(false);
 
   return (
@@ -22,24 +20,19 @@ export default function SendRequestPage() {
                 </span>
                 <div className="space-y-3">
                   <h2 className="text-2xl font-extrabold tracking-tight sm:text-4xl">
-                    Send more requests without cluttering the review queue.
+                    Add testimonials without cluttering the review queue.
                   </h2>
                   <p className="max-w-2xl text-sm leading-6 text-slate-300 sm:text-base sm:leading-7">
-                    Use WhatsApp when you want fresh customer feedback, or add verified offline testimonials manually when they already came in through another channel.
+                    Add verified offline testimonials manually when they already came in through another channel.
                   </p>
                 </div>
                 <div className="flex flex-col gap-3 sm:flex-row">
-                  <Button className="h-11 gap-2 bg-white text-slate-950 hover:bg-slate-100" onClick={() => setSendOpen(true)}>
-                    <MessageCirclePlus className="h-4 w-4" />
-                    Send WhatsApp request
-                  </Button>
                   <Button
-                    variant="outline"
-                    className="h-11 gap-2 border-white/20 bg-white/5 text-white hover:bg-white/10 hover:text-white"
+                    className="h-11 gap-2 bg-white text-slate-950 hover:bg-slate-100"
                     onClick={() => setManualOpen(true)}
                   >
                     <PencilLine className="h-4 w-4" />
-                    Add manually
+                    Add testimonial
                   </Button>
                 </div>
               </div>
@@ -59,7 +52,8 @@ export default function SendRequestPage() {
                   <p className="text-sm font-semibold">Ask right after value is delivered</p>
                 </div>
                 <p className="text-sm leading-6 text-slate-600">
-                  Requests convert better when sent shortly after onboarding, purchase, or a successful support interaction.
+                  Manual entries work best when they include a clear customer
+                  name, rating, and the original feedback.
                 </p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -79,8 +73,11 @@ export default function SendRequestPage() {
         </section>
       </div>
 
-      <SendRequestModal open={sendOpen} onOpenChange={setSendOpen} />
-      <ManualAddModal open={manualOpen} onOpenChange={setManualOpen} activeStatus="all" />
+      <ManualAddModal
+        open={manualOpen}
+        onOpenChange={setManualOpen}
+        activeStatus="all"
+      />
     </>
   );
 }
