@@ -7,6 +7,7 @@ import WidgetLoader from "../components/WidgetLoader";
 
 const INITIAL_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
+const PUBLIC_TESTIMONIALS_LIMIT = 100;
 const MIN_LOADING_SCREEN_MS = 500;
 const PUBLIC_TESTIMONIALS_STALE_TIME_MS = 5 * 60 * 1000;
 const PUBLIC_TESTIMONIALS_GC_TIME_MS = 30 * 60 * 1000;
@@ -156,14 +157,14 @@ const CARD_TONES = [
 ];
 
 const CARD_LAYOUTS = [
-  "break-inside-avoid mb-5 w-full",
-  "break-inside-avoid mb-5 w-full",
-  "break-inside-avoid mb-5 w-full",
-  "break-inside-avoid mb-5 w-full",
-  "break-inside-avoid mb-5 w-full",
-  "break-inside-avoid mb-5 w-full",
-  "break-inside-avoid mb-5 w-full",
-  "break-inside-avoid mb-5 w-full",
+  "w-full",
+  "w-full",
+  "w-full",
+  "w-full",
+  "w-full",
+  "w-full",
+  "w-full",
+  "w-full",
 ];
 
 function getCardLayout(index) {
@@ -223,7 +224,6 @@ function ReviewBoardCard({ testimonial, index }) {
         background: tone.bg,
         color: tone.color,
         boxShadow: tone.shadow,
-        display: "inline-flex",
       }}
     >
       {tone.showQuote && (
@@ -323,6 +323,45 @@ function ReviewBoardCard({ testimonial, index }) {
   );
 }
 
+function buildMasonryColumns(testimonials, columnCount) {
+  return testimonials.reduce(
+    (columns, testimonial, index) => {
+      columns[index % columnCount].push({ testimonial, index });
+      return columns;
+    },
+    Array.from({ length: columnCount }, () => [])
+  );
+}
+
+function ReviewMasonry({ testimonials }) {
+  const renderColumns = (columnCount) =>
+    buildMasonryColumns(testimonials, columnCount).map((column, columnIndex) => (
+      <div key={columnIndex} className="flex min-w-0 flex-col gap-5">
+        {column.map(({ testimonial, index }) => (
+          <ReviewBoardCard
+            key={testimonial.id ?? `${testimonial.customerName ?? "review"}-${index}`}
+            testimonial={testimonial}
+            index={index}
+          />
+        ))}
+      </div>
+    ));
+
+  return (
+    <>
+      <div className="mt-16 flex flex-col gap-5 md:hidden">
+        {renderColumns(1)}
+      </div>
+      <div className="mt-16 hidden gap-5 md:grid md:grid-cols-2 lg:hidden">
+        {renderColumns(2)}
+      </div>
+      <div className="mt-16 hidden gap-5 lg:grid lg:grid-cols-3">
+        {renderColumns(3)}
+      </div>
+    </>
+  );
+}
+
 function ErrorState({ onRetry }) {
   return (
     <div className="min-h-screen w-full px-6 py-10 text-center widget-fade-in sm:px-8 sm:py-12 flex items-center justify-center flex-col">
@@ -356,7 +395,7 @@ export default function PublicTestimonialsPage() {
 
   const testimonialsQuery = useQuery({
     queryKey: ["public-testimonials", "full", slug],
-    queryFn: () => getPublicTestimonials(slug),
+    queryFn: () => getPublicTestimonials(slug, { limit: PUBLIC_TESTIMONIALS_LIMIT }),
     enabled: Boolean(slug),
     retry: false,
     staleTime: PUBLIC_TESTIMONIALS_STALE_TIME_MS,
@@ -591,15 +630,7 @@ export default function PublicTestimonialsPage() {
               {averageRating} / 5 • {data?.totalCount || 0} reviews
             </div>
 
-            <div className=". columns-1 gap-5 md:columns-2 lg:columns-3 xl:columns-3 margin mt-16 ">
-              {visibleTestimonials.map((testimonial, index) => (
-                <ReviewBoardCard
-                  key={`${testimonial.id ?? testimonial.customerName ?? "review"}-${index}`}
-                  testimonial={testimonial}
-                  index={index}
-                />
-              ))}
-            </div>
+            <ReviewMasonry testimonials={visibleTestimonials} />
 
             {hasMoreTestimonials ? (
               <div className="mt-10 text-center">

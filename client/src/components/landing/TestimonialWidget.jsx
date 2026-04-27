@@ -16,11 +16,10 @@ export default function TestimonialsWidget() {
   return (
     <div
       className="woice-testimonial-widget"
-      data-business-slug="cliq-cmarq"
+      data-business-slug="woice-pxiuk"
       data-theme="light"
       data-layout="slider"
       data-height="420"
     />
   );
 }
-
