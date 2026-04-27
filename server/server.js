@@ -25,7 +25,6 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 const isProduction = process.env.NODE_ENV === "production";
 
-// ─── Helmet ───────────────────────────────────────────────────────────────────
 app.use(
   helmet({
     crossOriginResourcePolicy: false,
@@ -33,15 +32,33 @@ app.use(
   })
 );
 
-// Important for Railway / reverse proxies so req.ip works properly
 app.set("trust proxy", 1);
 
-// ─── CORS ─────────────────────────────────────────────────────────────────────
+const publicReadLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    error: "Too many requests. Please slow down.",
+  },
+});
+
+// Public testimonials/widget API must be before restricted global CORS
+app.use(
+  "/api/p",
+  publicReadLimiter,
+  cors({
+    origin: "*",
+    credentials: false,
+  }),
+  publicTestimonialsRouter
+);
+
 const allowedOrigins = [
   process.env.FRONTEND_URL,
   "https://www.woice.it.com",
   "https://woice.it.com",
-
   ...(isProduction
     ? []
     : [
@@ -55,7 +72,6 @@ const allowedOrigins = [
 
 const appCors = cors({
   origin: (origin, callback) => {
-    // Allow same-origin, Postman, mobile apps, server-to-server requests
     if (!origin) return callback(null, true);
 
     if (allowedOrigins.includes(origin)) {
@@ -70,14 +86,12 @@ const appCors = cors({
 app.use(appCors);
 app.options("*", appCors);
 
-// ─── Webhook JSON Parser ───────────────────────────────────────────────────────
 const webhookJsonParser = express.json({
   verify: (req, res, buf) => {
     req.rawBody = Buffer.from(buf);
   },
 });
 
-// ─── Session Middleware ────────────────────────────────────────────────────────
 app.use(
   session({
     secret: process.env.SESSION_SECRET,
@@ -97,7 +111,6 @@ app.use(
   })
 );
 
-// ─── Helpers For Rate Limiting ────────────────────────────────────────────────
 function getBusinessKey(req) {
   return (
     req.body?.businessId ||
@@ -107,7 +120,6 @@ function getBusinessKey(req) {
   );
 }
 
-// ─── Rate Limiters ────────────────────────────────────────────────────────────
 const publicReviewLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 40,
@@ -119,57 +131,28 @@ const publicReviewLimiter = rateLimit({
   },
 });
 
-const publicReadLimiter = rateLimit({
-  windowMs: 60 * 1000,
-  max: 120,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: {
-    error: "Too many requests. Please slow down.",
-  },
-});
-
-// ─── WhatsApp Webhook ─────────────────────────────────────────────────────────
 if (process.env.WHATSAPP_ENABLED === "true") {
   app.use("/webhook", webhookJsonParser, whatsappWebhookRoutes);
 }
 
-// ─── Body Parser ──────────────────────────────────────────────────────────────
 app.use(express.json());
 
-// ─── Health Check ─────────────────────────────────────────────────────────────
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// ─── Public Routes ────────────────────────────────────────────────────────────
 app.use("/whatsapp", whatsappCallbackRoutes);
 app.use("/api/r", publicReviewLimiter, publicReviewRouter);
 
-// Public testimonials/widget API: allow all origins, no credentials
-app.use(
-  "/api/p",
-  publicReadLimiter,
-  cors({
-    origin: "*",
-    credentials: false,
-  }),
-  publicTestimonialsRouter
-);
-
-// ─── Auth Routes ──────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 
-// ─── Protected Routes ─────────────────────────────────────────────────────────
 app.use("/api/business", authMiddleware, businessSettingsRouter);
 app.use("/api/feedback", authMiddleware, privateFeedbackRouter);
 app.use("/api/whatsapp", authMiddleware, whatsappRoutes);
 app.use("/api/testimonials", authMiddleware, testimonialRoutes);
 
-// ─── Error Handler ────────────────────────────────────────────────────────────
 app.use(errorHandler);
 
-// ─── Database + Server Start ──────────────────────────────────────────────────
 mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
