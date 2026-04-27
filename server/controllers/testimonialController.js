@@ -66,7 +66,10 @@ const getWordFilterStages = (query, textField) => {
 
 export const getTestimonials = async (req, res) => {
   const { status } = req.query;
-  const query = { businessId: req.user.businessId };
+  const query = {
+    businessId: req.user.businessId,
+    status: { $ne: "deleted" },
+  };
   const { page, limit, skip } = getPaginationOptions(req.query);
   const dateFilter = getDateFilter(req.query);
   const wordFilterStages = getWordFilterStages(req.query, "testimonialText");
@@ -97,7 +100,12 @@ export const getTestimonials = async (req, res) => {
       },
     ]),
     Testimonial.aggregate([
-      { $match: { businessId: req.user.businessId } },
+      {
+        $match: {
+          businessId: req.user.businessId,
+          status: { $ne: "deleted" },
+        },
+      },
       { $group: { _id: "$status", count: { $sum: 1 } } },
     ]),
   ]);
@@ -139,7 +147,7 @@ export const updateStatus = async (req, res) => {
   }
 
   const testimonial = await Testimonial.findOneAndUpdate(
-    { _id: id, businessId: req.user.businessId },
+    { _id: id, businessId: req.user.businessId, status: { $ne: "deleted" } },
     { status },
     { new: true }
   );
@@ -149,6 +157,30 @@ export const updateStatus = async (req, res) => {
   }
 
   return res.json(testimonial);
+};
+
+export const deleteTestimonial = async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw createHttpError(400, "Invalid testimonial id");
+  }
+
+  const testimonial = await Testimonial.findOneAndUpdate(
+    { _id: id, businessId: req.user.businessId, status: { $ne: "deleted" } },
+    { status: "deleted" },
+    { new: true }
+  );
+
+  if (!testimonial) {
+    throw createHttpError(404, "Testimonial not found");
+  }
+
+  return res.json({
+    success: true,
+    message: "Testimonial deleted",
+    testimonial,
+  });
 };
 
 export const addManualTestimonial = async (req, res) => {
@@ -178,6 +210,7 @@ export const addManualTestimonial = async (req, res) => {
 export const getUnreadTestimonialCount = async (req, res) => {
   const unreadCount = await Testimonial.countDocuments({
     businessId: req.user.businessId,
+    status: { $ne: "deleted" },
     isRead: { $ne: true },
   });
 
@@ -188,6 +221,7 @@ export const markAllTestimonialsAsRead = async (req, res) => {
   const result = await Testimonial.updateMany(
     {
       businessId: req.user.businessId,
+      status: { $ne: "deleted" },
       isRead: { $ne: true },
     },
     {

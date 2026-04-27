@@ -1,4 +1,4 @@
-import { Clock3, Phone, Quote, Star } from "lucide-react";
+import { Clock3, Phone, Quote, Star, Trash2 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Card, CardContent } from "./ui/card";
 import { Badge } from "./ui/badge";
@@ -20,14 +20,18 @@ function StarRating({ rating }) {
 export default function TestimonialCard({
   testimonial,
   onStatusChange,
+  onDeleteRequest,
   isUpdating,
   onOpen,
 }) {
-  const collectedDate = new Date(testimonial.collectedAt).toLocaleDateString(undefined, {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
+  const collectedDate = new Date(testimonial.collectedAt).toLocaleDateString(
+    undefined,
+    {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    },
+  );
   const customerName = testimonial.customerName || "Unnamed customer";
   const customerInitial = customerName.charAt(0).toUpperCase();
   const isReadOnly = typeof onStatusChange !== "function";
@@ -50,7 +54,9 @@ export default function TestimonialCard({
                 </div>
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-base font-semibold text-slate-950 sm:text-lg">{customerName}</h3>
+                    <h3 className="text-base font-semibold text-slate-950 sm:text-lg">
+                      {customerName}
+                    </h3>
                     <StatusBadge status={testimonial.status} />
                     <Badge className="border-slate-200 bg-slate-50 text-slate-700">
                       {sourceLabel}
@@ -134,6 +140,17 @@ export default function TestimonialCard({
                   Return to pending
                 </Button>
               )}
+              {typeof onDeleteRequest === "function" ? (
+                <Button
+                  variant="outline"
+                  className="w-full justify-center border-red-200 bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 hover:border-red-300 transition-all duration-200"
+                  onClick={() => onDeleteRequest(testimonial)}
+                  disabled={isUpdating}
+                >
+                  <Trash2 className="mr-2 h-4 w-4 text-red-500" />
+                  Delete testimonial
+                </Button>
+              ) : null}
             </div>
           ) : null}
         </div>

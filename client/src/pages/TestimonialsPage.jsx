@@ -14,6 +14,7 @@ import {
 } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
+  deleteTestimonial,
   getTestimonials,
   markAllTestimonialsAsRead,
   updateStatus,
@@ -255,6 +256,7 @@ export default function TestimonialsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [manualOpen, setManualOpen] = useState(false);
   const [selectedEntry, setSelectedEntry] = useState(null);
+  const [testimonialToDelete, setTestimonialToDelete] = useState(null);
   const [detailDialogOpen, setDetailDialogOpen] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -277,8 +279,10 @@ export default function TestimonialsPage() {
     setDetailDialogOpen(true);
   };
 
+  const testimonialsQueryKey = ["testimonials", deferredStatus, currentPage, filters];
+
   const testimonialsQuery = useQuery({
-    queryKey: ["testimonials", deferredStatus, currentPage, filters],
+    queryKey: testimonialsQueryKey,
     queryFn: () =>
       getTestimonials(deferredStatus, {
         page: currentPage,
@@ -308,6 +312,50 @@ export default function TestimonialsPage() {
       toast.error(
         error.response?.data?.message || "Failed to update testimonial",
       );
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteTestimonial,
+    onSuccess: async (_, deletedId) => {
+      queryClient.setQueryData(testimonialsQueryKey, (current) => {
+        if (!current) return current;
+
+        const deletedItem = current.data?.find((item) => item._id === deletedId);
+        const nextSummary = current.summary
+          ? {
+              ...current.summary,
+              total: Math.max((current.summary.total || 0) - 1, 0),
+              ...(deletedItem?.status && current.summary[deletedItem.status] !== undefined
+                ? {
+                    [deletedItem.status]: Math.max(
+                      (current.summary[deletedItem.status] || 0) - 1,
+                      0,
+                    ),
+                  }
+                : {}),
+            }
+          : current.summary;
+
+        return {
+          ...current,
+          data: (current.data || []).filter((item) => item._id !== deletedId),
+          total: Math.max((current.total || 0) - 1, 0),
+          summary: nextSummary,
+        };
+      });
+
+      setTestimonialToDelete(null);
+      toast.success("Testimonial deleted");
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["testimonials"] }),
+        queryClient.invalidateQueries({
+          queryKey: ["unread-count", "testimonials"],
+        }),
+      ]);
+    },
+    onError: () => {
+      toast.error("Could not delete testimonial. Please try again.");
     },
   });
 
@@ -386,6 +434,11 @@ export default function TestimonialsPage() {
     } catch {
       toast.error("Failed to copy public link");
     }
+  };
+
+  const handleConfirmDelete = () => {
+    if (!testimonialToDelete?._id) return;
+    deleteMutation.mutate(testimonialToDelete._id);
   };
 
   useEffect(() => {
@@ -630,8 +683,11 @@ export default function TestimonialsPage() {
                         onStatusChange={(id, status) =>
                           statusMutation.mutate({ id, status })
                         }
-                        isUpdating={statusMutation.isPending}
+                        isUpdating={
+                          statusMutation.isPending || deleteMutation.isPending
+                        }
                         onOpen={handleOpenEntry}
+                        onDeleteRequest={setTestimonialToDelete}
                       />
                     ))}
                   </div>
@@ -695,6 +751,45 @@ export default function TestimonialsPage() {
                   "No feedback text provided."}
               </p>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={Boolean(testimonialToDelete)}
+        onOpenChange={(open) => {
+          if (!open && !deleteMutation.isPending) {
+            setTestimonialToDelete(null);
+          }
+        }}
+      >
+        <DialogContent className="rounded-xl sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Delete testimonial?</DialogTitle>
+            <DialogDescription>
+              This testimonial will be removed from your dashboard and public
+              display. This action cannot be undone from the dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="rounded-xl"
+              onClick={() => setTestimonialToDelete(null)}
+              disabled={deleteMutation.isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              className="rounded-xl"
+              onClick={handleConfirmDelete}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete testimonial"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

@@ -26,7 +26,7 @@ const testimonialSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ["pending", "approved", "hidden"],
+    enum: ["pending", "approved", "hidden", "deleted"],
     default: "pending",
   },
   source: {

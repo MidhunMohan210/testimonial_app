@@ -30,6 +30,11 @@ export const updateStatus = async (id, status) => {
   return response.data;
 };
 
+export const deleteTestimonial = async (id) => {
+  const response = await api.delete(`/api/testimonials/${id}`);
+  return response.data;
+};
+
 export const addManual = async (data) => {
   const response = await api.post("/api/testimonials/manual", data);
   return response.data;
