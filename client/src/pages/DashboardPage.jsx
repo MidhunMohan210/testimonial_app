@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   Copy,
   Inbox,
-  Settings,
   ArrowUpRight,
   TrendingUp,
   Star,
@@ -375,10 +374,15 @@ export default function DashboardPage() {
                 <Button
                   variant="outline"
                   className="h-10 w-full rounded-xl border-slate-200 bg-white px-4 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
-                  onClick={() => navigate("/settings")}
+                  onClick={handleCopyLink}
+                  disabled={!reviewLink}
                 >
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
+                  {copied ? (
+                    <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Copy className="mr-2 h-4 w-4" />
+                  )}
+                  {copied ? "Copied" : "Copy review link"}
                 </Button>
 
                 {/* <Button
