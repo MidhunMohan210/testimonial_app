@@ -1,7 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Copy, Globe, BellRing, Building2, CheckCircle2, ExternalLink } from "lucide-react";
+import {
+  BellRing,
+  Building2,
+  CheckCircle2,
+  Copy,
+  ExternalLink,
+  Monitor,
+  Settings,
+  Star,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   getBusinessSettings,
@@ -9,7 +18,7 @@ import {
 } from "../api/businessApi";
 import { ErrorStateCard } from "../components/StateCard";
 import { Button } from "../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Card, CardContent } from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Skeleton } from "../components/ui/skeleton";
@@ -21,7 +30,7 @@ function SettingsToggle({ checked, onChange, title, description }) {
     <button
       type="button"
       onClick={() => onChange(!checked)}
-      className="flex w-full flex-col items-start justify-between gap-4 rounded-2xl border border-slate-200 bg-slate-50/80 px-4 py-4 text-left transition hover:border-slate-300 hover:bg-white sm:flex-row sm:items-center"
+      className="flex w-full flex-col items-start justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-4 text-left transition hover:border-slate-300 hover:bg-white sm:flex-row sm:items-center"
     >
       <div className="min-w-0">
         <p className="text-sm font-semibold text-slate-900">{title}</p>
@@ -57,11 +66,47 @@ function SettingsLoadingState() {
   );
 }
 
+const SETTINGS_TABS = [
+  {
+    id: "business-profile",
+    label: "Business Profile",
+    description: "Business details and review link",
+    icon: Building2,
+    iconClassName: "border-blue-100 bg-blue-50 text-blue-700",
+    activeAccentClassName: "bg-blue-600",
+  },
+  {
+    id: "review-flow",
+    label: "Review Flow",
+    description: "Google review destination",
+    icon: Star,
+    iconClassName: "border-amber-100 bg-amber-50 text-amber-700",
+    activeAccentClassName: "bg-amber-500",
+  },
+  // {
+  //   id: "display",
+  //   label: "Display",
+  //   description: "Public testimonial page",
+  //   icon: Monitor,
+  //   iconClassName: "border-emerald-100 bg-emerald-50 text-emerald-700",
+  //   activeAccentClassName: "bg-emerald-600",
+  // },
+  // {
+  //   id: "notifications",
+  //   label: "Notifications",
+  //   description: "Workspace alerts",
+  //   icon: BellRing,
+  //   iconClassName: "border-violet-100 bg-violet-50 text-violet-700",
+  //   activeAccentClassName: "bg-violet-600",
+  // },
+];
+
 export default function SettingsPage() {
   const queryClient = useQueryClient();
   const { business, updateBusiness: updateBusinessInAuth } = useAuth();
   const [formError, setFormError] = useState("");
   const [copied, setCopied] = useState(false);
+  const [activeTab, setActiveTab] = useState("business-profile");
   const {
     register,
     handleSubmit,
@@ -171,209 +216,263 @@ export default function SettingsPage() {
     );
   }
 
+  const activeTabMeta =
+    SETTINGS_TABS.find((item) => item.id === activeTab) || SETTINGS_TABS[0];
+  const ActiveTabIcon = activeTabMeta.icon;
+
   return (
     <div className="mx-auto max-w-7xl space-y-6">
-      <Card className="overflow-hidden border-white/70 bg-[radial-gradient(circle_at_top_left,rgba(15,23,42,0.06),transparent_34%),linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] shadow-[0_32px_80px_-48px_rgba(15,23,42,0.35)]">
-        <CardContent className="flex flex-col gap-6 p-5 sm:p-8 lg:flex-row lg:items-end lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.26em] text-slate-400">
-              Settings
-            </p>
-            <h1 className="mt-3 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">
-              Manage your workspace
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-              Keep your business profile, public page, and notifications aligned from one place.
-            </p>
-          </div>
 
-          <Button
-            className="h-11 w-full rounded-2xl bg-slate-950 px-5 text-sm font-semibold text-white hover:bg-slate-800 sm:w-auto"
-            type="submit"
-            form="settings-form"
-            disabled={mutation.isPending || settingsQuery.isLoading || !isDirty}
-          >
-            {mutation.isPending ? "Saving..." : "Save changes"}
-          </Button>
-        </CardContent>
-      </Card>
 
-      <form id="settings-form" className="space-y-6" onSubmit={onSubmit}>
-        {formError ? (
-          <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-            {formError}
-          </div>
-        ) : null}
+      <form id="settings-form" onSubmit={onSubmit}>
+        <div className="grid gap-5 lg:grid-cols-[260px_1fr]">
+          <aside className="rounded-xl border border-white/80 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-2 shadow-[0_22px_70px_-48px_rgba(15,23,42,0.42)] ring-1 ring-slate-950/[0.03] lg:p-3">
+            <nav
+              className="flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible"
+              aria-label="Settings sections"
+            >
+              {SETTINGS_TABS.map((item) => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
 
-        <div className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-          <Card className="rounded-[1.75rem] border-white/80 bg-white shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)]">
-            <CardHeader className="space-y-3 pb-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-950 text-white">
-                <Building2 className="h-5 w-5" />
-              </div>
-              <CardTitle className="text-xl font-semibold text-slate-950">
-                Business Profile
-              </CardTitle>
-              <p className="text-sm leading-6 text-slate-500">
-                Update the essentials customers see and use when sharing your review page.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="settings-name">Business Name</Label>
-                <Input
-                  id="settings-name"
-                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
-                  {...register("name", {
-                    required: "Business name is required",
-                    validate: (value) =>
-                      value.trim().length > 0 || "Business name is required",
-                  })}
-                />
-                {errors.name ? (
-                  <p className="text-sm text-red-600">{errors.name.message}</p>
-                ) : null}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="settings-slug">Slug</Label>
-                <Input
-                  id="settings-slug"
-                  value={slug}
-                  readOnly
-                  className="h-12 rounded-2xl border-slate-200 bg-slate-100 text-slate-500"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="settings-public-link">Public review link</Label>
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <Input
-                    id="settings-public-link"
-                    value={publicReviewLink}
-                    readOnly
-                    className="h-12 rounded-2xl border-slate-200 bg-slate-50/70 text-slate-500"
-                  />
-                  <Button
+                return (
+                  <button
+                    key={item.id}
                     type="button"
-                    variant="outline"
-                    className="h-12 w-full rounded-2xl px-4 sm:w-auto"
-                    onClick={handleCopyLink}
-                    disabled={!publicReviewLink}
+                    onClick={() => setActiveTab(item.id)}
+                    className={cn(
+                      "relative flex min-w-[190px] items-center gap-3 rounded-lg px-3 py-3 text-left transition-all duration-200 lg:min-w-0",
+                      isActive
+                        ? "bg-white text-slate-950 shadow-[0_14px_34px_-24px_rgba(15,23,42,0.55)] ring-1 ring-slate-200/80"
+                        : "text-slate-500 hover:bg-white/70 hover:text-slate-800",
+                    )}
                   >
-                    {copied ? <CheckCircle2 className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
-                    {copied ? "Copied" : "Copy"}
+                    <span
+                      className={cn(
+                        "absolute left-0 top-3 hidden h-8 w-1 rounded-r-full lg:block",
+                        isActive ? item.activeAccentClassName : "bg-transparent",
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border transition-colors",
+                        item.iconClassName,
+                        !isActive && "opacity-75",
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="block text-sm font-semibold">{item.label}</span>
+                      <span className="mt-0.5 hidden text-xs leading-5 text-slate-400 sm:block">
+                        {item.description}
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </nav>
+          </aside>
+
+          <Card className="min-h-[520px] overflow-hidden rounded-xl border-white/80 bg-white shadow-[0_26px_80px_-50px_rgba(15,23,42,0.42)] ring-1 ring-slate-950/[0.04]">
+            <CardContent className="flex min-h-[520px] flex-col p-5 sm:p-7">
+              <div className="rounded-lg border border-slate-100 bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.08),transparent_34%),linear-gradient(180deg,#f8fafc_0%,#ffffff_100%)] p-4 sm:p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                  <div className="flex gap-4">
+                    <div
+                      className={cn(
+                        "flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border shadow-[0_18px_34px_-24px_rgba(15,23,42,0.45)]",
+                        activeTabMeta.iconClassName,
+                      )}
+                    >
+                      <ActiveTabIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-400">
+                    {activeTabMeta.label}
+                  </p>
+                  <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">
+                    {activeTabMeta.label}
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
+                    {activeTab === "business-profile"
+                      ? "This is the link you can share with customers to collect reviews."
+                      : activeTab === "review-flow"
+                        ? "After a positive testimonial, customers can be guided to leave a Google review."
+                        : activeTab === "display"
+                          ? "Control whether your approved testimonials page is publicly available."
+                          : "Get notified when new testimonials or private feedback arrive."}
+                  </p>
+                    </div>
+                  </div>
+                  <Button
+                    className="h-11 w-full rounded-lg bg-slate-950 px-5 text-sm font-semibold text-white shadow-[0_18px_34px_-24px_rgba(15,23,42,0.75)] hover:bg-slate-800 sm:w-auto"
+                    type="submit"
+                    disabled={mutation.isPending || settingsQuery.isLoading || !isDirty}
+                  >
+                    {mutation.isPending ? "Saving..." : "Save changes"}
                   </Button>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          <Card className="rounded-[1.75rem] border-white/80 bg-white shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)]">
-            <CardHeader className="space-y-3 pb-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-600 text-white">
-                <Globe className="h-5 w-5" />
-              </div>
-              <CardTitle className="text-xl font-semibold text-slate-950">
-                Review Settings
-              </CardTitle>
-              <p className="text-sm leading-6 text-slate-500">
-                Control where happy customers land after they submit a public review.
-              </p>
-            </CardHeader>
-            <CardContent className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="settings-google-review-link">Google Review Link</Label>
-                <Input
-                  id="settings-google-review-link"
-                  placeholder="https://g.page/r/..."
-                  className="h-12 rounded-2xl border-slate-200 bg-slate-50/70"
-                  {...register("googleReviewLink", {
-                    validate: (value) => {
-                      const trimmed = value.trim();
-
-                      if (!trimmed) return true;
-
-                      try {
-                        const parsed = new URL(trimmed);
-                        return (
-                          parsed.protocol === "http:" ||
-                          parsed.protocol === "https:" ||
-                          "Enter a valid URL"
-                        );
-                      } catch {
-                        return "Enter a valid URL";
-                      }
-                    },
-                  })}
-                />
-                {errors.googleReviewLink ? (
-                  <p className="text-sm text-red-600">
-                    {errors.googleReviewLink.message}
-                  </p>
-                ) : (
-                  <p className="text-sm text-slate-500">
-                    Add this if you want to invite customers to leave a Google review after a positive testimonial.
-                  </p>
-                )}
-              </div>
-
-              {watch("googleReviewLink")?.trim() ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  className="h-11 w-full rounded-2xl px-4 sm:w-auto"
-                  onClick={() => window.open(watch("googleReviewLink").trim(), "_blank", "noopener,noreferrer")}
-                >
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Open Google link
-                </Button>
+              {formError ? (
+                <div className="mt-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+                  {formError}
+                </div>
               ) : null}
-            </CardContent>
-          </Card>
-        </div>
 
-        <div className="grid gap-6 lg:grid-cols-2">
-          <Card className="rounded-[1.75rem] border-white/80 bg-white shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)]">
-            <CardHeader className="space-y-3 pb-2">
-              <CardTitle className="text-xl font-semibold text-slate-950">
-                Public Page Settings
-              </CardTitle>
-              <p className="text-sm leading-6 text-slate-500">
-                Decide whether your testimonial page should be available publicly.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <SettingsToggle
-                checked={watch("isPublicEnabled")}
-                onChange={(value) => setValue("isPublicEnabled", value, { shouldDirty: true })}
-                title="Enable Public Testimonials Page"
-                description="Turn this off if you want to pause access to your public testimonials page temporarily."
-              />
-            </CardContent>
-          </Card>
+              <div className="flex-1 py-6">
+                {activeTab === "business-profile" ? (
+                  <div className="max-w-3xl space-y-6">
+                    <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                      <div className="space-y-2">
+                      <Label htmlFor="settings-name">Business Name</Label>
+                      <Input
+                        id="settings-name"
+                        className="h-12 rounded-lg border-slate-200 bg-white"
+                        {...register("name", {
+                          required: "Business name is required",
+                          validate: (value) =>
+                            value.trim().length > 0 || "Business name is required",
+                        })}
+                      />
+                      {errors.name ? (
+                        <p className="text-sm text-red-600">{errors.name.message}</p>
+                      ) : null}
+                      </div>
+                    </div>
 
-          <Card className="rounded-[1.75rem] border-white/80 bg-white shadow-[0_20px_60px_-40px_rgba(15,23,42,0.35)]">
-            <CardHeader className="space-y-3 pb-2">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500 text-white">
-                <BellRing className="h-5 w-5" />
+                    <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                      <div className="space-y-2">
+                      <Label htmlFor="settings-slug">Slug</Label>
+                      <Input
+                        id="settings-slug"
+                        value={slug}
+                        readOnly
+                        className="h-12 rounded-lg border-slate-200 bg-white text-slate-500"
+                      />
+                      </div>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                      <div className="space-y-2">
+                      <Label htmlFor="settings-public-link">Public review link</Label>
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <Input
+                          id="settings-public-link"
+                          value={publicReviewLink}
+                          readOnly
+                          className="h-12 rounded-lg border-slate-200 bg-white text-slate-500"
+                        />
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-12 w-full rounded-lg px-4 sm:w-auto"
+                          onClick={handleCopyLink}
+                          disabled={!publicReviewLink}
+                        >
+                          {copied ? (
+                            <CheckCircle2 className="mr-2 h-4 w-4" />
+                          ) : (
+                            <Copy className="mr-2 h-4 w-4" />
+                          )}
+                          {copied ? "Copied" : "Copy"}
+                        </Button>
+                      </div>
+                      <p className="text-sm leading-6 text-slate-500">
+                        This is the link you can share with customers to collect reviews.
+                      </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+
+                {activeTab === "review-flow" ? (
+                  <div className="max-w-3xl space-y-6">
+                    <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+                      <div className="space-y-2">
+                      <Label htmlFor="settings-google-review-link">Google Review Link</Label>
+                      <Input
+                        id="settings-google-review-link"
+                        placeholder="https://g.page/r/..."
+                        className="h-12 rounded-lg border-slate-200 bg-white"
+                        {...register("googleReviewLink", {
+                          validate: (value) => {
+                            const trimmed = value.trim();
+
+                            if (!trimmed) return true;
+
+                            try {
+                              const parsed = new URL(trimmed);
+                              return (
+                                parsed.protocol === "http:" ||
+                                parsed.protocol === "https:" ||
+                                "Enter a valid URL"
+                              );
+                            } catch {
+                              return "Enter a valid URL";
+                            }
+                          },
+                        })}
+                      />
+                      {errors.googleReviewLink ? (
+                        <p className="text-sm text-red-600">
+                          {errors.googleReviewLink.message}
+                        </p>
+                      ) : (
+                        <p className="text-sm leading-6 text-slate-500">
+                          After a positive testimonial, customers can be guided to leave a Google review.
+                        </p>
+                      )}
+                      </div>
+                    </div>
+
+                    {watch("googleReviewLink")?.trim() ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="h-11 w-full rounded-lg px-4 sm:w-auto"
+                        onClick={() =>
+                          window.open(
+                            watch("googleReviewLink").trim(),
+                            "_blank",
+                            "noopener,noreferrer",
+                          )
+                        }
+                      >
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Open Google link
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
+
+                {activeTab === "display" ? (
+                  <div className="max-w-3xl">
+                    <SettingsToggle
+                      checked={watch("isPublicEnabled")}
+                      onChange={(value) =>
+                        setValue("isPublicEnabled", value, { shouldDirty: true })
+                      }
+                      title="Enable Public Testimonials Page"
+                      description="Control whether your approved testimonials page is publicly available."
+                    />
+                  </div>
+                ) : null}
+
+                {activeTab === "notifications" ? (
+                  <div className="max-w-3xl">
+                    <SettingsToggle
+                      checked={watch("notificationsEnabled")}
+                      onChange={(value) =>
+                        setValue("notificationsEnabled", value, { shouldDirty: true })
+                      }
+                      title="Notify on new reviews"
+                      description="Get notified when new testimonials or private feedback arrive."
+                    />
+                  </div>
+                ) : null}
               </div>
-              <CardTitle className="text-xl font-semibold text-slate-950">
-                Notifications
-              </CardTitle>
-              <p className="text-sm leading-6 text-slate-500">
-                Control whether your workspace should notify you when new reviews come in.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <SettingsToggle
-                checked={watch("notificationsEnabled")}
-                onChange={(value) =>
-                  setValue("notificationsEnabled", value, { shouldDirty: true })
-                }
-                title="Notify on new reviews"
-                description="Keep this on to stay in sync whenever fresh testimonials or private feedback arrive."
-              />
             </CardContent>
           </Card>
         </div>
