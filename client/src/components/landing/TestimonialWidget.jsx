@@ -3,9 +3,9 @@ import { useEffect } from "react";
 export default function TestimonialsWidget() {
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = "http://localhost:5173/embed.js";
+    script.src = "https://www.woice.it.com/embed.js";
     script.defer = true;
-    script.setAttribute("data-base-url", "http://localhost:5173");
+    script.setAttribute("data-base-url", "https://www.woice.it.com");
     document.body.appendChild(script);
 
     return () => {
