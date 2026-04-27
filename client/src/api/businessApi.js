@@ -20,8 +20,29 @@ export const updateBusinessSettings = async (data) => {
   return response.data;
 };
 
-export const getPrivateFeedback = async () => {
-  const response = await api.get("/api/feedback");
+export const getPrivateFeedback = async (options = {}) => {
+  const {
+    status,
+    page,
+    limit = 20,
+    fromDate,
+    toDate,
+    minWords,
+    maxWords,
+    ratingSort,
+  } = options;
+  const response = await api.get("/api/feedback", {
+    params: {
+      ...(status && status !== "all" ? { status } : {}),
+      ...(page ? { page } : {}),
+      limit,
+      ...(fromDate ? { fromDate } : {}),
+      ...(toDate ? { toDate } : {}),
+      ...(minWords !== null && minWords !== undefined ? { minWords } : {}),
+      ...(maxWords !== null && maxWords !== undefined ? { maxWords } : {}),
+      ...(ratingSort && ratingSort !== "none" ? { ratingSort } : {}),
+    },
+  });
   return response.data;
 };
 

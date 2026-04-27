@@ -167,8 +167,8 @@ export default function DashboardPage() {
   const [embedCopied, setEmbedCopied] = useState(false);
 
   const allTestimonialsQuery = useQuery({
-    queryKey: ["testimonials"],
-    queryFn: () => getTestimonials("all"),
+    queryKey: ["testimonials", "dashboard"],
+    queryFn: () => getTestimonials("all", { limit: 20 }),
   });
 
   // console.log(business);
@@ -178,9 +178,8 @@ export default function DashboardPage() {
     queryFn: getMyBusiness,
   });
   const privateFeedbackQuery = useQuery({
-    queryKey: ["private-feedback"],
-    queryFn: getPrivateFeedback,
-    placeholderData: [],
+    queryKey: ["private-feedback", "dashboard"],
+    queryFn: () => getPrivateFeedback({ limit: 1 }),
   });
 
   useEffect(() => {
@@ -210,7 +209,7 @@ export default function DashboardPage() {
   };
 
   const businessName = businessQuery.data?.businessName || "Business";
-  const privateFeedbackCount = privateFeedbackQuery.data?.length || 0;
+  const privateFeedbackCount = privateFeedbackQuery.data?.summary?.total || 0;
   // console.log(businessQuery.data);
 
   const reviewLink = businessQuery.data?.slug

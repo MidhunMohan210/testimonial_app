@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Mail, MessageSquareWarning, Phone, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -440,86 +440,75 @@ export default function PrivateFeedbackPage() {
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [draftFilters, setDraftFilters] = useState(DEFAULT_FILTERS);
+  const serverFilterParams = useMemo(
+    () => getServerFilterParams(filters),
+    [filters],
+  );
 
   const privateFeedbackQuery = useQuery({
-    queryKey: ["private-feedback"],
-    queryFn: getPrivateFeedback,
+    queryKey: ["private-feedback", activeStatus, currentPage, filters],
+    queryFn: () =>
+      getPrivateFeedback({
+        status: activeStatus,
+        page: currentPage,
+        limit: PAGE_SIZE,
+        ...serverFilterParams,
+      }),
+    placeholderData: keepPreviousData,
   });
 
-  const privateFeedback = privateFeedbackQuery.data || [];
-  const statusScopedFeedback = useMemo(() => {
-    if (activeStatus === "all") {
-      return privateFeedback;
-    }
-    return privateFeedback.filter((item) => (item.status || "new") === activeStatus);
-  }, [activeStatus, privateFeedback]);
-  const filteredFeedback = useMemo(() => {
-    const { fromDate, toDate } = getDateRangeFromPreset(
-      filters.datePreset,
-      filters.fromDate,
-      filters.toDate,
-    );
-    const customMinWords = parseFilterNumber(filters.minWords);
-    const customMaxWords = parseFilterNumber(filters.maxWords);
-
-    let minWords = customMinWords;
-    let maxWords = customMaxWords;
-    if (filters.wordPreset === "below_10") {
-      minWords = null;
-      maxWords = 9;
-    } else if (filters.wordPreset === "10_20") {
-      minWords = 10;
-      maxWords = 20;
-    } else if (filters.wordPreset === "20_50") {
-      minWords = 20;
-      maxWords = 50;
-    } else if (filters.wordPreset === "50_100") {
-      minWords = 50;
-      maxWords = 100;
-    } else if (filters.wordPreset === "above_100") {
-      minWords = 101;
-      maxWords = null;
-    }
-
-    const next = statusScopedFeedback.filter((item) => {
-      const createdAt = new Date(item.createdAt || Date.now());
-      if (fromDate && createdAt < fromDate) return false;
-      if (toDate && createdAt > toDate) return false;
-
-      const text = String(item.feedbackText || "").trim();
-      const wordCount = text ? text.split(/\s+/).length : 0;
-      if (minWords !== null && wordCount < minWords) return false;
-      if (maxWords !== null && wordCount > maxWords) return false;
-
-      return true;
-    });
-
-    if (filters.ratingSort === "high_to_low") {
-      next.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (filters.ratingSort === "low_to_high") {
-      next.sort((a, b) => (a.rating || 0) - (b.rating || 0));
-    }
-
-    return next;
-  }, [filters, statusScopedFeedback]);
-  const hasPrivateFeedback = filteredFeedback.length > 0;
+  const privateFeedback = privateFeedbackQuery.data?.data || [];
+  const feedbackTotal = privateFeedbackQuery.data?.total || 0;
+  const feedbackSummaryTotal = privateFeedbackQuery.data?.summary?.total || feedbackTotal;
+  const hasPrivateFeedback = privateFeedback.length > 0;
   const hasActiveFilters = useMemo(
     () => Object.entries(filters).some(([key, value]) => value !== DEFAULT_FILTERS[key]),
     [filters],
   );
 
-  const totalPages = Math.max(1, Math.ceil(filteredFeedback.length / PAGE_SIZE));
-  const paginatedItems = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredFeedback.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [currentPage, filteredFeedback]);
+  const totalPages = Math.max(1, Math.ceil(feedbackTotal / PAGE_SIZE));
+
+  function getServerFilterParams(nextFilters) {
+    const { fromDate, toDate } = getDateRangeFromPreset(
+      nextFilters.datePreset,
+      nextFilters.fromDate,
+      nextFilters.toDate,
+    );
+    const customMinWords = parseFilterNumber(nextFilters.minWords);
+    const customMaxWords = parseFilterNumber(nextFilters.maxWords);
+
+    let minWords = customMinWords;
+    let maxWords = customMaxWords;
+    if (nextFilters.wordPreset === "below_10") {
+      minWords = null;
+      maxWords = 9;
+    } else if (nextFilters.wordPreset === "10_20") {
+      minWords = 10;
+      maxWords = 20;
+    } else if (nextFilters.wordPreset === "20_50") {
+      minWords = 20;
+      maxWords = 50;
+    } else if (nextFilters.wordPreset === "50_100") {
+      minWords = 50;
+      maxWords = 100;
+    } else if (nextFilters.wordPreset === "above_100") {
+      minWords = 101;
+      maxWords = null;
+    }
+
+    return {
+      ...(fromDate ? { fromDate: fromDate.toISOString() } : {}),
+      ...(toDate ? { toDate: toDate.toISOString() } : {}),
+      ...(minWords !== null ? { minWords } : {}),
+      ...(maxWords !== null ? { maxWords } : {}),
+      ...(nextFilters.ratingSort !== "none"
+        ? { ratingSort: nextFilters.ratingSort }
+        : {}),
+    };
+  }
 
   const syncEntryEverywhere = (updatedEntry) => {
-    queryClient.setQueryData(["private-feedback"], (current) =>
-      Array.isArray(current)
-        ? current.map((item) => (item._id === updatedEntry._id ? updatedEntry : item))
-        : [],
-    );
+    queryClient.invalidateQueries({ queryKey: ["private-feedback"] });
     setSelectedEntry((current) =>
       current?._id === updatedEntry._id ? updatedEntry : current,
     );
@@ -664,7 +653,7 @@ export default function PrivateFeedbackPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [activeStatus, filters]);
+  }, [activeStatus, serverFilterParams]);
 
   useEffect(() => {
     if (filterSheetOpen) {
@@ -723,7 +712,7 @@ export default function PrivateFeedbackPage() {
               </p>
             </div>
             <Badge className="w-fit border-amber-200 bg-amber-50 text-amber-700">
-              {privateFeedback.length} items
+              {feedbackSummaryTotal} items
             </Badge>
           </div>
         </section>
@@ -762,7 +751,7 @@ export default function PrivateFeedbackPage() {
                     Items
                   </p>
                   <p className="mt-2 text-base font-semibold text-slate-950">
-                    {filteredFeedback.length}
+                    {feedbackTotal}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
@@ -779,7 +768,7 @@ export default function PrivateFeedbackPage() {
               <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-slate-600">
                   {hasActiveFilters
-                    ? `Showing ${filteredFeedback.length} filtered feedback entries`
+                    ? `Showing ${feedbackTotal} filtered feedback entries`
                     : "No filters applied"}
                 </div>
                 <Button
@@ -797,7 +786,7 @@ export default function PrivateFeedbackPage() {
               ) : hasPrivateFeedback ? (
                 <>
                   <div className="space-y-4">
-                    {paginatedItems.map((feedback) => (
+                    {privateFeedback.map((feedback) => (
                       <PrivateFeedbackCard
                         key={feedback._id}
                         feedback={feedback}

@@ -2,20 +2,100 @@ import mongoose from "mongoose";
 import Testimonial from "../models/Testimonial.js";
 import { createHttpError } from "../utils/httpError.js";
 
+const getPaginationOptions = (query) => {
+  const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+  const limit = Math.min(Math.max(Number.parseInt(query.limit, 10) || 20, 1), 100);
+  return { page, limit, skip: (page - 1) * limit };
+};
+
+const getDateFilter = (query) => {
+  const dateFilter = {};
+  const fromDate = query.fromDate ? new Date(query.fromDate) : null;
+  const toDate = query.toDate ? new Date(query.toDate) : null;
+
+  if (fromDate && !Number.isNaN(fromDate.getTime())) {
+    dateFilter.$gte = fromDate;
+  }
+
+  if (toDate && !Number.isNaN(toDate.getTime())) {
+    dateFilter.$lte = toDate;
+  }
+
+  return Object.keys(dateFilter).length > 0 ? dateFilter : null;
+};
+
+const getWordFilterStages = (query, textField) => {
+  const minWords = Number.parseInt(query.minWords, 10);
+  const maxWords = Number.parseInt(query.maxWords, 10);
+  const wordFilter = {};
+
+  if (!Number.isNaN(minWords)) {
+    wordFilter.$gte = minWords;
+  }
+
+  if (!Number.isNaN(maxWords)) {
+    wordFilter.$lte = maxWords;
+  }
+
+  if (Object.keys(wordFilter).length === 0) {
+    return [];
+  }
+
+  return [
+    {
+      $addFields: {
+        __wordCount: {
+          $size: {
+            $filter: {
+              input: {
+                $split: [
+                  { $trim: { input: { $ifNull: [`$${textField}`, ""] } } },
+                  " ",
+                ],
+              },
+              as: "word",
+              cond: { $ne: ["$$word", ""] },
+            },
+          },
+        },
+      },
+    },
+    { $match: { __wordCount: wordFilter } },
+  ];
+};
+
 export const getTestimonials = async (req, res) => {
   const { status } = req.query;
   const query = { businessId: req.user.businessId };
-  const page = Math.max(Number.parseInt(req.query.page, 10) || 1, 1);
-  const limit = Math.min(Math.max(Number.parseInt(req.query.limit, 10) || 20, 1), 100);
-  const skip = (page - 1) * limit;
+  const { page, limit, skip } = getPaginationOptions(req.query);
+  const dateFilter = getDateFilter(req.query);
+  const wordFilterStages = getWordFilterStages(req.query, "testimonialText");
+  const sort =
+    req.query.ratingSort === "high_to_low"
+      ? { rating: -1, collectedAt: -1, _id: -1 }
+      : req.query.ratingSort === "low_to_high"
+        ? { rating: 1, collectedAt: -1, _id: -1 }
+        : { collectedAt: -1, _id: -1 };
 
   if (status && ["pending", "approved", "hidden"].includes(status)) {
     query.status = status;
   }
 
-  const [testimonials, total, summary] = await Promise.all([
-    Testimonial.find(query).sort({ collectedAt: -1 }).skip(skip).limit(limit),
-    Testimonial.countDocuments(query),
+  if (dateFilter) {
+    query.collectedAt = dateFilter;
+  }
+
+  const [result, summary] = await Promise.all([
+    Testimonial.aggregate([
+      { $match: query },
+      ...wordFilterStages,
+      {
+        $facet: {
+          data: [{ $sort: sort }, { $skip: skip }, { $limit: limit }],
+          total: [{ $count: "count" }],
+        },
+      },
+    ]),
     Testimonial.aggregate([
       { $match: { businessId: req.user.businessId } },
       { $group: { _id: "$status", count: { $sum: 1 } } },
@@ -29,6 +109,8 @@ export const getTestimonials = async (req, res) => {
     },
     { approved: 0, pending: 0, hidden: 0 }
   );
+  const testimonials = result[0]?.data || [];
+  const total = result[0]?.total[0]?.count || 0;
 
   return res.json({
     data: testimonials,

@@ -155,12 +155,6 @@ const DEFAULT_FILTERS = {
   maxWords: "",
 };
 
-const getWordCount = (item) => {
-  const text = String(item?.testimonialText || item?.feedbackText || "").trim();
-  if (!text) return 0;
-  return text.split(/\s+/).length;
-};
-
 const parseFilterNumber = (value) => {
   if (value === "") return null;
   const parsed = Number.parseInt(value, 10);
@@ -278,8 +272,13 @@ export default function TestimonialsPage() {
   };
 
   const testimonialsQuery = useQuery({
-    queryKey: ["testimonials", deferredStatus],
-    queryFn: () => getTestimonials(deferredStatus),
+    queryKey: ["testimonials", deferredStatus, currentPage, filters],
+    queryFn: () =>
+      getTestimonials(deferredStatus, {
+        page: currentPage,
+        limit: PAGE_SIZE,
+        ...getServerFilterParams(filters),
+      }),
     placeholderData: keepPreviousData,
   });
 
@@ -301,58 +300,13 @@ export default function TestimonialsPage() {
     },
   });
 
+  const serverFilterParams = useMemo(
+    () => getServerFilterParams(filters),
+    [filters],
+  );
   const testimonials = testimonialsQuery.data?.data || [];
-  const filteredTestimonials = useMemo(() => {
-    const { fromDate, toDate } = getDateRangeFromPreset(
-      filters.datePreset,
-      filters.fromDate,
-      filters.toDate,
-    );
-    const customMinWords = parseFilterNumber(filters.minWords);
-    const customMaxWords = parseFilterNumber(filters.maxWords);
-
-    let minWords = customMinWords;
-    let maxWords = customMaxWords;
-    if (filters.wordPreset === "below_10") {
-      minWords = null;
-      maxWords = 9;
-    } else if (filters.wordPreset === "10_20") {
-      minWords = 10;
-      maxWords = 20;
-    } else if (filters.wordPreset === "20_50") {
-      minWords = 20;
-      maxWords = 50;
-    } else if (filters.wordPreset === "50_100") {
-      minWords = 50;
-      maxWords = 100;
-    } else if (filters.wordPreset === "above_100") {
-      minWords = 101;
-      maxWords = null;
-    }
-
-    const next = testimonials.filter((testimonial) => {
-      const createdAt = new Date(
-        testimonial.createdAt || testimonial.collectedAt || Date.now(),
-      );
-      if (fromDate && createdAt < fromDate) return false;
-      if (toDate && createdAt > toDate) return false;
-
-      const wordCount = getWordCount(testimonial);
-      if (minWords !== null && wordCount < minWords) return false;
-      if (maxWords !== null && wordCount > maxWords) return false;
-
-      return true;
-    });
-
-    if (filters.ratingSort === "high_to_low") {
-      next.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-    } else if (filters.ratingSort === "low_to_high") {
-      next.sort((a, b) => (a.rating || 0) - (b.rating || 0));
-    }
-
-    return next;
-  }, [filters, testimonials]);
-  const hasTestimonials = filteredTestimonials.length > 0;
+  const testimonialTotal = testimonialsQuery.data?.total || 0;
+  const hasTestimonials = testimonials.length > 0;
   const hasActiveFilters = useMemo(
     () => Object.entries(filters).some(([key, value]) => value !== DEFAULT_FILTERS[key]),
     [filters],
@@ -360,12 +314,47 @@ export default function TestimonialsPage() {
 
   const testimonialTotalPages = Math.max(
     1,
-    Math.ceil(filteredTestimonials.length / PAGE_SIZE),
+    Math.ceil(testimonialTotal / PAGE_SIZE),
   );
-  const paginatedTestimonials = useMemo(() => {
-    const startIndex = (currentPage - 1) * PAGE_SIZE;
-    return filteredTestimonials.slice(startIndex, startIndex + PAGE_SIZE);
-  }, [filteredTestimonials, currentPage]);
+
+  function getServerFilterParams(nextFilters) {
+    const { fromDate, toDate } = getDateRangeFromPreset(
+      nextFilters.datePreset,
+      nextFilters.fromDate,
+      nextFilters.toDate,
+    );
+    const customMinWords = parseFilterNumber(nextFilters.minWords);
+    const customMaxWords = parseFilterNumber(nextFilters.maxWords);
+
+    let minWords = customMinWords;
+    let maxWords = customMaxWords;
+    if (nextFilters.wordPreset === "below_10") {
+      minWords = null;
+      maxWords = 9;
+    } else if (nextFilters.wordPreset === "10_20") {
+      minWords = 10;
+      maxWords = 20;
+    } else if (nextFilters.wordPreset === "20_50") {
+      minWords = 20;
+      maxWords = 50;
+    } else if (nextFilters.wordPreset === "50_100") {
+      minWords = 50;
+      maxWords = 100;
+    } else if (nextFilters.wordPreset === "above_100") {
+      minWords = 101;
+      maxWords = null;
+    }
+
+    return {
+      ...(fromDate ? { fromDate: fromDate.toISOString() } : {}),
+      ...(toDate ? { toDate: toDate.toISOString() } : {}),
+      ...(minWords !== null ? { minWords } : {}),
+      ...(maxWords !== null ? { maxWords } : {}),
+      ...(nextFilters.ratingSort !== "none"
+        ? { ratingSort: nextFilters.ratingSort }
+        : {}),
+    };
+  }
 
   const handlePageChange = (page) => {
     const nextPage = Math.min(Math.max(page, 1), testimonialTotalPages);
@@ -374,7 +363,7 @@ export default function TestimonialsPage() {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [deferredStatus]);
+  }, [deferredStatus, serverFilterParams]);
 
   useEffect(() => {
     const statusFromQuery = getValidStatus(searchParams.get("status"));
@@ -531,7 +520,7 @@ export default function TestimonialsPage() {
                     Items
                   </p>
                   <p className="mt-2 text-base font-semibold text-slate-950">
-                    {filteredTestimonials.length}
+                    {testimonialTotal}
                   </p>
                 </div>
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
@@ -548,7 +537,7 @@ export default function TestimonialsPage() {
               <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-slate-600">
                   {hasActiveFilters
-                    ? `Showing ${filteredTestimonials.length} filtered testimonials`
+                    ? `Showing ${testimonialTotal} filtered testimonials`
                     : "No filters applied"}
                 </div>
                 <Button
@@ -566,7 +555,7 @@ export default function TestimonialsPage() {
               ) : hasTestimonials ? (
                 <>
                   <div className="space-y-4">
-                    {paginatedTestimonials.map((testimonial) => (
+                    {testimonials.map((testimonial) => (
                       <TestimonialCard
                         key={testimonial._id}
                         testimonial={testimonial}
