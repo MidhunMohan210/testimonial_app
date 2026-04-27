@@ -17,6 +17,7 @@ export const getBusinessBySlug = async (req, res) => {
     businessId: String(business._id),
     businessName: business.businessName,
     googleReviewLink: getBusinessSettings(business).googleReviewLink,
+    googleReviewEnabled: getBusinessSettings(business).googleReviewEnabled,
   });
 };
 

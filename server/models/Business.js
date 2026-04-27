@@ -33,6 +33,10 @@ const businessSchema = new mongoose.Schema({
       default: "",
       trim: true,
     },
+    googleReviewEnabled: {
+      type: Boolean,
+      default: false,
+    },
     isPublicEnabled: {
       type: Boolean,
       default: true,
@@ -47,6 +51,10 @@ const businessSchema = new mongoose.Schema({
     type: String,
     default: "",
     trim: true,
+  },
+  googleReviewEnabled: {
+    type: Boolean,
+    default: false,
   },
   isPublicEnabled: {
     type: Boolean,

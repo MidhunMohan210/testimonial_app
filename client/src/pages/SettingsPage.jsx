@@ -25,12 +25,20 @@ import { Skeleton } from "../components/ui/skeleton";
 import { cn } from "../lib/utils";
 import { useAuth } from "../hooks/useAuth";
 
-function SettingsToggle({ checked, onChange, title, description }) {
+function SettingsToggle({ checked, onChange, title, description, disabled = false }) {
   return (
     <button
       type="button"
-      onClick={() => onChange(!checked)}
-      className="flex w-full flex-col items-start justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-4 text-left transition hover:border-slate-300 hover:bg-white sm:flex-row sm:items-center"
+      onClick={() => {
+        if (!disabled) {
+          onChange(!checked);
+        }
+      }}
+      disabled={disabled}
+      className={cn(
+        "flex w-full flex-col items-start justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-4 text-left transition hover:border-slate-300 hover:bg-white sm:flex-row sm:items-center",
+        disabled && "cursor-not-allowed opacity-60 hover:border-slate-200 hover:bg-slate-50/80",
+      )}
     >
       <div className="min-w-0">
         <p className="text-sm font-semibold text-slate-900">{title}</p>
@@ -70,7 +78,7 @@ const SETTINGS_TABS = [
   {
     id: "business-profile",
     label: "Business Profile",
-    description: "Business details and review link",
+    description: "Business details ",
     icon: Building2,
     iconClassName: "border-blue-100 bg-blue-50 text-blue-700",
     activeAccentClassName: "bg-blue-600",
@@ -120,6 +128,7 @@ export default function SettingsPage() {
     defaultValues: {
       name: "",
       googleReviewLink: "",
+      googleReviewEnabled: false,
       isPublicEnabled: true,
       notificationsEnabled: true,
     },
@@ -153,6 +162,7 @@ export default function SettingsPage() {
         businessName: data.name,
         slug: data.slug,
         googleReviewLink: data.googleReviewLink,
+        googleReviewEnabled: data.googleReviewEnabled,
         isPublicEnabled: data.isPublicEnabled,
         notificationsEnabled: data.notificationsEnabled,
       });
@@ -197,10 +207,18 @@ export default function SettingsPage() {
     }
   };
 
+  const googleReviewLinkValue = watch("googleReviewLink") || "";
+  const hasGoogleReviewLink = Boolean(googleReviewLinkValue.trim());
+
   const onSubmit = handleSubmit(async (values) => {
     clearErrors();
     setFormError("");
-    await mutation.mutateAsync(values);
+    await mutation.mutateAsync({
+      ...values,
+      googleReviewEnabled: values.googleReviewLink?.trim()
+        ? values.googleReviewEnabled
+        : false,
+    });
   });
 
   if (settingsQuery.isLoading) {
@@ -427,14 +445,30 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    {watch("googleReviewLink")?.trim() ? (
+                    <SettingsToggle
+                      checked={hasGoogleReviewLink && watch("googleReviewEnabled")}
+                      onChange={(value) =>
+                        hasGoogleReviewLink
+                          ? setValue("googleReviewEnabled", value, { shouldDirty: true })
+                          : undefined
+                      }
+                      title="Enable Google review flow"
+                      description={
+                        hasGoogleReviewLink
+                          ? "When enabled, customers who submit a positive testimonial can be guided to your Google review link."
+                          : "Add a Google Review Link before enabling this flow."
+                      }
+                      disabled={!hasGoogleReviewLink}
+                    />
+
+                    {hasGoogleReviewLink ? (
                       <Button
                         type="button"
                         variant="outline"
                         className="h-11 w-full rounded-lg px-4 sm:w-auto"
                         onClick={() =>
                           window.open(
-                            watch("googleReviewLink").trim(),
+                            googleReviewLinkValue.trim(),
                             "_blank",
                             "noopener,noreferrer",
                           )

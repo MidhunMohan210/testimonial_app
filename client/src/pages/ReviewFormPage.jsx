@@ -115,7 +115,10 @@ export default function ReviewFormPage() {
   const isSubmitting = reviewMutation.isPending || feedbackMutation.isPending;
   const businessName = businessQuery.data?.businessName || "Business";
   const businessId = businessQuery.data?.businessId || "";
-  const googleReviewUrl = businessQuery.data?.googleReviewLink || "";
+  const googleReviewUrl =
+    businessQuery.data?.googleReviewEnabled === false
+      ? ""
+      : businessQuery.data?.googleReviewLink || "";
   const reviewTextValue = watch("reviewText") || "";
   const feedbackTextValue = watch("feedbackText") || "";
   const allowFollowUpValue = watch("allowFollowUp");

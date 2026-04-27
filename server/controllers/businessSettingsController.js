@@ -19,6 +19,7 @@ const formatSettingsResponse = (business) => {
     name: business.businessName || "",
     slug: business.slug || "",
     googleReviewLink: settings.googleReviewLink,
+    googleReviewEnabled: settings.googleReviewEnabled,
     isPublicEnabled: settings.isPublicEnabled,
     notificationsEnabled: settings.notificationsEnabled,
   };
@@ -91,7 +92,13 @@ export const getBusinessSettings = async (req, res) => {
 };
 
 export const updateBusinessSettings = async (req, res) => {
-  const { name, googleReviewLink, isPublicEnabled, notificationsEnabled } = req.body;
+  const {
+    name,
+    googleReviewLink,
+    googleReviewEnabled,
+    isPublicEnabled,
+    notificationsEnabled,
+  } = req.body;
 
   if (typeof name !== "string" || !name.trim()) {
     throw createHttpError(400, "Business name is required");
@@ -115,6 +122,9 @@ export const updateBusinessSettings = async (req, res) => {
   assignBusinessSettings(business, {
     ...(googleReviewLink !== undefined
       ? { googleReviewLink: String(googleReviewLink).trim() }
+      : {}),
+    ...(googleReviewEnabled !== undefined
+      ? { googleReviewEnabled: Boolean(googleReviewEnabled) }
       : {}),
     ...(isPublicEnabled !== undefined
       ? { isPublicEnabled: Boolean(isPublicEnabled) }
