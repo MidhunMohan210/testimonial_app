@@ -23,11 +23,12 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isProduction = process.env.NODE_ENV === "production";
 
-// ─── Helmet (security headers, CORP disabled for public widget API) ────────────
+// ─── Helmet ───────────────────────────────────────────────────────────────────
 app.use(
   helmet({
-    crossOriginResourcePolicy: false,  // Allow cross-origin resource loading for widget
+    crossOriginResourcePolicy: false,
     crossOriginOpenerPolicy: false,
   })
 );
@@ -35,22 +36,46 @@ app.use(
 // Important for Railway / reverse proxies so req.ip works properly
 app.set("trust proxy", 1);
 
+// ─── CORS ─────────────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  "https://www.woice.it.com",
+  "https://woice.it.com",
+
+  ...(isProduction
+    ? []
+    : [
+        "http://localhost:5173",
+        "http://localhost:5174",
+        "http://localhost:3000",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5174",
+      ]),
+].filter(Boolean);
+
+const appCors = cors({
+  origin: (origin, callback) => {
+    // Allow same-origin, Postman, mobile apps, server-to-server requests
+    if (!origin) return callback(null, true);
+
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+
+    return callback(new Error(`Not allowed by CORS: ${origin}`));
+  },
+  credentials: true,
+});
+
+app.use(appCors);
+app.options("*", appCors);
+
 // ─── Webhook JSON Parser ───────────────────────────────────────────────────────
 const webhookJsonParser = express.json({
   verify: (req, res, buf) => {
     req.rawBody = Buffer.from(buf);
   },
 });
-
-// ─── CORS ─────────────────────────────────────────────────────────────────────
-app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
-);
-
-app.options("*", cors());
 
 // ─── Session Middleware ────────────────────────────────────────────────────────
 app.use(
@@ -64,7 +89,7 @@ app.use(
       autoRemove: "native",
     }),
     cookie: {
-      secure: process.env.NODE_ENV === "production",
+      secure: isProduction,
       httpOnly: true,
       sameSite: "lax",
       maxAge: 1000 * 60 * 60 * 24,
@@ -82,16 +107,13 @@ function getBusinessKey(req) {
   );
 }
 
-//
 // ─── Rate Limiters ────────────────────────────────────────────────────────────
 const publicReviewLimiter = rateLimit({
   windowMs: 5 * 60 * 1000,
   max: 40,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => {
-    return `${req.ip}:${getBusinessKey(req)}`;
-  },
+  keyGenerator: (req) => `${req.ip}:${getBusinessKey(req)}`,
   message: {
     error: "Too many submissions in a short time. Please try again later.",
   },
@@ -107,7 +129,7 @@ const publicReadLimiter = rateLimit({
   },
 });
 
-// ─── WhatsApp Webhook (Feature Flagged) ───────────────────────────────────────
+// ─── WhatsApp Webhook ─────────────────────────────────────────────────────────
 if (process.env.WHATSAPP_ENABLED === "true") {
   app.use("/webhook", webhookJsonParser, whatsappWebhookRoutes);
 }
@@ -120,29 +142,31 @@ app.get("/api/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
-// ─── Routes ───────────────────────────────────────────────────────────────────
-
-// Public unauthenticated routes
+// ─── Public Routes ────────────────────────────────────────────────────────────
 app.use("/whatsapp", whatsappCallbackRoutes);
 app.use("/api/r", publicReviewLimiter, publicReviewRouter);
 
-// Public testimonials — wide-open CORS for embedded widget support
+// Public testimonials/widget API: allow all origins, no credentials
 app.use(
   "/api/p",
   publicReadLimiter,
-  cors({ origin: "*", credentials: false }),
+  cors({
+    origin: "*",
+    credentials: false,
+  }),
   publicTestimonialsRouter
 );
 
-// Auth routes
+// ─── Auth Routes ──────────────────────────────────────────────────────────────
 app.use("/api/auth", authRoutes);
 
-// Protected routes
+// ─── Protected Routes ─────────────────────────────────────────────────────────
 app.use("/api/business", authMiddleware, businessSettingsRouter);
 app.use("/api/feedback", authMiddleware, privateFeedbackRouter);
 app.use("/api/whatsapp", authMiddleware, whatsappRoutes);
 app.use("/api/testimonials", authMiddleware, testimonialRoutes);
 
+// ─── Error Handler ────────────────────────────────────────────────────────────
 app.use(errorHandler);
 
 // ─── Database + Server Start ──────────────────────────────────────────────────
