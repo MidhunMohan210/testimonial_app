@@ -23,6 +23,7 @@ import { getMyBusiness } from "../api/businessApi";
 import ManualAddModal from "../components/ManualAddModal";
 import { EmptyStateCard, ErrorStateCard } from "../components/StateCard";
 import TestimonialCard from "../components/TestimonialCard";
+import { clearCachedPublicTestimonials } from "../lib/publicTestimonialsCache";
 import { Button } from "../components/ui/button";
 import {
   Dialog,
@@ -297,9 +298,22 @@ export default function TestimonialsPage() {
     queryFn: getMyBusiness,
   });
 
+  const invalidatePublicTestimonialsCache = () => {
+    const businessSlug = businessQuery.data?.slug;
+
+    if (businessSlug) {
+      clearCachedPublicTestimonials(businessSlug);
+      queryClient.removeQueries({
+        queryKey: ["public-testimonials", businessSlug],
+        exact: true,
+      });
+    }
+  };
+
   const statusMutation = useMutation({
     mutationFn: ({ id, status }) => updateStatus(id, status),
     onSuccess: async (_, variables) => {
+      invalidatePublicTestimonialsCache();
       toast.success(`Testimonial moved to ${variables.status}`);
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: ["testimonials"] }),
@@ -318,6 +332,7 @@ export default function TestimonialsPage() {
   const deleteMutation = useMutation({
     mutationFn: deleteTestimonial,
     onSuccess: async (_, deletedId) => {
+      invalidatePublicTestimonialsCache();
       queryClient.setQueryData(testimonialsQueryKey, (current) => {
         if (!current) return current;
 

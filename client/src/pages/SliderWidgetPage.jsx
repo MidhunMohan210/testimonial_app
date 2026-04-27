@@ -4,11 +4,26 @@ import { BadgeCheck, CloudAlert, Quote, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getPublicTestimonials } from "../api/publicTestimonialsApi";
 import WidgetLoader from "../components/WidgetLoader";
+import {
+  PUBLIC_TESTIMONIALS_GC_TIME_MS,
+  PUBLIC_TESTIMONIALS_STALE_TIME_MS,
+  readCachedPublicTestimonials,
+  writeCachedPublicTestimonials,
+} from "../lib/publicTestimonialsCache";
 
 const DISPLAY_LIMIT = 5;
 const LOADING_HINT_DELAY_MS = 5000;
-const PUBLIC_TESTIMONIALS_STALE_TIME_MS = 5 * 60 * 1000;
-const PUBLIC_TESTIMONIALS_GC_TIME_MS = 30 * 60 * 1000;
+
+async function fetchPublicSliderTestimonials(businessSlug) {
+  if (!businessSlug) {
+    throw new Error("Business slug is required to fetch public testimonials");
+  }
+
+  const data = await getPublicTestimonials(businessSlug, { limit: DISPLAY_LIMIT });
+  writeCachedPublicTestimonials(businessSlug, data);
+
+  return data;
+}
 
 function RatingStars({ rating }) {
   return (
@@ -225,20 +240,28 @@ function ErrorState({ onRetry }) {
 }
 
 export default function SliderWidgetPage() {
-  const { slug = "" } = useParams();
+  const { slug: businessSlug = "" } = useParams();
   const [searchParams] = useSearchParams();
   const embedMode = searchParams.get("embed") === "true";
   const widgetRootRef = useRef(null);
   const widgetContentRef = useRef(null);
   const [showSlowLoadingHint, setShowSlowLoadingHint] = useState(false);
+  const cachedTestimonials = useMemo(
+    () => readCachedPublicTestimonials(businessSlug),
+    [businessSlug]
+  );
 
   const testimonialsQuery = useQuery({
-    queryKey: ["public-testimonials", "slider", slug, DISPLAY_LIMIT],
-    queryFn: () => getPublicTestimonials(slug, { limit: DISPLAY_LIMIT }),
-    enabled: Boolean(slug),
-    retry: 1,
+    queryKey: ["public-testimonials", businessSlug],
+    queryFn: () => fetchPublicSliderTestimonials(businessSlug),
+    enabled: Boolean(businessSlug),
+    initialData: cachedTestimonials?.data,
+    initialDataUpdatedAt: cachedTestimonials?.updatedAt,
     staleTime: PUBLIC_TESTIMONIALS_STALE_TIME_MS,
     gcTime: PUBLIC_TESTIMONIALS_GC_TIME_MS,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 1,
   });
 
   const isLoading = testimonialsQuery.isLoading;
@@ -340,7 +363,7 @@ export default function SliderWidgetPage() {
         {
           type: "WOICE_WIDGET_HEIGHT",
           height,
-          slug,
+          slug: businessSlug,
         },
         "*"
       );
@@ -370,10 +393,10 @@ export default function SliderWidgetPage() {
     testimonialsQuery.isLoading,
     testimonialsQuery.isError,
     isInvalidData,
-    slug,
+    businessSlug,
   ]);
 
-  if (!slug) {
+  if (!businessSlug) {
     return <ErrorState onRetry={() => window.location.reload()} />;
   }
 
@@ -453,7 +476,7 @@ export default function SliderWidgetPage() {
                 type="button"
                 className="inline-flex items-center justify-center rounded-full bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:scale-105 hover:bg-slate-900 active:scale-95 focus:outline-none ring-2 ring-slate-300 ring-offset-1 disabled:pointer-events-none disabled:opacity-50 sm:px-6 sm:py-3"
                 onClick={() =>
-                  window.open(`/p/${slug}`, "_blank", "noopener,noreferrer")
+                  window.open(`/p/${businessSlug}`, "_blank", "noopener,noreferrer")
                 }
               >
                 See all reviews
