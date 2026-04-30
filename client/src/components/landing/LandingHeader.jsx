@@ -1,6 +1,6 @@
   import { useEffect, useRef, useState } from "react";
   import { Link } from "react-router-dom";
-  import logo from "../../assets/logo2.svg";
+  import logo from "../../assets/two.svg";
 
   function NavLink({ children, to = "#", className = "", style }) {
     return (
@@ -62,7 +62,7 @@
     }, []);
 
     return (
-      <header className="fixed inset-x-0 top-0 z-50 px-2 pt-2 sm:px-6 sm:pt-4 lg:px-8 lg:pt-6">
+      <header className="fixed inset-x-0 top-0 z-50 px-2 pt-2 sm:px-6 sm:pt-4  lg:px-8 lg:pt  ">
         <div
           className={[
             "mx-auto flex items-center justify-between gap-2 rounded-full py-1",
@@ -82,7 +82,7 @@
               alt="Woice"
               className={[
                 "transition-all duration-300 ease-out",
-                isScrolled || isCollapsed ? "w-[62px] sm:w-[92px]" : "w-[66px] sm:w-[95px]",
+                 "w-[50px] sm:w-[50px] py-3  mx-1" ,
               ].join(" ")}
             />
           </Link>

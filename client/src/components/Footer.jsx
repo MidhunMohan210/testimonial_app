@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import logo from "../assets/logo2.svg";
+import logo from "../assets/two.svg";
 
 export default function Footer({ className = "" }) {
   return (
@@ -8,7 +8,7 @@ export default function Footer({ className = "" }) {
     >
       <div className="mx-auto flex max-w-7xl flex-col items-center justify-center gap-6 px-4 py-6 text-center sm:px-6 lg:px-8">
         <Link to="/" className="inline-flex items-center justify-center">
-          <img src={logo} alt="Woice" className="h-12 w-auto" />
+          <img src={logo} alt="Woice" className="h-6 w-auto" />
         </Link>
 
         <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-medium text-slate-500">
