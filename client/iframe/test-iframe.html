@@ -1,0 +1,23 @@
+<div id="testimonial-widget-cliq-cmarq"></div>
+<script>
+  (function () {
+    var container = document.getElementById("testimonial-widget-cliq-cmarq");
+    if (!container) return;
+
+    var iframe = document.createElement("iframe");
+    iframe.src = "http://localhost:5173/widget/slider/cliq-cmarq?embed=true";
+    iframe.width = "100%";
+    iframe.height = "500";
+    iframe.style.border = "0";
+    iframe.style.display = "block";
+    iframe.style.transition = "height 0.3s ease";
+    iframe.setAttribute("scrolling", "no");
+    container.appendChild(iframe);
+
+    window.addEventListener("message", function (event) {
+      if (event.origin !== "http://localhost:5173") return;
+      if (!event.data || event.data.type !== "RESIZE_IFRAME") return;
+      iframe.style.height = event.data.height + "px";
+    });
+  })();
+</script>
