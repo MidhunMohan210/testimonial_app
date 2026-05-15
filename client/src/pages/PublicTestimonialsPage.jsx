@@ -4,10 +4,11 @@ import { CloudAlert, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { getPublicTestimonials } from "../api/publicTestimonialsApi";
 import WidgetLoader from "../components/WidgetLoader";
+import planetImg from "../assets/planet.png"
 
 const INITIAL_COUNT = 12;
 const LOAD_MORE_COUNT = 12;
-const PUBLIC_TESTIMONIALS_LIMIT = 100;
+const PUBLIC_TESTIMONIALS_LIMIT = 100; 
 const MIN_LOADING_SCREEN_MS = 500;
 const PUBLIC_TESTIMONIALS_STALE_TIME_MS = 5 * 60 * 1000;
 const PUBLIC_TESTIMONIALS_GC_TIME_MS = 30 * 60 * 1000;
@@ -615,8 +616,10 @@ export default function PublicTestimonialsPage() {
     >
       <div className={`mx-auto ${embedMode ? "max-w-5xl" : "max-w-6xl"}`}>
         {boardTestimonials.length === 0 ? (
-          <section className="rounded-[20px] bg-white px-8 py-14 text-center shadow-[0_24px_60px_rgba(148,163,184,0.12)]">
-            <p className="text-lg font-semibold text-slate-900">No reviews yet</p>
+          // <img src="" alt="" />
+          <section className="px-8 py-14 text-center h-[calc(100vh-64px)] flex flex-col items-center justify-center">
+            <img src={planetImg} alt="No testimonials" className="w-24 h-24 mb-2" />
+            <p className="text-lg font-semibold text-slate-900">No testimonials yet</p>
             <p className="mt-2 text-sm text-slate-500">
               Public testimonials will appear here automatically.
             </p>

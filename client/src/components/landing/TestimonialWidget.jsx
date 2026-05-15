@@ -6,9 +6,9 @@ export default function TestimonialsWidget() {
     const publicAppUrl = getPublicAppUrl();
     const script = document.createElement("script");
     // script.src = `${publicAppUrl}/embed.js`;
-    script.src = `http://localhost:5173/embed.js`;
+    script.src = `https://www.woice.it.com/embed.js`;
     script.defer = true;
-    script.setAttribute("data-base-url", "http://localhost:5173");
+    script.setAttribute("data-base-url", "https://www.woice.it.com");
     document.body.appendChild(script);
 
     return () => {
@@ -19,7 +19,7 @@ export default function TestimonialsWidget() {
   return (
     <div
       className="woice-testimonial-widget"
-      data-business-slug="cliq-cmarq"
+      data-business-slug="woice-pxiuk"
       data-theme="light"
       data-layout="slider"
       data-height="420"

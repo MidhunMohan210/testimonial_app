@@ -280,7 +280,7 @@ function WidgetSkeleton({ showSlowHint }) {
 
 function EmptyState() {
   return (
-    <div className="mx-auto max-w-md rounded-[24px] border border-slate-200 bg-slate-50 px-6 py-10 text-center sm:px-8 sm:py-12 widget-fade-in">
+    <div className="mx-auto max-w-md rounded-[24px]  px-6 py-10 text-center sm:px-8 sm:py-12 widget-fade-in">
       <p className="text-base font-semibold text-slate-700">
         No testimonials yet
       </p>
