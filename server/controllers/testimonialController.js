@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import Business from "../models/Business.js";
 import Testimonial from "../models/Testimonial.js";
 import { createHttpError } from "../utils/httpError.js";
 
@@ -63,6 +64,16 @@ const getWordFilterStages = (query, textField) => {
     { $match: { __wordCount: wordFilter } },
   ];
 };
+
+const touchTestimonialsUpdatedAt = async (businessId) => {
+  if (!businessId) return;
+
+  await Business.findByIdAndUpdate(businessId, {
+    testimonialsUpdatedAt: new Date(),
+  });
+};
+
+const isPublicStatus = (status) => status === "approved";
 
 export const getTestimonials = async (req, res) => {
   const { status } = req.query;
@@ -146,14 +157,28 @@ export const updateStatus = async (req, res) => {
     throw createHttpError(400, "Invalid testimonial id");
   }
 
-  const testimonial = await Testimonial.findOneAndUpdate(
-    { _id: id, businessId: req.user.businessId, status: { $ne: "deleted" } },
+  const existingTestimonial = await Testimonial.findOne({
+    _id: id,
+    businessId: req.user.businessId,
+    status: { $ne: "deleted" },
+  });
+
+  if (!existingTestimonial) {
+    throw createHttpError(404, "Testimonial not found");
+  }
+
+  const testimonial = await Testimonial.findByIdAndUpdate(
+    existingTestimonial._id,
     { status },
     { new: true }
   );
 
   if (!testimonial) {
     throw createHttpError(404, "Testimonial not found");
+  }
+
+  if (isPublicStatus(existingTestimonial.status) !== isPublicStatus(status)) {
+    await touchTestimonialsUpdatedAt(req.user.businessId);
   }
 
   return res.json(testimonial);
@@ -166,14 +191,28 @@ export const deleteTestimonial = async (req, res) => {
     throw createHttpError(400, "Invalid testimonial id");
   }
 
-  const testimonial = await Testimonial.findOneAndUpdate(
-    { _id: id, businessId: req.user.businessId, status: { $ne: "deleted" } },
+  const existingTestimonial = await Testimonial.findOne({
+    _id: id,
+    businessId: req.user.businessId,
+    status: { $ne: "deleted" },
+  });
+
+  if (!existingTestimonial) {
+    throw createHttpError(404, "Testimonial not found");
+  }
+
+  const testimonial = await Testimonial.findByIdAndUpdate(
+    existingTestimonial._id,
     { status: "deleted" },
     { new: true }
   );
 
   if (!testimonial) {
     throw createHttpError(404, "Testimonial not found");
+  }
+
+  if (isPublicStatus(existingTestimonial.status)) {
+    await touchTestimonialsUpdatedAt(req.user.businessId);
   }
 
   return res.json({
@@ -203,6 +242,8 @@ export const addManualTestimonial = async (req, res) => {
     source: "manual",
     status: "approved",
   });
+
+  await touchTestimonialsUpdatedAt(req.user.businessId);
 
   return res.status(201).json(testimonial);
 };

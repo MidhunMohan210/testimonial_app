@@ -1,35 +1,102 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { BadgeCheck, CloudAlert, Quote, Star } from "lucide-react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { getPublicTestimonials } from "../api/publicTestimonialsApi";
+import {
+  getPublicTestimonials,
+  getPublicTestimonialsVersion,
+} from "../api/publicTestimonialsApi";
 import WidgetLoader from "../components/WidgetLoader";
 import {
-  PUBLIC_TESTIMONIALS_GC_TIME_MS,
-  PUBLIC_TESTIMONIALS_STALE_TIME_MS,
-  readCachedPublicTestimonials,
-  writeCachedPublicTestimonials,
+  getCachedTestimonialsData,
+  readWidgetCache,
+  saveWidgetCache,
+  shouldUseCache,
 } from "../lib/publicTestimonialsCache";
 
 const DISPLAY_LIMIT = 5;
 const LOADING_HINT_DELAY_MS = 5000;
+const inFlightVersionRequests = new Map();
+const inFlightTestimonialsRequests = new Map();
+
+function getInFlightRequest(map, key, factory) {
+  if (map.has(key)) {
+    return map.get(key);
+  }
+
+  const request = Promise.resolve()
+    .then(factory)
+    .finally(() => {
+      map.delete(key);
+    });
+
+  map.set(key, request);
+  return request;
+}
 
 async function fetchPublicSliderTestimonials(businessSlug) {
   if (!businessSlug) {
     throw new Error("Business slug is required to fetch public testimonials");
   }
 
-  const data = await getPublicTestimonials(businessSlug, { limit: DISPLAY_LIMIT });
-  writeCachedPublicTestimonials(businessSlug, data);
+  return getInFlightRequest(inFlightTestimonialsRequests, businessSlug, () =>
+    getPublicTestimonials(businessSlug, { limit: DISPLAY_LIMIT }),
+  );
+}
 
-  return data;
+async function fetchTestimonialsVersion(businessSlug) {
+  if (!businessSlug) {
+    throw new Error("Business slug is required to fetch testimonials version");
+  }
+
+  const data = await getInFlightRequest(inFlightVersionRequests, businessSlug, () =>
+    getPublicTestimonialsVersion(businessSlug),
+  );
+  return data?.version ?? null;
+}
+
+async function loadSliderTestimonials(businessSlug) {
+  const cached = readWidgetCache(businessSlug);
+  const cachedData = getCachedTestimonialsData(cached, businessSlug);
+
+  const fetchFreshTestimonials = async (version) => {
+    const freshData = await fetchPublicSliderTestimonials(businessSlug);
+    saveWidgetCache(businessSlug, freshData, version);
+    return freshData;
+  };
+
+  try {
+    const version = await fetchTestimonialsVersion(businessSlug);
+
+    if (shouldUseCache(cached, version) && cachedData) {
+      return cachedData;
+    }
+
+    try {
+      return await fetchFreshTestimonials(version);
+    } catch (error) {
+      if (cachedData) {
+        return cachedData;
+      }
+
+      throw error;
+    }
+  } catch {
+    if (cachedData) {
+      return cachedData;
+    }
+
+    return fetchFreshTestimonials(null);
+  }
 }
 
 function RatingStars({ rating }) {
   return (
     <div className="flex items-center gap-1" aria-hidden="true">
       {Array.from({ length: 5 }).map((_, index) => (
-        <span key={index} className="relative inline-flex h-4 w-4 items-center justify-center">
+        <span
+          key={index}
+          className="relative inline-flex h-4 w-4 items-center justify-center"
+        >
           <Star className="absolute h-4 w-4 text-slate-200" />
           <span
             className="absolute inset-y-0 left-0 overflow-hidden"
@@ -78,7 +145,8 @@ function getInitialsTone(index) {
 
 function ReviewCard({ testimonial, index }) {
   const text = testimonial.testimonialText || "";
-  const secondaryText = formatDate(testimonial.collectedAt) || "Customer review";
+  const secondaryText =
+    formatDate(testimonial.collectedAt) || "Customer review";
   const isHighlighted = index % 5 === 2;
   const isCompactReview = text.trim().length > 0 && text.trim().length < 90;
 
@@ -91,7 +159,10 @@ function ReviewCard({ testimonial, index }) {
           : "border-slate-200/70 shadow-[0_12px_34px_rgba(148,163,184,0.12)]"
       }`}
     >
-      <Quote className="pointer-events-none absolute right-4 top-4 h-9 w-9 text-slate-100 transition-colors duration-300 group-hover:text-slate-200 sm:right-5 sm:top-5 sm:h-12 sm:w-12" strokeWidth={1.5} />
+      <Quote
+        className="pointer-events-none absolute right-4 top-4 h-9 w-9 text-slate-100 transition-colors duration-300 group-hover:text-slate-200 sm:right-5 sm:top-5 sm:h-12 sm:w-12"
+        strokeWidth={1.5}
+      />
 
       <div className="relative z-10 flex h-full flex-col justify-between">
         <div className="flex items-start gap-3 sm:gap-4">
@@ -124,7 +195,9 @@ function ReviewCard({ testimonial, index }) {
               </span>
             </div>
 
-            <p className="mt-1.5 text-xs text-slate-500 sm:mt-2 sm:text-sm">{secondaryText}</p>
+            <p className="mt-1.5 text-xs text-slate-500 sm:mt-2 sm:text-sm">
+              {secondaryText}
+            </p>
 
             <div className="mt-2 flex items-center gap-2 sm:mt-3 sm:gap-2.5">
               <RatingStars rating={testimonial.rating || 0} />
@@ -220,13 +293,13 @@ function EmptyState() {
 
 function ErrorState({ onRetry }) {
   return (
-    <div className="mx-auto  rounded-[24px] h-[420px] flex items-center justify-center flex-col px-6 py-10 text-center  sm:px-8 sm:py-12 widget-fade-in">
+    <div className="mx-auto rounded-[24px] h-[420px] flex items-center justify-center flex-col px-6 py-10 text-center sm:px-8 sm:py-12 widget-fade-in">
       <CloudAlert size={40} color="gray" />
       <p className="text-base font-semibold text-slate-800 mt-3">
         Unable to load testimonials
       </p>
       <p className="mt-2 text-sm text-slate-500">
-       Please try again in a moment
+        Please try again in a moment
       </p>
       <button
         type="button"
@@ -246,38 +319,91 @@ export default function SliderWidgetPage() {
   const widgetRootRef = useRef(null);
   const widgetContentRef = useRef(null);
   const [showSlowLoadingHint, setShowSlowLoadingHint] = useState(false);
+  const [reloadCount, setReloadCount] = useState(0);
   const cachedTestimonials = useMemo(
-    () => readCachedPublicTestimonials(businessSlug),
-    [businessSlug]
+    () => readWidgetCache(businessSlug),
+    [businessSlug],
+  );
+  const cachedTestimonialsData = useMemo(
+    () => getCachedTestimonialsData(cachedTestimonials, businessSlug),
+    [businessSlug, cachedTestimonials],
+  );
+  const [data, setData] = useState(cachedTestimonialsData);
+  const [status, setStatus] = useState(() =>
+    businessSlug ? (cachedTestimonialsData ? "success" : "loading") : "idle",
   );
 
-  const testimonialsQuery = useQuery({
-    queryKey: ["public-testimonials", businessSlug],
-    queryFn: () => fetchPublicSliderTestimonials(businessSlug),
-    enabled: Boolean(businessSlug),
-    initialData: cachedTestimonials?.data,
-    initialDataUpdatedAt: cachedTestimonials?.updatedAt,
-    staleTime: PUBLIC_TESTIMONIALS_STALE_TIME_MS,
-    gcTime: PUBLIC_TESTIMONIALS_GC_TIME_MS,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 1,
-  });
+  useEffect(() => {
+    setData(cachedTestimonialsData);
+    setStatus(
+      businessSlug ? (cachedTestimonialsData ? "success" : "loading") : "idle",
+    );
+  }, [businessSlug, cachedTestimonialsData]);
 
-  const isLoading = testimonialsQuery.isLoading;
-  const isError = testimonialsQuery.isError;
-  // const isError = true;
-  const data = testimonialsQuery.data;
+  useEffect(() => {
+    if (!businessSlug) return;
+
+    let cancelled = false;
+
+    const syncTestimonials = async () => {
+      try {
+        const version = await fetchTestimonialsVersion(businessSlug);
+
+        if (cancelled) return;
+
+        const cached = readWidgetCache(businessSlug);
+        const cachedData = getCachedTestimonialsData(cached, businessSlug);
+
+        if (shouldUseCache(cached, version) && cachedData) {
+          setData(cachedData);
+          setStatus("success");
+          return;
+        }
+
+        const freshData = await fetchPublicSliderTestimonials(businessSlug);
+
+        if (cancelled) return;
+
+        saveWidgetCache(businessSlug, freshData, version);
+        setData(freshData);
+        setStatus("success");
+      } catch {
+        if (cancelled) return;
+
+        const cached = readWidgetCache(businessSlug);
+        const cachedData = getCachedTestimonialsData(cached, businessSlug);
+
+        if (cachedData) {
+          setData(cachedData);
+          setStatus("success");
+        } else {
+          setStatus("error");
+        }
+      }
+    };
+
+    syncTestimonials();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [businessSlug, reloadCount]);
+
+  const isLoading = status === "loading";
+  const isError = status === "error";
 
   const testimonials = Array.isArray(data?.testimonials)
     ? data.testimonials
     : [];
 
   const isInvalidData = !isLoading && !isError && !data;
+  const handleRetry = () => {
+    setReloadCount((current) => current + 1);
+  };
 
   const visibleTestimonials = useMemo(() => {
     const filteredTestimonials = testimonials.filter(
-      (testimonial) => (testimonial.testimonialText || "").trim().length > 20
+      (testimonial) => (testimonial.testimonialText || "").trim().length > 20,
     );
 
     const preparedTestimonials =
@@ -310,11 +436,11 @@ export default function SliderWidgetPage() {
 
   const duplicatedTestimonials = useMemo(
     () => [...marqueeTestimonials, ...marqueeTestimonials],
-    [marqueeTestimonials]
+    [marqueeTestimonials],
   );
 
   useEffect(() => {
-    if (!testimonialsQuery.isLoading) {
+    if (!isLoading) {
       setShowSlowLoadingHint(false);
       return;
     }
@@ -326,7 +452,7 @@ export default function SliderWidgetPage() {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [testimonialsQuery.isLoading]);
+  }, [isLoading]);
 
   useEffect(() => {
     let timeoutId;
@@ -342,12 +468,12 @@ export default function SliderWidgetPage() {
       const measuredHeight = measuredEl
         ? Math.max(
             measuredEl.scrollHeight,
-            Math.ceil(measuredEl.getBoundingClientRect().height)
+            Math.ceil(measuredEl.getBoundingClientRect().height),
           )
         : 0;
       const fallbackHeight = Math.max(
         document.documentElement?.scrollHeight || 0,
-        document.body?.scrollHeight || 0
+        document.body?.scrollHeight || 0,
       );
       const height = measuredHeight || fallbackHeight || 400;
 
@@ -356,7 +482,7 @@ export default function SliderWidgetPage() {
           type: "RESIZE_IFRAME",
           height,
         },
-        "*"
+        "*",
       );
 
       window.parent.postMessage(
@@ -365,7 +491,7 @@ export default function SliderWidgetPage() {
           height,
           slug: businessSlug,
         },
-        "*"
+        "*",
       );
     };
 
@@ -390,8 +516,8 @@ export default function SliderWidgetPage() {
   }, [
     duplicatedTestimonials.length,
     embedMode,
-    testimonialsQuery.isLoading,
-    testimonialsQuery.isError,
+    isLoading,
+    isError,
     isInvalidData,
     businessSlug,
   ]);
@@ -445,22 +571,34 @@ export default function SliderWidgetPage() {
             {isLoading ? <WidgetLoader /> : null}
 
             {isError || isInvalidData ? (
-              <ErrorState onRetry={() => testimonialsQuery.refetch()} />
+              <ErrorState onRetry={handleRetry} />
             ) : null}
 
-            {!isLoading && !isError && !isInvalidData && testimonials.length === 0 ? (
+            {!isLoading &&
+            !isError &&
+            !isInvalidData &&
+            testimonials.length === 0 ? (
               <EmptyState />
             ) : null}
 
-            {!isLoading && !isError && !isInvalidData && testimonials.length > 0 ? (
+            {!isLoading &&
+            !isError &&
+            !isInvalidData &&
+            testimonials.length > 0 ? (
               <div className="relative widget-fade-in">
                 <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-4 bg-gradient-to-r from-white via-white/80 to-transparent sm:w-20" />
                 <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-4 bg-gradient-to-l from-white via-white/80 to-transparent sm:w-20" />
 
-                <div className="overflow-hidden" aria-label="Customer testimonials" role="region">
+                <div
+                  className="overflow-hidden"
+                  aria-label="Customer testimonials"
+                  role="region"
+                >
                   <div className="public-review-marquee group flex w-max items-stretch gap-3 py-3 pl-4 pr-4 will-change-transform sm:gap-6 sm:pl-0 sm:pr-4">
                     {duplicatedTestimonials.map((testimonial, index) => (
-                      <div key={`${testimonial.id ?? testimonial.customerName ?? "review"}-${index}`}>
+                      <div
+                        key={`${testimonial.id ?? testimonial.customerName ?? "review"}-${index}`}
+                      >
                         <ReviewCard testimonial={testimonial} index={index} />
                       </div>
                     ))}
@@ -470,13 +608,20 @@ export default function SliderWidgetPage() {
             ) : null}
           </div>
 
-          {!isLoading && !isError && !isInvalidData && testimonials.length > 0 ? (
+          {!isLoading &&
+          !isError &&
+          !isInvalidData &&
+          testimonials.length > 0 ? (
             <div className="mt-8 px-4 text-center sm:mt-10 sm:px-0 widget-fade-in">
               <button
                 type="button"
                 className="inline-flex items-center justify-center rounded-full bg-slate-800 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition duration-200 hover:scale-105 hover:bg-slate-900 active:scale-95 focus:outline-none ring-2 ring-slate-300 ring-offset-1 disabled:pointer-events-none disabled:opacity-50 sm:px-6 sm:py-3"
                 onClick={() =>
-                  window.open(`/p/${businessSlug}`, "_blank", "noopener,noreferrer")
+                  window.open(
+                    `/p/${businessSlug}`,
+                    "_blank",
+                    "noopener,noreferrer",
+                  )
                 }
               >
                 See all reviews

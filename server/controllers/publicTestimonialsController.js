@@ -63,3 +63,23 @@ export const getPublicTestimonials = async (req, res) => {
     })),
   });
 };
+
+export const getPublicTestimonialsVersion = async (req, res) => {
+  const business = await Business.findOne({ slug: req.params.slug }).select(
+    "slug settings isPublicEnabled testimonialsUpdatedAt",
+  );
+
+  if (!business) {
+    throw createHttpError(404, "Business not found");
+  }
+
+  if (getBusinessSettings(business).isPublicEnabled === false) {
+    throw createHttpError(404, "Public testimonials page is disabled");
+  }
+
+  return res.json({
+    version: business.testimonialsUpdatedAt
+      ? business.testimonialsUpdatedAt.toISOString()
+      : null,
+  });
+};

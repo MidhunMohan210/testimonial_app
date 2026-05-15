@@ -2,48 +2,57 @@ export const PUBLIC_TESTIMONIALS_STALE_TIME_MS = 5 * 60 * 1000;
 export const PUBLIC_TESTIMONIALS_GC_TIME_MS = 30 * 60 * 1000;
 export const PUBLIC_TESTIMONIALS_STORAGE_EXPIRY_MS = 10 * 60 * 1000;
 
-const PUBLIC_TESTIMONIALS_STORAGE_PREFIX = "woice:public-testimonials:";
+const PUBLIC_TESTIMONIALS_STORAGE_PREFIX = "woice_testimonials_";
 
-function getPublicTestimonialsStorageKey(businessSlug) {
+function getWidgetCacheKey(businessSlug) {
   return `${PUBLIC_TESTIMONIALS_STORAGE_PREFIX}${businessSlug}`;
 }
 
-export function readCachedPublicTestimonials(businessSlug) {
+function isCacheShapeValid(cache) {
+  return (
+    cache &&
+    Array.isArray(cache.testimonials) &&
+    Number.isFinite(Number(cache.cachedAt))
+  );
+}
+
+export function readWidgetCache(businessSlug) {
   if (!businessSlug || typeof window === "undefined") return undefined;
 
   try {
-    const cached = window.localStorage.getItem(
-      getPublicTestimonialsStorageKey(businessSlug)
-    );
+    const cached = window.localStorage.getItem(getWidgetCacheKey(businessSlug));
     if (!cached) return undefined;
 
     const parsed = JSON.parse(cached);
-    const updatedAt = Number(parsed?.updatedAt);
-
-    if (
-      !parsed?.data ||
-      !Number.isFinite(updatedAt) ||
-      Date.now() - updatedAt > PUBLIC_TESTIMONIALS_STORAGE_EXPIRY_MS
-    ) {
-      window.localStorage.removeItem(getPublicTestimonialsStorageKey(businessSlug));
+    if (!isCacheShapeValid(parsed)) {
+      window.localStorage.removeItem(getWidgetCacheKey(businessSlug));
       return undefined;
     }
 
-    return parsed;
+    return {
+      ...parsed,
+      cachedAt: Number(parsed.cachedAt),
+      version: parsed.version ?? null,
+    };
   } catch {
     return undefined;
   }
 }
 
-export function writeCachedPublicTestimonials(businessSlug, data) {
-  if (!businessSlug || typeof window === "undefined") return;
+export function saveWidgetCache(businessSlug, data, version) {
+  if (!businessSlug || typeof window === "undefined" || !data) return;
 
   try {
     window.localStorage.setItem(
-      getPublicTestimonialsStorageKey(businessSlug),
+      getWidgetCacheKey(businessSlug),
       JSON.stringify({
-        data,
-        updatedAt: Date.now(),
+        businessName: data.businessName || "",
+        slug: data.slug || businessSlug,
+        averageRating: Number(data.averageRating || 0),
+        totalCount: Number(data.totalCount || 0),
+        testimonials: Array.isArray(data.testimonials) ? data.testimonials : [],
+        cachedAt: Date.now(),
+        version: version ?? null,
       })
     );
   } catch {
@@ -55,8 +64,33 @@ export function clearCachedPublicTestimonials(businessSlug) {
   if (!businessSlug || typeof window === "undefined") return;
 
   try {
-    window.localStorage.removeItem(getPublicTestimonialsStorageKey(businessSlug));
+    window.localStorage.removeItem(getWidgetCacheKey(businessSlug));
   } catch {
     // Ignore storage failures; query invalidation will still refresh in memory.
   }
+}
+
+export function shouldUseCache(cached, version) {
+  if (!isCacheShapeValid(cached)) {
+    return false;
+  }
+
+  const isFresh =
+    Date.now() - Number(cached.cachedAt) < PUBLIC_TESTIMONIALS_STORAGE_EXPIRY_MS;
+
+  return isFresh && cached.version === (version ?? null);
+}
+
+export function getCachedTestimonialsData(cached, businessSlug) {
+  if (!isCacheShapeValid(cached)) {
+    return undefined;
+  }
+
+  return {
+    businessName: cached.businessName || "",
+    slug: cached.slug || businessSlug,
+    averageRating: Number(cached.averageRating || 0),
+    totalCount: Number(cached.totalCount || cached.testimonials.length || 0),
+    testimonials: cached.testimonials,
+  };
 }

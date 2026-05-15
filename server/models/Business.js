@@ -68,6 +68,10 @@ const businessSchema = new mongoose.Schema({
     type: String,
     default: uuidv4,
   },
+  testimonialsUpdatedAt: {
+    type: Date,
+    default: null,
+  },
   createdAt: {
     type: Date,
     default: Date.now,
