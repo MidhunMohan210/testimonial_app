@@ -18,6 +18,45 @@
 
   var Woice = getNamespace();
 
+  /*
+   * IMPORTANT FIX:
+   * Capture the script tag and base URL immediately when embed.js loads.
+   * Do not resolve it later during lazy loading, because document.currentScript
+   * may become null or point to another script on the client's website.
+   */
+  var EMBED_SCRIPT = document.currentScript;
+
+  var EMBED_BASE_URL = (function () {
+    if (EMBED_SCRIPT && EMBED_SCRIPT.getAttribute("data-base-url")) {
+      return EMBED_SCRIPT.getAttribute("data-base-url").replace(/\/+$/, "");
+    }
+
+    if (EMBED_SCRIPT && EMBED_SCRIPT.src) {
+      try {
+        return new URL(EMBED_SCRIPT.src).origin;
+      } catch (e) {}
+    }
+
+    var scripts = document.getElementsByTagName("script");
+
+    for (var i = scripts.length - 1; i >= 0; i--) {
+      var script = scripts[i];
+      var src = script.src || "";
+
+      if (src.indexOf("/embed.js") !== -1 || src.indexOf("woice.it.com") !== -1) {
+        if (script.getAttribute("data-base-url")) {
+          return script.getAttribute("data-base-url").replace(/\/+$/, "");
+        }
+
+        try {
+          return new URL(src).origin;
+        } catch (e) {}
+      }
+    }
+
+    return "https://www.woice.it.com";
+  })();
+
   if (Woice.__EMBED_RUNTIME__) {
     Woice.init();
     return;
@@ -32,6 +71,7 @@
 
   function ensureRuntimeStyles() {
     if (document.getElementById(STYLE_ID)) return;
+
     var style = document.createElement("style");
     style.id = STYLE_ID;
     style.textContent =
@@ -108,17 +148,8 @@
           "min-width:30px;" +
         "}" +
       "}";
-    (document.head || document.documentElement).appendChild(style);
-  }
 
-  function getCurrentScript() {
-    return (
-      document.currentScript ||
-      (function () {
-        var scripts = document.getElementsByTagName("script");
-        return scripts[scripts.length - 1] || null;
-      })()
-    );
+    (document.head || document.documentElement).appendChild(style);
   }
 
   function resolveBaseUrl() {
@@ -130,24 +161,14 @@
       return Woice.config.baseUrl.replace(/\/+$/, "");
     }
 
-    var script = getCurrentScript();
-
-    if (script && script.getAttribute("data-base-url")) {
-      return script.getAttribute("data-base-url").replace(/\/+$/, "");
-    }
-
-    if (script && script.src) {
-      try {
-        return new URL(script.src).origin;
-      } catch (e) {}
-    }
-
-    return "https://www.woice.it.com";
+    return EMBED_BASE_URL;
   }
 
   function normalizeHeight(rawHeight) {
     if (!rawHeight || !String(rawHeight).trim()) return DEFAULT_HEIGHT;
+
     var value = String(rawHeight).trim();
+
     return /^\d+$/.test(value) ? value + "px" : value;
   }
 
@@ -164,6 +185,7 @@
       container.getAttribute("data-height") ||
       container.style.height ||
       DEFAULT_HEIGHT;
+
     var stableHeight = normalizeHeight(configuredHeight);
 
     container.innerHTML = "";
@@ -204,6 +226,7 @@
 
   function prepareContainer(container, height) {
     ensureRuntimeStyles();
+
     container.classList.add("woice-embed-container");
     container.style.cssText =
       "position:relative;" +
@@ -230,6 +253,7 @@
 
   function createIframe(src, height) {
     var iframe = document.createElement("iframe");
+
     iframe.src = src;
     iframe.title = "Woice testimonials";
     iframe.loading = "lazy";
@@ -240,6 +264,7 @@
     iframe.setAttribute("scrolling", "no");
     iframe.setAttribute("frameborder", "0");
     iframe.setAttribute("allowtransparency", "true");
+
     return iframe;
   }
 
@@ -252,7 +277,9 @@
 
     var applyHeight = function (nextHeight) {
       if (!nextHeight || nextHeight < 120) return;
+
       var value = nextHeight + "px";
+
       iframe.style.height = value;
       container.style.height = value;
       container.style.minHeight = value;
@@ -264,9 +291,11 @@
       if (!event.data) return;
 
       var type = event.data.type;
+
       if (type !== "RESIZE_IFRAME" && type !== "WOICE_WIDGET_HEIGHT") return;
 
       var nextHeight = Number(event.data.height);
+
       if (!Number.isFinite(nextHeight)) return;
 
       receivedResizeSignal = true;
@@ -288,6 +317,7 @@
 
     teardownMessageListener = function () {
       if (detached) return;
+
       detached = true;
       window.removeEventListener("message", handleMessage);
     };
@@ -296,6 +326,7 @@
 
     var timeoutId = window.setTimeout(function () {
       if (settled) return;
+
       settled = true;
       teardownMessageListener();
 
@@ -316,6 +347,7 @@
 
       loadHandshakeTimeoutId = window.setTimeout(function () {
         if (settled || receivedResizeSignal) return;
+
         settled = true;
         window.clearTimeout(timeoutId);
         teardownMessageListener();
@@ -325,6 +357,7 @@
 
     iframe.onerror = function () {
       if (settled) return;
+
       settled = true;
       window.clearTimeout(timeoutId);
 
@@ -382,8 +415,11 @@
   function onVisible(entries) {
     for (var i = 0; i < entries.length; i++) {
       var entry = entries[i];
+
       if (!entry.isIntersecting) continue;
+
       var node = entry.target;
+
       visibilityObserver.unobserve(node);
       hydrateWidget(node);
     }
@@ -398,6 +434,7 @@
           threshold: LOADER_THRESHOLD,
         });
       }
+
       visibilityObserver.observe(node);
       return;
     }
@@ -410,6 +447,7 @@
     if (isProcessed(node)) return;
 
     var config = readWidgetConfig(node);
+
     if (config.slug) {
       mountSkeleton(node, config.height);
     }
@@ -420,6 +458,7 @@
 
   function initAll() {
     var nodes = document.querySelectorAll(WIDGET_SELECTOR);
+
     for (var i = 0; i < nodes.length; i++) {
       initNode(nodes[i]);
     }
@@ -434,6 +473,7 @@
 
         for (var j = 0; j < addedNodes.length; j++) {
           var node = addedNodes[j];
+
           if (!node || node.nodeType !== 1) continue;
 
           if (node.matches && node.matches(WIDGET_SELECTOR)) {
@@ -442,6 +482,7 @@
 
           if (node.querySelectorAll) {
             var nested = node.querySelectorAll(WIDGET_SELECTOR);
+
             for (var k = 0; k < nested.length; k++) {
               initNode(nested[k]);
             }
