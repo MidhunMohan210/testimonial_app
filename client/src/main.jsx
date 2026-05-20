@@ -38,7 +38,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
               },
             }}
           />
-          <ReactQueryDevtools initialIsOpen={false} />  
+          {/* <ReactQueryDevtools initialIsOpen={false} />   */}
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
