@@ -12,7 +12,7 @@ const sections = [
     label: "See everything in one place",
     description:
       "Track feedback, approvals, pending reviews, and recent activity from one clean dashboard.",
-    url: "woice.it.com/dashboard",
+    url: "app.woice.it.com/dashboard",
     mainImage: previewImage,
     topRightImage: embed,
     bottomLeftImage: shareLink,
@@ -23,7 +23,7 @@ const sections = [
     label: "Approve the best, hide the rest",
     description:
       "Review incoming testimonials, publish the strongest ones, and move unsuitable responses out of public view.",
-    url: "woice.it.com/testimonials",
+    url: "app.woice.it.com/testimonials",
     mainImage: testimonials,
     topRightImage: "",
     bottomLeftImage: "",
@@ -34,7 +34,7 @@ const sections = [
     label: "Protect your brand reputation",
     description:
       "Low-rated responses stay private so your team can follow up internally before anything reaches your website.",
-    url: "woice.it.com/feedback",
+    url: "app.woice.it.com/feedback",
     mainImage: feedback,
     topRightImage: "",
     bottomLeftImage: "",

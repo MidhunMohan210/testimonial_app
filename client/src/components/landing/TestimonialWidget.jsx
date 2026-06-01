@@ -6,9 +6,9 @@ export default function TestimonialsWidget() {
     const publicAppUrl = getPublicAppUrl();
     const script = document.createElement("script");
     // script.src = `${publicAppUrl}/embed.js`;
-    script.src = `https://www.woice.it.com/embed.js`;
+    script.src = `https://www.app.woice.it.com/embed.js`;
     script.defer = true;
-    script.setAttribute("data-base-url", "https://www.woice.it.com");
+    script.setAttribute("data-base-url", "https://www.app.woice.it.com");
     document.body.appendChild(script);
 
     return () => {

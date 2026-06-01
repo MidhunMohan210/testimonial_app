@@ -57,8 +57,8 @@ app.use(
 
 const allowedOrigins = [
   process.env.FRONTEND_URL,
-  "https://www.woice.it.com",
-  "https://woice.it.com",
+  "https://www.app.woice.it.com",
+  "https://app.woice.it.com",
   ...(isProduction
     ? []
     : [
