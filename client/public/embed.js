@@ -54,7 +54,7 @@
       }
     }
 
-    return "https://www.app.woice.it.com";
+    return "https://app.woice.it.com";
   })();
 
   if (Woice.__EMBED_RUNTIME__) {

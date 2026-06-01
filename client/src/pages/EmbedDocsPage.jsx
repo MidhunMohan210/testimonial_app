@@ -82,8 +82,8 @@ export default function EmbedDocsPage() {
   data-height="420"
 ></div>
 <script
-  src="https://www.app.woice.it.com/embed.js"
-  data-base-url="https://www.app.woice.it.com"
+  src="https://app.woice.it.com/embed.js"
+  data-base-url="https://app.woice.it.com"
   defer
 ></script>`,
     [businessSlug],
@@ -95,9 +95,9 @@ export default function EmbedDocsPage() {
 export default function TestimonialsWidget() {
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = "https://www.app.woice.it.com/embed.js";
+    script.src = "https://app.woice.it.com/embed.js";
     script.defer = true;
-    script.setAttribute("data-base-url", "https://www.app.woice.it.com");
+    script.setAttribute("data-base-url", "https://app.woice.it.com");
     document.body.appendChild(script);
 
     return () => {
@@ -133,9 +133,9 @@ export default function Page() {
       />
 
       <Script
-        src="https://www.app.woice.it.com/embed.js"
+        src="https://app.woice.it.com/embed.js"
         strategy="afterInteractive"
-        data-base-url="https://www.app.woice.it.com"
+        data-base-url="https://app.woice.it.com"
       />
     </>
   );
@@ -151,7 +151,7 @@ export default function Page() {
   data-theme="light"
   data-layout="grid"
 ></div>
-<script src="https://www.app.woice.it.com/embed.js" defer></script>`,
+<script src="https://app.woice.it.com/embed.js" defer></script>`,
     [businessSlug],
   );
 
@@ -165,7 +165,7 @@ export default function Page() {
 ></div>
 
 {% comment %} Add before </body> in theme.liquid if not already added {% endcomment %}
-<script src="https://www.app.woice.it.com/embed.js" defer></script>`,
+<script src="https://app.woice.it.com/embed.js" defer></script>`,
     [businessSlug],
   );
 
@@ -352,7 +352,7 @@ export default function Page() {
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3">
                 <p className="font-medium text-slate-900">Iframe blocked or blank</p>
                 <p className="mt-1 text-slate-600">
-                  Update CSP to allow <code>https://www.app.woice.it.com</code> in <code>script-src</code> and <code>frame-src</code>.
+                  Update CSP to allow <code>https://app.woice.it.com</code> in <code>script-src</code> and <code>frame-src</code>.
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3">
