@@ -37,14 +37,14 @@ function NotFoundRoute() {
     return <main className="min-h-screen bg-transparent" aria-hidden="true" />;
   }
 
-  return <Navigate to="/" replace />;
+  return <Navigate to="/login" replace />;
 }
 
 export default function App() {
   return (
     <Routes>
       <Route element={<PublicLayout />}>
-        <Route path="/" element={<LandingPage />} />
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/home" element={<LandingPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/privacy" element={<PrivacyPage />} />

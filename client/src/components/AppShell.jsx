@@ -13,7 +13,7 @@ import {
   Settings,
   X,
 } from "lucide-react";
-import logo from "../assets/logo2.svg";
+import logo from "../assets/two.svg";
 import { useAuth } from "../hooks/useAuth";
 import { getUnreadPrivateFeedbackCount } from "../api/businessApi";
 import { getUnreadTestimonialCount } from "../api/testimonialApi";
@@ -107,21 +107,27 @@ function SidebarContent({
       {/* Logo Header */}
       <div className="border-b border-white/10 px-5 py-4 bg-[#415a77]/80 flex items-center justify-between">
         <div>
+
+          <div className="flex items-center gap-1">
+
+       
           <Link
             to="/dashboard"
             className="inline-flex items-center rounded-[1.35rem] px-1 py-1"
             onClick={onNavigate}
           >
+            
             <img
               src={logo}
               alt="Woice"
-              className="h-12 w-auto brightness-0 invert"
+              className="h-5 w-auto brightness-125"
             />
           </Link>
-          <p className="text-xs px-5 font-semibold uppercase tracking-[0.28em] text-slate-400">
+          <p className="text-xs  font-semibold uppercase tracking-[0.28em] text-slate-100">
             Woice
           </p>
         </div>
+           </div>
         <Ellipsis className="text-white/50" />
       </div>
 

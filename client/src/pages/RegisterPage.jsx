@@ -4,7 +4,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { ArrowRight, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
-import logo from "../assets/logo2.svg";
+import logo from "../assets/two.svg";
 import { register as registerRequest } from "../api/authApi";
 import { useAuth } from "../hooks/useAuth";
 import { Button } from "../components/ui/button";
@@ -62,7 +62,7 @@ export default function RegisterPage() {
       <Card className="w-full max-w-lg border-white/80 bg-white/92 shadow-[0_32px_80px_-40px_rgba(15,23,42,0.3)] backdrop-blur">
         <CardContent className="p-5 sm:p-8">
           <div className="mb-7 text-center">
-            <img src={logo} alt="Woice" className="mx-auto h-12 w-auto sm:h-14" />
+            <img src={logo} alt="Woice" className="mx-auto h-6 w-auto sm:h-7" />
             <p className="mt-5 text-sm font-semibold uppercase tracking-[0.24em] text-slate-400">
               Create account
             </p>
