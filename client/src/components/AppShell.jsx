@@ -105,7 +105,7 @@ function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       {/* Logo Header */}
-      <div className="border-b border-white/10 px-5 py-4 bg-[#415a77]/80 flex items-center justify-between">
+      <div className="border-b border-white/10 px-5 h-[84px] bg-[#415a77]/80 flex items-center justify-between">
         <div>
 
           <div className="flex items-center gap-1">
@@ -131,12 +131,12 @@ function SidebarContent({
         <Ellipsis className="text-white/50" />
       </div>
 
-      <div className="flex items-center justify-center">
+      {/* <div className="flex items-center justify-center">
         <hr className="border-white/20 w-[100px] py-4" />
-      </div>
+      </div> */}
 
       {/* Nav Links */}
-      <nav className="flex-1 px-3 pb-4">
+      <nav className="flex-1 px-3 pb-4 mt-10">
         <div className="space-y-1">
           {navigation.map((item) => {
             const Icon = item.icon;
