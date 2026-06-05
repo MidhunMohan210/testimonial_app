@@ -5,7 +5,7 @@ import { createHttpError } from "../utils/httpError.js";
 
 export const getPublicTestimonials = async (req, res) => {
   const business = await Business.findOne({ slug: req.params.slug }).select(
-    "businessName slug settings isPublicEnabled",
+    "businessName slug settings",
   );
 
   if (!business) {
@@ -66,7 +66,7 @@ export const getPublicTestimonials = async (req, res) => {
 
 export const getPublicTestimonialsVersion = async (req, res) => {
   const business = await Business.findOne({ slug: req.params.slug }).select(
-    "slug settings isPublicEnabled testimonialsUpdatedAt",
+    "slug settings testimonialsUpdatedAt",
   );
 
   if (!business) {

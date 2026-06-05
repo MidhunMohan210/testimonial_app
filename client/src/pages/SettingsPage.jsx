@@ -5,6 +5,7 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import {
   getBusinessSettings,
+  updateShareFeedbackSettings,
   updateBusinessSettings,
 } from "../api/businessApi";
 import BusinessProfileSettings from "../components/settings/BusinessProfileSettings";
@@ -19,22 +20,11 @@ import {
 import { ErrorStateCard } from "../components/StateCard";
 import { Skeleton } from "../components/ui/skeleton";
 import { getPublicAppUrl } from "../lib/publicUrl";
+import {
+  buildShareFeedbackFinalMessage,
+  getShareFeedbackMessage,
+} from "../lib/shareFeedback";
 import { useAuth } from "../hooks/useAuth";
-
-function buildDefaultShareMessage(businessName, feedbackLink) {
-  if (!feedbackLink) {
-    return "";
-  }
-
-  const safeBusinessName = businessName?.trim() || "our business";
-
-  return `Hi, thank you for choosing ${safeBusinessName}.
-
-We’d love to hear about your experience. Please share your feedback here:
-${feedbackLink}
-
-Your feedback helps us improve and also helps other customers trust us.`;
-}
 
 async function copyText(value) {
   if (!value) return false;
@@ -88,7 +78,6 @@ export default function SettingsPage() {
   const [messageCopied, setMessageCopied] = useState(false);
   const [shareMessage, setShareMessage] = useState("");
   const qrCodeContainerRef = useRef(null);
-  const previousGeneratedMessageRef = useRef("");
 
   const {
     register,
@@ -117,6 +106,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (settingsQuery.data) {
       reset(settingsQuery.data);
+      setShareMessage(getShareFeedbackMessage(settingsQuery.data));
       setFormError("");
     }
   }, [reset, settingsQuery.data]);
@@ -126,29 +116,24 @@ export default function SettingsPage() {
     () => (slug ? `${getPublicAppUrl()}/r/${slug}` : ""),
     [slug],
   );
-  const businessName = watch("name") || "";
-  const generatedShareMessage = useMemo(
-    () => buildDefaultShareMessage(businessName, publicReviewLink),
-    [businessName, publicReviewLink],
-  );
-
-  useEffect(() => {
-    const previousGeneratedMessage = previousGeneratedMessageRef.current;
-    const shouldSyncMessage =
-      !shareMessage.trim() || shareMessage === previousGeneratedMessage;
-
-    previousGeneratedMessageRef.current = generatedShareMessage;
-
-    if (shouldSyncMessage) {
-      setShareMessage(generatedShareMessage);
-    }
-  }, [generatedShareMessage, shareMessage]);
+  const persistedShareMessage = getShareFeedbackMessage(settingsQuery.data);
 
   const mutation = useMutation({
     mutationFn: updateBusinessSettings,
     onSuccess: async (data) => {
       setFormError("");
       reset(data);
+      queryClient.setQueryData(["business", "settings"], data);
+      queryClient.setQueryData(["business", "me"], {
+        ...(business || {}),
+        businessName: data.name,
+        slug: data.slug,
+        googleReviewLink: data.googleReviewLink,
+        googleReviewEnabled: data.googleReviewEnabled,
+        isPublicEnabled: data.isPublicEnabled,
+        notificationsEnabled: data.notificationsEnabled,
+        settings: data.settings,
+      });
       updateBusinessInAuth({
         ...(business || {}),
         businessName: data.name,
@@ -157,11 +142,10 @@ export default function SettingsPage() {
         googleReviewEnabled: data.googleReviewEnabled,
         isPublicEnabled: data.isPublicEnabled,
         notificationsEnabled: data.notificationsEnabled,
+        settings: data.settings,
       });
       toast.success("Settings saved");
       await Promise.all([
-        queryClient.invalidateQueries({ queryKey: ["business", "settings"] }),
-        queryClient.invalidateQueries({ queryKey: ["business", "me"] }),
         queryClient.invalidateQueries({ queryKey: ["auth"] }),
       ]);
     },
@@ -186,6 +170,33 @@ export default function SettingsPage() {
     },
   });
 
+  const shareFeedbackMutation = useMutation({
+    mutationFn: updateShareFeedbackSettings,
+    onSuccess: async (data) => {
+      const nextBusiness = data.business;
+      const nextSettings = data.settings;
+
+      setFormError("");
+      setShareMessage(getShareFeedbackMessage(nextSettings));
+      queryClient.setQueryData(["business", "settings"], nextSettings);
+      queryClient.setQueryData(["business", "me"], nextBusiness);
+      updateBusinessInAuth({
+        ...(business || {}),
+        ...nextBusiness,
+      });
+      toast.success(data.message);
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
+    onError: (error) => {
+      const payload = error.response?.data;
+      const message =
+        payload?.message || payload?.error || "Failed to save greeting message";
+
+      setFormError(message);
+      toast.error(message);
+    },
+  });
+
   const handleCopyLink = async () => {
     if (!publicReviewLink) return;
 
@@ -202,9 +213,15 @@ export default function SettingsPage() {
   };
 
   const handleCopyMessage = async () => {
-    if (!shareMessage.trim()) return;
+    if (!publicReviewLink) return;
 
-    const didCopy = await copyText(shareMessage);
+    const finalMessage = buildShareFeedbackFinalMessage(
+      settingsQuery.data,
+      shareMessage,
+      publicReviewLink,
+    );
+
+    const didCopy = await copyText(finalMessage);
 
     if (didCopy) {
       setMessageCopied(true);
@@ -222,14 +239,12 @@ export default function SettingsPage() {
       return;
     }
 
-    const messageToShare = shareMessage.trim() || generatedShareMessage;
-
-    if (!messageToShare) {
-      toast.error("Please add a message before sharing.");
-      return;
-    }
-
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageToShare)}`;
+    const finalMessage = buildShareFeedbackFinalMessage(
+      settingsQuery.data,
+      shareMessage,
+      publicReviewLink,
+    );
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(finalMessage)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -296,8 +311,14 @@ export default function SettingsPage() {
 
   const googleReviewLinkValue = watch("googleReviewLink") || "";
   const hasGoogleReviewLink = Boolean(googleReviewLinkValue.trim());
+  const requestedSection = searchParams.get("section");
+  const activeSection = SETTINGS_SECTION_IDS.has(requestedSection) ? requestedSection : null;
+  const activeTabMeta =
+    SETTINGS_SECTIONS.find((item) => item.id === activeSection) || null;
+  const isShareSection = activeSection === "share-feedback";
+  const isShareMessageDirty = shareMessage !== persistedShareMessage;
 
-  const onSubmit = handleSubmit(async (values) => {
+  const handleFormSubmit = handleSubmit(async (values) => {
     clearErrors();
     setFormError("");
     await mutation.mutateAsync({
@@ -307,6 +328,20 @@ export default function SettingsPage() {
         : false,
     });
   });
+
+  const onSubmit = async (event) => {
+    if (isShareSection) {
+      event.preventDefault();
+      clearErrors();
+      setFormError("");
+      await shareFeedbackMutation.mutateAsync({
+        greetingMessage: shareMessage,
+      });
+      return;
+    }
+
+    await handleFormSubmit(event);
+  };
 
   if (settingsQuery.isLoading) {
     return <SettingsLoadingState />;
@@ -321,11 +356,6 @@ export default function SettingsPage() {
     );
   }
 
-  const requestedSection = searchParams.get("section");
-  const activeSection = SETTINGS_SECTION_IDS.has(requestedSection) ? requestedSection : null;
-  const activeTabMeta =
-    SETTINGS_SECTIONS.find((item) => item.id === activeSection) || null;
-
   return (
     <div className="mx-auto max-w-7xl space-y-6">
       <form id="settings-form" onSubmit={onSubmit}>
@@ -339,8 +369,10 @@ export default function SettingsPage() {
             section={activeTabMeta}
             onBack={() => setSearchParams({})}
             onSubmit={onSubmit}
-            isSaving={mutation.isPending}
-            isSaveDisabled={settingsQuery.isLoading || !isDirty}
+            isSaving={isShareSection ? shareFeedbackMutation.isPending : mutation.isPending}
+            isSaveDisabled={
+              settingsQuery.isLoading || (isShareSection ? !isShareMessageDirty : !isDirty)
+            }
             error={formError}
           >
             {activeSection === "business-profile" ? (

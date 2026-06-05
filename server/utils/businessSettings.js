@@ -1,13 +1,17 @@
 export const getBusinessSettings = (business) => {
   const settings = business?.settings || {};
+  const shareFeedbackSettings = settings.shareFeedback || {};
 
   return {
-    googleReviewLink: settings.googleReviewLink ?? business?.googleReviewLink ?? "",
-    googleReviewEnabled:
-      settings.googleReviewEnabled ?? business?.googleReviewEnabled ?? false,
-    isPublicEnabled: settings.isPublicEnabled ?? business?.isPublicEnabled ?? true,
-    notificationsEnabled:
-      settings.notificationsEnabled ?? business?.notificationsEnabled ?? true,
+    googleReviewLink: settings.googleReviewLink ?? "",
+    googleReviewEnabled: settings.googleReviewEnabled ?? false,
+    isPublicEnabled: settings.isPublicEnabled ?? true,
+    notificationsEnabled: settings.notificationsEnabled ?? true,
+    shareFeedback: {
+      ...(shareFeedbackSettings.greetingMessage
+        ? { greetingMessage: shareFeedbackSettings.greetingMessage }
+        : {}),
+    },
   };
 };
 
@@ -29,33 +33,6 @@ export const toBusinessResponse = (business) => {
     googleReviewEnabled: settings.googleReviewEnabled,
     isPublicEnabled: settings.isPublicEnabled,
     notificationsEnabled: settings.notificationsEnabled,
+    settings,
   };
-};
-
-export const assignBusinessSettings = (business, updates = {}) => {
-  const currentSettings = getBusinessSettings(business);
-
-  business.settings = {
-    ...currentSettings,
-    ...(updates.googleReviewLink !== undefined
-      ? { googleReviewLink: updates.googleReviewLink }
-      : {}),
-    ...(updates.googleReviewEnabled !== undefined
-      ? { googleReviewEnabled: updates.googleReviewEnabled }
-      : {}),
-    ...(updates.isPublicEnabled !== undefined
-      ? { isPublicEnabled: updates.isPublicEnabled }
-      : {}),
-    ...(updates.notificationsEnabled !== undefined
-      ? { notificationsEnabled: updates.notificationsEnabled }
-      : {}),
-  };
-
-  // Mirror into legacy flat fields during the compatibility window.
-  business.googleReviewLink = business.settings.googleReviewLink;
-  business.googleReviewEnabled = business.settings.googleReviewEnabled;
-  business.isPublicEnabled = business.settings.isPublicEnabled;
-  business.notificationsEnabled = business.settings.notificationsEnabled;
-
-  return business.settings;
 };

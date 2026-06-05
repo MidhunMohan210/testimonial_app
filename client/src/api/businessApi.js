@@ -20,6 +20,11 @@ export const updateBusinessSettings = async (data) => {
   return response.data;
 };
 
+export const updateShareFeedbackSettings = async (data) => {
+  const response = await api.patch("/api/business/settings/share-feedback", data);
+  return response.data;
+};
+
 export const getPrivateFeedback = async (options = {}) => {
   const {
     status,

@@ -45,8 +45,15 @@ const businessSchema = new mongoose.Schema({
       type: Boolean,
       default: true,
     },
+    shareFeedback: {
+      greetingMessage: {
+        type: String,
+        trim: true,
+        maxlength: 500,
+      },
+    },
   },
-  // Kept temporarily for backward compatibility with older documents.
+  // Legacy fields. Do not use in new code. Use settings.* instead.
   googleReviewLink: {
     type: String,
     default: "",

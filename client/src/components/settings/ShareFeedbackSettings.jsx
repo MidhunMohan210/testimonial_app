@@ -52,7 +52,7 @@ export default function ShareFeedbackSettings({
                 ) : (
                   <Copy className="mr-2 h-4 w-4" />
                 )}
-                {copied ? "Copied" : "Copy"}
+                {copied ? "Copied" : "Copy Link"}
               </Button>
             </div>
           </div>
@@ -66,6 +66,7 @@ export default function ShareFeedbackSettings({
               placeholder="Add a greeting message to share with customers."
               className="min-h-[180px] rounded-lg border-slate-200"
               disabled={!publicReviewLink}
+              maxLength={500}
             />
             <p className="text-sm leading-6 text-slate-500">
               Customers will see this message in WhatsApp before you choose who to send it to.
@@ -87,7 +88,7 @@ export default function ShareFeedbackSettings({
               variant="outline"
               className="h-11 rounded-lg px-4"
               onClick={onCopyMessage}
-              disabled={!shareMessage.trim()}
+              disabled={!publicReviewLink}
             >
               {messageCopied ? (
                 <CheckCircle2 className="mr-2 h-4 w-4" />

@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import {
   getMyBusiness,
   getPrivateFeedback,
+  updateShareFeedbackSettings,
   updateBusiness,
 } from "../api/businessApi";
 import { getTestimonials } from "../api/testimonialApi";
@@ -37,6 +38,11 @@ import { Label } from "../components/ui/label";
 import { Skeleton } from "../components/ui/skeleton";
 import { Textarea } from "../components/ui/textarea";
 import { getPublicAppUrl } from "../lib/publicUrl";
+import {
+  buildShareFeedbackFinalMessage,
+  getShareFeedbackMessage,
+} from "../lib/shareFeedback";
+import { useAuth } from "../hooks/useAuth";
 
 function WavesDecoration() {
   return (
@@ -160,21 +166,6 @@ function DashboardLoadingState() {
   );
 }
 
-function buildShareMessage(name, link) {
-  if (!link) {
-    return "";
-  }
-
-  const safeName = name?.trim() || "our business";
-
-  return `Hi, thank you for choosing ${safeName}.
-
-We’d love to hear about your experience. Please share your feedback here:
-${link}
-
-Your feedback helps us improve and also helps other customers trust us.`;
-}
-
 async function copyText(value) {
   if (!value) return false;
 
@@ -207,6 +198,7 @@ async function copyText(value) {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { business: authBusiness, updateBusiness: updateBusinessInAuth } = useAuth();
   const [manualOpen, setManualOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
@@ -217,6 +209,7 @@ export default function DashboardPage() {
   const [shareMessage, setShareMessage] = useState("");
   const [shareLinkCopied, setShareLinkCopied] = useState(false);
   const [shareMessageCopied, setShareMessageCopied] = useState(false);
+  const [shareMessageSaveState, setShareMessageSaveState] = useState("");
 
   const allTestimonialsQuery = useQuery({
     queryKey: ["testimonials", "dashboard"],
@@ -235,8 +228,8 @@ export default function DashboardPage() {
   });
 
   useEffect(() => {
-    setGoogleReviewLink(businessQuery.data?.googleReviewLink || "");
-  }, [businessQuery.data?.googleReviewLink]);
+    setGoogleReviewLink(businessQuery.data?.settings?.googleReviewLink || "");
+  }, [businessQuery.data?.settings?.googleReviewLink]);
 
   const businessMutation = useMutation({
     mutationFn: updateBusiness,
@@ -250,6 +243,28 @@ export default function DashboardPage() {
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || "Failed to update business");
+    },
+  });
+
+  const shareFeedbackMutation = useMutation({
+    mutationFn: updateShareFeedbackSettings,
+    onSuccess: async (data) => {
+      queryClient.setQueryData(["business", "me"], data.business);
+      queryClient.setQueryData(["business", "settings"], data.settings);
+      updateBusinessInAuth({
+        ...(authBusiness || {}),
+        ...data.business,
+      });
+      setShareMessage(getShareFeedbackMessage(data.business));
+      setShareMessageSaveState(getShareFeedbackMessage(data.business));
+      toast.success(data.message);
+      await queryClient.invalidateQueries({ queryKey: ["auth"] });
+    },
+    onError: (error) => {
+      const payload = error.response?.data;
+      toast.error(
+        payload?.message || payload?.error || "Failed to save greeting message",
+      );
     },
   });
 
@@ -343,19 +358,21 @@ export default function DashboardPage() {
     ];
   }, [allTestimonialsQuery.data, summary]);
 
-  const defaultShareMessage = useMemo(
-    () => buildShareMessage(shareName || businessName, reviewLink),
-    [shareName, businessName, reviewLink],
+  const persistedShareMessage = useMemo(
+    () => getShareFeedbackMessage(businessQuery.data),
+    [businessQuery.data],
   );
+  const isShareMessageDirty = shareMessage !== shareMessageSaveState;
 
   useEffect(() => {
     if (!shareModalOpen) {
       setShareName(businessName);
-      setShareMessage(buildShareMessage(businessName, reviewLink));
+      setShareMessage(persistedShareMessage);
+      setShareMessageSaveState(persistedShareMessage);
       setShareLinkCopied(false);
       setShareMessageCopied(false);
     }
-  }, [businessName, reviewLink, shareModalOpen]);
+  }, [businessName, persistedShareMessage, shareModalOpen]);
 
   const handleCopyLink = async () => {
     if (!reviewLink) return;
@@ -374,7 +391,8 @@ export default function DashboardPage() {
 
   const openShareModal = () => {
     setShareName(businessName);
-    setShareMessage(buildShareMessage(businessName, reviewLink));
+    setShareMessage(persistedShareMessage);
+    setShareMessageSaveState(persistedShareMessage);
     setShareModalOpen(true);
   };
 
@@ -394,7 +412,11 @@ export default function DashboardPage() {
   };
 
   const handleCopyShareMessage = async () => {
-    const messageToCopy = shareMessage.trim() || defaultShareMessage;
+    const messageToCopy = buildShareFeedbackFinalMessage(
+      businessQuery.data,
+      shareMessage,
+      reviewLink,
+    );
 
     if (!messageToCopy) return;
 
@@ -411,7 +433,11 @@ export default function DashboardPage() {
   };
 
   const handleShareOnWhatsApp = () => {
-    const messageToShare = shareMessage.trim() || defaultShareMessage;
+    const messageToShare = buildShareFeedbackFinalMessage(
+      businessQuery.data,
+      shareMessage,
+      reviewLink,
+    );
 
     if (!messageToShare) {
       toast.error("Share message is not ready yet.");
@@ -420,6 +446,12 @@ export default function DashboardPage() {
 
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageToShare)}`;
     window.open(whatsappUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleSaveShareMessage = async () => {
+    await shareFeedbackMutation.mutateAsync({
+      greetingMessage: shareMessage,
+    });
   };
 
   const handleSettingsSave = async (event) => {
@@ -888,16 +920,7 @@ export default function DashboardPage() {
               <Input
                 id="share-name"
                 value={shareName}
-                onChange={(event) => {
-                  const nextName = event.target.value;
-                  const previousDefault = buildShareMessage(shareName, reviewLink);
-                  setShareName(nextName);
-                  setShareMessage((currentMessage) =>
-                    !currentMessage.trim() || currentMessage === previousDefault
-                      ? buildShareMessage(nextName, reviewLink)
-                      : currentMessage,
-                  );
-                }}
+                onChange={(event) => setShareName(event.target.value)}
                 className="h-12 rounded-xl border-slate-200 bg-slate-50 px-4"
               />
             </div>
@@ -914,6 +937,7 @@ export default function DashboardPage() {
                 value={shareMessage}
                 onChange={(event) => setShareMessage(event.target.value)}
                 className="min-h-[220px] rounded-xl border-slate-200 bg-slate-50 px-4 py-3"
+                maxLength={500}
               />
             </div>
 
@@ -933,6 +957,14 @@ export default function DashboardPage() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                className="h-11 rounded-xl bg-slate-900 px-5 font-semibold text-white hover:bg-slate-800"
+                onClick={handleSaveShareMessage}
+                disabled={shareFeedbackMutation.isPending || !isShareMessageDirty}
+              >
+                {shareFeedbackMutation.isPending ? "Saving..." : "Save greeting"}
+              </Button>
               <Button
                 type="button"
                 variant="outline"

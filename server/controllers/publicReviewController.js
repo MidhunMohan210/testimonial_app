@@ -6,7 +6,7 @@ import { createHttpError } from "../utils/httpError.js";
 
 export const getBusinessBySlug = async (req, res) => {
   const business = await Business.findOne({ slug: req.params.slug }).select(
-    "businessName settings googleReviewLink",
+    "businessName settings",
   );
 
   if (!business) {
@@ -18,6 +18,7 @@ export const getBusinessBySlug = async (req, res) => {
     businessName: business.businessName,
     googleReviewLink: getBusinessSettings(business).googleReviewLink,
     googleReviewEnabled: getBusinessSettings(business).googleReviewEnabled,
+    settings: getBusinessSettings(business),
   });
 };
 
