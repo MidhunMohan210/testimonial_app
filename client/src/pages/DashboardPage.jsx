@@ -11,6 +11,7 @@ import {
   Star,
   MessageCircle,
 } from "lucide-react";
+import { FaWhatsapp } from "react-icons/fa";
 import { toast } from "sonner";
 import {
   getMyBusiness,
@@ -159,14 +160,63 @@ function DashboardLoadingState() {
   );
 }
 
+function buildShareMessage(name, link) {
+  if (!link) {
+    return "";
+  }
+
+  const safeName = name?.trim() || "our business";
+
+  return `Hi, thank you for choosing ${safeName}.
+
+We’d love to hear about your experience. Please share your feedback here:
+${link}
+
+Your feedback helps us improve and also helps other customers trust us.`;
+}
+
+async function copyText(value) {
+  if (!value) return false;
+
+  try {
+    if (navigator?.clipboard?.writeText) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch {
+    // Fall back to execCommand below.
+  }
+
+  try {
+    const textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.opacity = "0";
+    document.body.appendChild(textarea);
+    textarea.focus();
+    textarea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    return copied;
+  } catch {
+    return false;
+  }
+}
+
 export default function DashboardPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [manualOpen, setManualOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
   const [googleReviewLink, setGoogleReviewLink] = useState("");
   const [copied, setCopied] = useState(false);
   const [embedCopied, setEmbedCopied] = useState(false);
+  const [shareName, setShareName] = useState("");
+  const [shareMessage, setShareMessage] = useState("");
+  const [shareLinkCopied, setShareLinkCopied] = useState(false);
+  const [shareMessageCopied, setShareMessageCopied] = useState(false);
 
   const allTestimonialsQuery = useQuery({
     queryKey: ["testimonials", "dashboard"],
@@ -293,17 +343,83 @@ export default function DashboardPage() {
     ];
   }, [allTestimonialsQuery.data, summary]);
 
+  const defaultShareMessage = useMemo(
+    () => buildShareMessage(shareName || businessName, reviewLink),
+    [shareName, businessName, reviewLink],
+  );
+
+  useEffect(() => {
+    if (!shareModalOpen) {
+      setShareName(businessName);
+      setShareMessage(buildShareMessage(businessName, reviewLink));
+      setShareLinkCopied(false);
+      setShareMessageCopied(false);
+    }
+  }, [businessName, reviewLink, shareModalOpen]);
+
   const handleCopyLink = async () => {
     if (!reviewLink) return;
 
-    try {
-      await navigator.clipboard.writeText(reviewLink);
+    const didCopy = await copyText(reviewLink);
+
+    if (didCopy) {
       setCopied(true);
       toast.success("Review link copied");
       window.setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Failed to copy link");
+      return;
     }
+
+    toast.error("Failed to copy link");
+  };
+
+  const openShareModal = () => {
+    setShareName(businessName);
+    setShareMessage(buildShareMessage(businessName, reviewLink));
+    setShareModalOpen(true);
+  };
+
+  const handleCopyShareLink = async () => {
+    if (!reviewLink) return;
+
+    const didCopy = await copyText(reviewLink);
+
+    if (didCopy) {
+      setShareLinkCopied(true);
+      toast.success("Review link copied");
+      window.setTimeout(() => setShareLinkCopied(false), 2000);
+      return;
+    }
+
+    toast.error("Failed to copy link");
+  };
+
+  const handleCopyShareMessage = async () => {
+    const messageToCopy = shareMessage.trim() || defaultShareMessage;
+
+    if (!messageToCopy) return;
+
+    const didCopy = await copyText(messageToCopy);
+
+    if (didCopy) {
+      setShareMessageCopied(true);
+      toast.success("Message copied");
+      window.setTimeout(() => setShareMessageCopied(false), 2000);
+      return;
+    }
+
+    toast.error("Failed to copy message");
+  };
+
+  const handleShareOnWhatsApp = () => {
+    const messageToShare = shareMessage.trim() || defaultShareMessage;
+
+    if (!messageToShare) {
+      toast.error("Share message is not ready yet.");
+      return;
+    }
+
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(messageToShare)}`;
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   const handleSettingsSave = async (event) => {
@@ -366,7 +482,7 @@ export default function DashboardPage() {
                   Dashboard Live
                 </div>
 
-                <h1 className="text-2xl font-bold text-slate-700 sm:text-4xl">
+                <h1 className="text-xl font-bold text-slate-700 sm:text-3xl">
                   Welcome back{" "}
                   <span className="text-black">{businessName}</span>
                 </h1>
@@ -397,15 +513,11 @@ export default function DashboardPage() {
                 <Button
                   variant="outline"
                   className="h-10 w-full rounded-xl border-slate-200 bg-white px-4 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
-                  onClick={handleCopyLink}
+                  onClick={openShareModal}
                   disabled={!reviewLink}
                 >
-                  {copied ? (
-                    <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
-                  ) : (
-                    <Copy className="mr-2 h-4 w-4" />
-                  )}
-                  {copied ? "Copied" : "Copy review link"}
+                  <FaWhatsapp className="mr-2 h-4 w-4 text-[#25D366]" />
+                  Share feedback
                 </Button>
 
               </div>
@@ -653,19 +765,10 @@ export default function DashboardPage() {
 
                 <Button
                   className="mt-5 h-11 w-full rounded-xl bg-slate-900 px-4 font-semibold text-white shadow-[0_12px_30px_rgba(15,23,42,0.16)] transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.01] hover:bg-slate-800 hover:shadow-[0_18px_36px_rgba(15,23,42,0.2)] active:translate-y-0 active:scale-[0.99] focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2"
-                  onClick={handleCopyLink}
+                  onClick={openShareModal}
                 >
-                  {copied ? (
-                    <>
-                      <CheckCircle2 className="mr-2 h-4 w-4" />
-                      Copied!
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy review link
-                    </>
-                  )}
+                  <FaWhatsapp className="mr-2 h-4 w-4 text-[#25D366]" />
+                  Share feedback
                 </Button>
               </div>
             </div>
@@ -760,6 +863,103 @@ export default function DashboardPage() {
               {businessMutation.isPending ? "Saving..." : "Save changes"}
             </Button>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={shareModalOpen} onOpenChange={setShareModalOpen}>
+        <DialogContent className="sm:max-w-2xl rounded-2xl border-none shadow-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold">
+              Share feedback
+            </DialogTitle>
+            <DialogDescription className="text-sm text-slate-500">
+              Personalize the greeting, then copy the review link or open WhatsApp with the message pre-filled.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 pt-2">
+            <div className="space-y-2">
+              <Label
+                htmlFor="share-name"
+                className="text-sm font-bold text-slate-700"
+              >
+                Business name
+              </Label>
+              <Input
+                id="share-name"
+                value={shareName}
+                onChange={(event) => {
+                  const nextName = event.target.value;
+                  const previousDefault = buildShareMessage(shareName, reviewLink);
+                  setShareName(nextName);
+                  setShareMessage((currentMessage) =>
+                    !currentMessage.trim() || currentMessage === previousDefault
+                      ? buildShareMessage(nextName, reviewLink)
+                      : currentMessage,
+                  );
+                }}
+                className="h-12 rounded-xl border-slate-200 bg-slate-50 px-4"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="share-message"
+                className="text-sm font-bold text-slate-700"
+              >
+                Greeting message
+              </Label>
+              <Textarea
+                id="share-message"
+                value={shareMessage}
+                onChange={(event) => setShareMessage(event.target.value)}
+                className="min-h-[220px] rounded-xl border-slate-200 bg-slate-50 px-4 py-3"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label
+                htmlFor="share-review-link"
+                className="text-sm font-bold text-slate-700"
+              >
+                Review link
+              </Label>
+              <Input
+                id="share-review-link"
+                value={reviewLink || "Review link is not available yet."}
+                readOnly
+                className="h-12 rounded-xl border-slate-200 bg-slate-50 px-4 text-slate-500"
+              />
+            </div>
+
+            <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-900 hover:bg-slate-50"
+                onClick={handleCopyShareLink}
+                disabled={!reviewLink}
+              >
+                {shareLinkCopied ? (
+                  <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
+                ) : (
+                  <Copy className="mr-2 h-4 w-4" />
+                )}
+                {shareLinkCopied ? "Copied" : "Copy review link"}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                className="h-11 rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-900 hover:bg-slate-50"
+                onClick={handleShareOnWhatsApp}
+                disabled={!reviewLink}
+              >
+                <FaWhatsapp className="mr-2 h-5 w-5 text-[#25D366]" />
+                Share on WhatsApp
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
