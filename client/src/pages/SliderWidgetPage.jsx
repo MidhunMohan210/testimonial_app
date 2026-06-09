@@ -547,7 +547,7 @@ export default function SliderWidgetPage() {
 
               <div className="relative z-10 inline-block">
                 <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-4xl">
-                  What our Clients say!
+                  What our Customers say!
                 </h1>
                 <div className="mx-auto mt-2 flex items-center justify-center gap-1 sm:mt-3">
                   <div className="h-[5px] w-28 rounded-full bg-[#f4a59a] sm:w-36" />
