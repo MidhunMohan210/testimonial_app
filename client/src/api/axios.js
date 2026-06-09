@@ -4,6 +4,18 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "",
 });
 
+const environment = import.meta.env.VITE_ENVIRONMENT || "production";
+if (environment === "development") {
+  api.defaults.baseURL = "http://localhost:5001/";
+} else if (environment === "staging") {
+  api.defaults.baseURL = import.meta.env.VITE_PUBLIC_STAGING_URL || "";
+} else {
+  api.defaults.baseURL = import.meta.env.VITE_API_URL || "";
+}
+
+console.log(environment);
+console.log(api.defaults.baseURL);
+
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("testiflow_token");
 
@@ -28,7 +40,7 @@ api.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
