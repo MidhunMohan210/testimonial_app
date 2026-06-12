@@ -233,6 +233,93 @@ function SidebarContent({
   );
 }
 
+function MobileMenuContent({
+  onClose,
+  unreadCounts = { testimonials: 0, privateFeedback: 0 },
+}) {
+  const { logout } = useAuth();
+
+  return (
+    <div className="flex min-h-screen flex-col bg-white text-slate-950 animate-[mobile-menu-panel-in_340ms_cubic-bezier(0.16,1,0.3,1)_both]">
+      <div className="flex items-center justify-between px-5 pb-4 pt-5 [animation:mobile-menu-item-in_420ms_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-2 rounded-full text-slate-950"
+          onClick={onClose}
+        >
+          <img src={logo} alt="Woice" className="h-5 w-auto" />
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Woice
+          </span>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <X className="h-6 w-6" />
+        </Button>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-6 pb-8 pt-2">
+        <div className="space-y-1">
+          {navigation.map((item, index) => {
+            const unreadCount =
+              item.to === "/testimonials"
+                ? unreadCounts.testimonials
+                : item.to === "/private-feedback"
+                  ? unreadCounts.privateFeedback
+                  : 0;
+            const hasUnread = unreadCount > 0;
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center justify-between gap-4 rounded-2xl px-3 py-2.5 text-[1.1rem] font-medium tracking-tight transition",
+                    isActive
+                      ? "bg-slate-100 text-slate-950"
+                      : "text-slate-900 hover:bg-slate-50",
+                  )
+                }
+                style={{
+                  animation: `mobile-menu-item-in 420ms cubic-bezier(0.16, 1, 0.3, 1) ${120 + index * 36}ms both`,
+                }}
+              >
+                <span>{item.label}</span>
+                {hasUnread ? (
+                  <span className="inline-flex min-w-8 items-center justify-center rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600">
+                    {formatUnreadCount(unreadCount)}
+                  </span>
+                ) : null}
+              </NavLink>
+            );
+          })}
+        </div>
+      </nav>
+
+      <div className="border-t border-slate-200 px-6 py-5">
+        <Button
+          variant="outline"
+          className="w-full justify-center gap-2 rounded-2xl border-slate-200 bg-white text-slate-900 hover:bg-slate-50 [animation:mobile-menu-item-in_420ms_cubic-bezier(0.16,1,0.3,1)_360ms_both]"
+          onClick={() => {
+            onClose();
+            logout();
+          }}
+        >
+          <Power className="h-4 w-4 text-red-500" />
+          Logout
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 // ── Main shell ─────────────────────────────────────────────────────────────────
 export default function AppShell() {
   const location = useLocation();
@@ -357,31 +444,11 @@ export default function AppShell() {
       {/* Mobile drawer (hamburger-triggered full sidebar) */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
-          <button
-            type="button"
-            aria-label="Close sidebar"
-            className="absolute inset-0 bg-slate-950/42 backdrop-blur-sm animate-[sidebar-overlay-in_220ms_ease-out]"
-            onClick={() => setSidebarOpen(false)}
-          />
-          {/* Drawer panel — slides in from left */}
-          <div className="absolute inset-y-0 left-0 flex w-[84vw] max-w-[312px] flex-col border-r border-white/10 bg-slate-950 shadow-2xl animate-[sidebar-drawer-in_260ms_cubic-bezier(0.22,1,0.36,1)]">
-            <div className="flex items-center justify-end px-4 py-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/10 hover:text-white"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <SidebarContent
-                onNavigate={() => setSidebarOpen(false)}
-                unreadCounts={unreadCounts}
-              />
-            </div>
+          <div className="absolute inset-0 animate-[sidebar-overlay-in_220ms_ease-out]">
+            <MobileMenuContent
+              onClose={() => setSidebarOpen(false)}
+              unreadCounts={unreadCounts}
+            />
           </div>
         </div>
       )}
