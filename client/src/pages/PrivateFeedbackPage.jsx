@@ -697,13 +697,13 @@ export default function PrivateFeedbackPage() {
   return (
     <>
       <div className="mx-auto max-w-7xl px-3">
-        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)] sm:p-6">
+        <section className="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)] sm:mb-6 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-700">
                 Private feedback
               </span>
-              <h2 className="mt-4 text-lg font-bold tracking-tight text-slate-950 sm:text-xl">
+              <h2 className="mt-3 text-base font-bold tracking-tight text-slate-950 sm:mt-4 sm:text-xl">
                 Review low-rated customer feedback separately.
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
@@ -719,10 +719,10 @@ export default function PrivateFeedbackPage() {
 
         <section>
           <Tabs value={activeStatus} onValueChange={setActiveStatus}>
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)] sm:p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)] sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h3 className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
+                  <h3 className="text-[15px] font-semibold tracking-tight text-slate-950 sm:text-lg">
                     Private feedback queue
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
@@ -737,7 +737,7 @@ export default function PrivateFeedbackPage() {
                   <TabsTrigger value="closed">Closed</TabsTrigger>
                 </TabsList>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Current view
@@ -765,7 +765,7 @@ export default function PrivateFeedbackPage() {
               </div>
             </div>
             <TabsContent value={activeStatus} className="mt-5">
-              <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-4 flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-slate-600">
                   {hasActiveFilters
                     ? `Showing ${feedbackTotal} filtered feedback entries`
@@ -827,10 +827,10 @@ export default function PrivateFeedbackPage() {
         }}
       >
         <DialogContent className="flex max-h-[min(88vh,56rem)] flex-col rounded-2xl border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] sm:max-w-xl">
-          <DialogHeader className="space-y-3 rounded-xl border border-slate-200/80 bg-white/90 p-4 shadow-[0_14px_34px_-26px_rgba(15,23,42,0.35)]">
+            <DialogHeader className="space-y-3 rounded-xl border border-slate-200/80 bg-white/90 p-3.5 shadow-[0_14px_34px_-26px_rgba(15,23,42,0.35)] sm:p-4">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
-                <DialogTitle className="truncate text-2xl font-semibold text-slate-950">
+                <DialogTitle className="truncate text-xl font-semibold text-slate-950 sm:text-2xl">
                   {selectedEntry?.customerName || "Anonymous customer"}
                 </DialogTitle>
               </div>
@@ -863,9 +863,9 @@ export default function PrivateFeedbackPage() {
             </TabsList>
 
             <TabsContent value="feedback" className="mt-0">
-              <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.3)]">
+              <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.3)] sm:p-4">
                 <h3 className="text-base font-semibold text-slate-950">Feedback</h3>
-                <div className="h-56 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3">
+                <div className="h-52 overflow-y-auto rounded-lg border border-slate-200 bg-slate-50 p-3 sm:h-56">
                   <p className="break-words whitespace-pre-wrap text-sm leading-7 text-slate-700 [overflow-wrap:anywhere]">
                     {selectedEntry?.feedbackText || "No feedback text provided."}
                   </p>
@@ -883,7 +883,7 @@ export default function PrivateFeedbackPage() {
             </TabsContent>
 
             <TabsContent value="response" className="mt-0">
-              <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.3)]">
+              <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.3)] sm:p-4">
                 <h3 className="text-base font-semibold text-slate-950">Response</h3>
                 <div className="space-y-2">
                   <label htmlFor="private-feedback-response" className="text-sm font-medium text-slate-700">
@@ -937,7 +937,7 @@ export default function PrivateFeedbackPage() {
             </TabsContent>
 
             <TabsContent value="contact" className="mt-0">
-              <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.3)]">
+              <section className="space-y-3 rounded-xl border border-slate-200 bg-white p-3.5 shadow-[0_14px_34px_-28px_rgba(15,23,42,0.3)] sm:p-4">
                 <h3 className="text-base font-semibold text-slate-950">Contact actions</h3>
                 {hasSelectedContact ? (
                   <>

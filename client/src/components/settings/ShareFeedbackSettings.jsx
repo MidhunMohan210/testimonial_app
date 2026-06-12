@@ -22,7 +22,7 @@ export default function ShareFeedbackSettings({
   return (
     <div className="">
       <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4 sm:p-5">
-        <div className="space-y-5">
+        <div className="space-y-4 sm:space-y-5">
           <div>
             <h3 className="text-base font-semibold text-slate-950">Share Feedback Link</h3>
             <p className="mt-1 text-sm leading-6 text-slate-500">
@@ -38,12 +38,12 @@ export default function ShareFeedbackSettings({
                 id="settings-feedback-link"
                 value={publicReviewLink || "Feedback link is not available yet."}
                 readOnly
-                className="h-12 rounded-lg border-slate-200 bg-white text-slate-500"
+                className="rounded-lg border-slate-200 bg-white text-slate-500"
               />
               <Button
                 type="button"
                 variant="outline"
-                className="h-12 w-full rounded-lg px-4 sm:w-auto"
+                className="w-full whitespace-nowrap rounded-lg px-4 sm:w-auto sm:min-w-[9.5rem]"
                 onClick={onCopyLink}
                 disabled={!publicReviewLink}
               >
@@ -64,7 +64,7 @@ export default function ShareFeedbackSettings({
               value={shareMessage}
               onChange={(event) => onShareMessageChange(event.target.value)}
               placeholder="Add a greeting message to share with customers."
-              className="min-h-[180px] rounded-lg border-slate-200"
+              className="min-h-[160px] rounded-lg border-slate-200 sm:min-h-[180px]"
               disabled={!publicReviewLink}
               maxLength={500}
             />
@@ -76,7 +76,7 @@ export default function ShareFeedbackSettings({
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button
               type="button"
-              className="h-11 rounded-lg bg-slate-950 px-4 text-white hover:bg-slate-800"
+              className="rounded-lg bg-slate-950 px-4 text-white hover:bg-slate-800"
               onClick={onShareOnWhatsApp}
               disabled={!publicReviewLink}
             >
@@ -86,7 +86,7 @@ export default function ShareFeedbackSettings({
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-lg px-4"
+              className="rounded-lg px-4"
               onClick={onCopyMessage}
               disabled={!publicReviewLink}
             >
@@ -111,7 +111,7 @@ export default function ShareFeedbackSettings({
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-11 rounded-lg px-4"
+                  className="rounded-lg px-4"
                   onClick={onDownloadQrCode}
                 >
                   <Download className="mr-2 h-4 w-4" />
@@ -119,10 +119,10 @@ export default function ShareFeedbackSettings({
                 </Button>
               </div>
 
-              <div className="mt-5 flex justify-center sm:justify-start">
+              <div className="mt-4 flex justify-center sm:mt-5 sm:justify-start">
                 <div
                   ref={qrCodeContainerRef}
-                  className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm"
+                  className="rounded-2xl border border-slate-200 bg-white p-3 shadow-sm sm:p-4"
                 >
                   <QRCodeSVG
                     value={publicReviewLink}

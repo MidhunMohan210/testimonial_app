@@ -554,13 +554,13 @@ export default function TestimonialsPage() {
   return (
     <>
       <div className="mx-auto max-w-7xl px-3">
-        <section className="mb-6 rounded-xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)] sm:p-6">
+        <section className="mb-5 rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.28)] sm:mb-6 sm:p-6">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
             <div>
               <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-500">
                 Testimonials
               </span>
-              <h2 className="mt-4 text-lg font-bold tracking-tight text-slate-950 sm:text-xl">
+              <h2 className="mt-3 text-base font-bold tracking-tight text-slate-950 sm:mt-4 sm:text-xl">
                 Manage every customer quote in one place.
               </h2>
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">
@@ -572,7 +572,7 @@ export default function TestimonialsPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+                className="w-full whitespace-nowrap rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
                 onClick={() =>
                   window.open(
                     publicTestimonialsLink,
@@ -588,7 +588,7 @@ export default function TestimonialsPage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
+                className="w-full whitespace-nowrap rounded-xl border-slate-200 bg-white px-5 font-semibold text-slate-700 hover:bg-slate-50 sm:w-auto"
                 onClick={handleCopyPublicLink}
                 disabled={!publicTestimonialsLink}
               >
@@ -600,14 +600,14 @@ export default function TestimonialsPage() {
                 {publicLinkCopied ? "Copied" : "Copy link"}
               </Button>
               <Button
-                className="w-full rounded-xl px-5 sm:w-auto"
+                className="w-full whitespace-nowrap rounded-xl px-5 sm:w-auto"
                 onClick={() => setManualOpen(true)}
               >
                 Add testimonial
               </Button>
             </div>
           </div>
-          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
+          <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50/80 px-3.5 py-3 sm:px-4">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
               Public testimonials link
             </p>
@@ -625,10 +625,10 @@ export default function TestimonialsPage() {
               handleStatusChange(nextStatus);
             }}
           >
-            <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)] sm:p-5">
+            <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.24)] sm:p-5">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
-                  <h3 className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
+                  <h3 className="text-[15px] font-semibold tracking-tight text-slate-950 sm:text-lg">
                     Moderation queue
                   </h3>
                   <p className="mt-1 text-sm text-slate-500">
@@ -643,7 +643,7 @@ export default function TestimonialsPage() {
                   <TabsTrigger value="hidden">Hidden</TabsTrigger>
                 </TabsList>
               </div>
-              <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="mt-4 grid gap-3 sm:mt-5 sm:grid-cols-3">
                 <div className="rounded-xl border border-slate-200 bg-slate-50/80 px-4 py-3">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Current view
@@ -671,7 +671,7 @@ export default function TestimonialsPage() {
               </div>
             </div>
             <TabsContent value={activeStatus} className="mt-5">
-              <div className="mb-4 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+              <div className="mb-4 flex flex-col gap-2.5 rounded-xl border border-slate-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="text-sm text-slate-600">
                   {hasActiveFilters
                     ? `Showing ${testimonialTotal} filtered testimonials`
@@ -760,7 +760,7 @@ export default function TestimonialsPage() {
             </DialogDescription>
           </DialogHeader>
           <div className="min-h-0 overflow-y-auto">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 sm:p-4">
               <p className="break-words whitespace-pre-wrap text-sm leading-7 text-slate-700 [overflow-wrap:anywhere]">
                 {selectedEntry?.feedbackText ||
                   selectedEntry?.testimonialText ||

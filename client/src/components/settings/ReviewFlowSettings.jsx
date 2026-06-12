@@ -15,7 +15,7 @@ function SettingsToggle({ checked, onChange, title, description, disabled = fals
       }}
       disabled={disabled}
       className={cn(
-        "flex w-full flex-col items-start justify-between gap-4 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-4 text-left transition hover:border-slate-300 hover:bg-white sm:flex-row sm:items-center",
+        "flex w-full flex-col items-start justify-between gap-3 rounded-lg border border-slate-200 bg-slate-50/80 px-4 py-3.5 text-left transition hover:border-slate-300 hover:bg-white sm:gap-4 sm:py-4 sm:flex-row sm:items-center",
         disabled && "cursor-not-allowed opacity-60 hover:border-slate-200 hover:bg-slate-50/80",
       )}
     >
@@ -25,14 +25,14 @@ function SettingsToggle({ checked, onChange, title, description, disabled = fals
       </div>
       <span
         className={cn(
-          "relative inline-flex h-7 w-12 shrink-0 rounded-full transition-colors",
+          "relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors sm:h-7 sm:w-12",
           checked ? "bg-slate-950" : "bg-slate-300",
         )}
       >
         <span
           className={cn(
-            "absolute top-1 h-5 w-5 rounded-full bg-white shadow-sm transition-transform",
-            checked ? "translate-x-6" : "translate-x-1",
+            "absolute top-0.5 h-5 w-5 rounded-full bg-white shadow-sm transition-transform sm:top-1",
+            checked ? "translate-x-5 sm:translate-x-6" : "translate-x-0.5 sm:translate-x-1",
           )}
         />
       </span>
@@ -49,14 +49,14 @@ export default function ReviewFlowSettings({
   googleReviewLinkValue,
 }) {
   return (
-    <div className="max-w-3xl space-y-6">
-      <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-4">
+    <div className=" space-y-5 sm:space-y-6">
+      <div className="rounded-lg border border-slate-100 bg-slate-50/60 p-3.5 sm:p-4">
         <div className="space-y-2">
-          <Label htmlFor="settings-google-review-link">Google Review Link</Label>
+          <Label htmlFor="settings-google-review-link">Google Review Link </Label>
           <Input
             id="settings-google-review-link"
             placeholder="https://g.page/r/..."
-            className="h-12 rounded-lg border-slate-200 bg-white"
+            className="rounded-lg border-slate-200 bg-white"
             {...register("googleReviewLink", {
               validate: (value) => {
                 const trimmed = value.trim();

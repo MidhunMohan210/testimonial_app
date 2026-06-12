@@ -24,7 +24,7 @@ function RatingSelector({ value, onChange }) {
           <button
             key={rating}
             type="button"
-            className={`text-2xl transition ${rating <= value ? "text-amber-500" : "text-slate-300"}`}
+            className={`text-[1.65rem] transition sm:text-2xl ${rating <= value ? "text-amber-500" : "text-slate-300"}`}
             onClick={() => onChange(rating)}
           >
             ★
@@ -99,7 +99,7 @@ export default function ManualAddModal({ open, onOpenChange, activeStatus }) {
           </DialogDescription>
         </DialogHeader>
 
-        <form className="space-y-4" onSubmit={handleSubmit((data) => mutation.mutate(data))}>
+        <form className="space-y-3.5 sm:space-y-4" onSubmit={handleSubmit((data) => mutation.mutate(data))}>
           <div className="space-y-2">
             <Label htmlFor="manual-name">Customer Name</Label>
             <Input

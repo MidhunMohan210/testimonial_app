@@ -12,13 +12,13 @@ export function DialogContent({ className, children, ...props }) {
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-white p-6 shadow-soft",
+          "fixed left-1/2 top-1/2 z-50 w-[calc(100%-1.25rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border bg-white p-4 shadow-soft sm:w-[calc(100%-2rem)] sm:p-6",
           className
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full p-1 text-muted-foreground transition hover:bg-muted">
+        <DialogPrimitive.Close className="absolute right-3 top-3 rounded-full p-1 text-muted-foreground transition hover:bg-muted sm:right-4 sm:top-4">
           <X className="h-4 w-4" />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
@@ -27,7 +27,7 @@ export function DialogContent({ className, children, ...props }) {
 }
 
 export function DialogHeader({ className, ...props }) {
-  return <div className={cn("mb-5 space-y-1", className)} {...props} />;
+  return <div className={cn("mb-4 space-y-1 sm:mb-5", className)} {...props} />;
 }
 
 export function DialogTitle({ className, ...props }) {

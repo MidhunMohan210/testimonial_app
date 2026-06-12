@@ -229,20 +229,20 @@ export default function Page() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f8fbff_0%,#f3f6fb_45%,#eef2f8_100%)] px-4 py-8 sm:px-6 sm:py-10">
-      <div className="mx-4  space-y-6 sm:space-y-8">
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-6 shadow-[0_40px_90px_-65px_rgba(15,23,42,0.65)] sm:p-8 lg:p-10">
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,#f8fbff_0%,#f3f6fb_45%,#eef2f8_100%)] px-3 py-6 sm:px-6 sm:py-10">
+      <div className="mx-1 space-y-5 sm:mx-4 sm:space-y-8">
+        <section className="relative overflow-hidden rounded-3xl border border-slate-200/80 bg-white p-5 shadow-[0_40px_90px_-65px_rgba(15,23,42,0.65)] sm:p-8 lg:p-10">
           <div className="absolute -right-16 -top-20 h-52 w-52 rounded-full bg-sky-100/70 blur-2xl" />
           <div className="absolute -bottom-20 left-10 h-52 w-52 rounded-full bg-violet-100/60 blur-2xl" />
 
-          <div className="relative grid gap-6 lg:grid-cols-[1.25fr_0.75fr] lg:gap-10">
+          <div className="relative grid gap-5 lg:grid-cols-[1.25fr_0.75fr] lg:gap-10">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-600">
                 <Sparkles className="h-3.5 w-3.5" />
                 Embed Documentation
               </p>
 
-              <h1 className="mt-4 text-2xl font-semibold leading-tight text-slate-950 sm:text-4xl">
+              <h1 className="mt-4 text-xl font-semibold leading-tight text-slate-950 sm:text-4xl">
                 Add your testimonial widget to any website in minutes.
               </h1>
 
@@ -325,7 +325,7 @@ export default function Page() {
           </div>
         </section>
 
-        <section className="grid gap-4 lg:grid-cols-2">
+        <section className="grid gap-3 sm:gap-4 lg:grid-cols-2">
           <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.45)] sm:p-6">
             <h3 className="flex items-center gap-2 text-base font-semibold text-slate-900 sm:text-lg">
               <ShieldCheck className="h-5 w-5 text-slate-700" />

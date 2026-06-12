@@ -58,9 +58,9 @@ async function copyText(value) {
 
 function SettingsLoadingState() {
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-5 sm:space-y-6">
       <Skeleton className="h-32 w-full rounded-[2rem]" />
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid gap-5 lg:grid-cols-2">
         <Skeleton className="h-72 w-full rounded-[2rem]" />
         <Skeleton className="h-72 w-full rounded-[2rem]" />
       </div>
@@ -357,7 +357,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6">
+    <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
       <form id="settings-form" onSubmit={onSubmit}>
         {!activeSection ? (
           <SettingsOverview
@@ -376,7 +376,7 @@ export default function SettingsPage() {
             error={formError}
           >
             {activeSection === "business-profile" ? (
-              <BusinessProfileSettings register={register} errors={errors} slug={slug} />
+              <BusinessProfileSettings register={register} errors={errors} />
             ) : null}
 
             {activeSection === "review-flow" ? (
