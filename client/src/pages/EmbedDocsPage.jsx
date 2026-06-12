@@ -10,15 +10,9 @@ import {
   Sparkles,
 } from "lucide-react";
 import { useAuth } from "../hooks/useAuth";
+import { PUBLIC_APP_BASE_URL } from "../lib/publicUrl";
 
-function CodeBlock({
-  id,
-  title,
-  subtitle,
-  code,
-  onCopy,
-  copied,
-}) {
+function CodeBlock({ id, title, subtitle, code, onCopy, copied }) {
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_20px_50px_-38px_rgba(15,23,42,0.45)]">
       <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 bg-slate-50 px-4 py-3 sm:px-5">
@@ -27,7 +21,9 @@ function CodeBlock({
             {title}
           </h3>
           {subtitle ? (
-            <p className="mt-0.5 truncate text-xs text-slate-500 sm:text-sm">{subtitle}</p>
+            <p className="mt-0.5 truncate text-xs text-slate-500 sm:text-sm">
+              {subtitle}
+            </p>
           ) : null}
         </div>
         <button
@@ -61,8 +57,12 @@ function StepCard({ icon: Icon, title, description }) {
       <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-white">
         <Icon className="h-5 w-5" />
       </div>
-      <h3 className="mt-3 text-sm font-semibold text-slate-900 sm:text-base">{title}</h3>
-      <p className="mt-1 text-xs leading-6 text-slate-600 sm:text-sm">{description}</p>
+      <h3 className="mt-3 text-sm font-semibold text-slate-900 sm:text-base">
+        {title}
+      </h3>
+      <p className="mt-1 text-xs leading-6 text-slate-600 sm:text-sm">
+        {description}
+      </p>
     </article>
   );
 }
@@ -72,6 +72,7 @@ export default function EmbedDocsPage() {
   const [copiedKey, setCopiedKey] = useState("");
 
   const businessSlug = (business?.slug || "your-business-slug").trim();
+  const embedScriptUrl = `${PUBLIC_APP_BASE_URL}/embed.js`;
 
   const embedSnippet = useMemo(
     () => `<div
@@ -82,11 +83,11 @@ export default function EmbedDocsPage() {
   data-height="420"
 ></div>
 <script
-  src="https://app.woice.it.com/embed.js"
-  data-base-url="https://app.woice.it.com"
+  src="${embedScriptUrl}"
+  data-base-url="${PUBLIC_APP_BASE_URL}"
   defer
 ></script>`,
-    [businessSlug],
+    [businessSlug, embedScriptUrl],
   );
 
   const reactSnippet = useMemo(
@@ -95,9 +96,9 @@ export default function EmbedDocsPage() {
 export default function TestimonialsWidget() {
   useEffect(() => {
     const script = document.createElement("script");
-    script.src = "https://app.woice.it.com/embed.js";
+    script.src = "${embedScriptUrl}";
     script.defer = true;
-    script.setAttribute("data-base-url", "https://app.woice.it.com");
+    script.setAttribute("data-base-url", "${PUBLIC_APP_BASE_URL}");
     document.body.appendChild(script);
 
     return () => {
@@ -115,7 +116,7 @@ export default function TestimonialsWidget() {
     />
   );
 }`,
-    [businessSlug],
+    [businessSlug, embedScriptUrl],
   );
 
   const nextSnippet = useMemo(
@@ -133,14 +134,14 @@ export default function Page() {
       />
 
       <Script
-        src="https://app.woice.it.com/embed.js"
+        src="${embedScriptUrl}"
         strategy="afterInteractive"
-        data-base-url="https://app.woice.it.com"
+        data-base-url="${PUBLIC_APP_BASE_URL}"
       />
     </>
   );
 }`,
-    [businessSlug],
+    [businessSlug, embedScriptUrl],
   );
 
   const wordpressSnippet = useMemo(
@@ -151,8 +152,12 @@ export default function Page() {
   data-theme="light"
   data-layout="grid"
 ></div>
-<script src="https://app.woice.it.com/embed.js" defer></script>`,
-    [businessSlug],
+<script
+  src="${embedScriptUrl}"
+  data-base-url="${PUBLIC_APP_BASE_URL}"
+  defer
+></script>`,
+    [businessSlug, embedScriptUrl],
   );
 
   const shopifySnippet = useMemo(
@@ -165,8 +170,12 @@ export default function Page() {
 ></div>
 
 {% comment %} Add before </body> in theme.liquid if not already added {% endcomment %}
-<script src="https://app.woice.it.com/embed.js" defer></script>`,
-    [businessSlug],
+<script
+  src="${embedScriptUrl}"
+  data-base-url="${PUBLIC_APP_BASE_URL}"
+  defer
+></script>`,
+    [businessSlug, embedScriptUrl],
   );
 
   const platformBlocks = useMemo(
@@ -238,9 +247,9 @@ export default function Page() {
               </h1>
 
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-600 sm:text-base">
-                Use the production-ready snippet below to publish verified social proof
-                across landing pages, product pages, and checkout funnels with zero
-                custom backend work.
+                Use the production-ready snippet below to publish verified
+                social proof across landing pages, product pages, and checkout
+                funnels with zero custom backend work.
               </p>
 
               <div className="mt-5 flex flex-wrap gap-2">
@@ -259,8 +268,6 @@ export default function Page() {
                 ))}
               </div>
             </div>
-
-     
           </div>
         </section>
 
@@ -341,24 +348,31 @@ export default function Page() {
           </article>
 
           <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-[0_20px_50px_-40px_rgba(15,23,42,0.45)] sm:p-6">
-            <h3 className="text-base font-semibold text-slate-900 sm:text-lg">Troubleshooting</h3>
+            <h3 className="text-base font-semibold text-slate-900 sm:text-lg">
+              Troubleshooting
+            </h3>
             <div className="mt-4 space-y-3 text-sm text-slate-700">
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3">
                 <p className="font-medium text-slate-900">Widget not loading</p>
                 <p className="mt-1 text-slate-600">
-                  Validate <code>data-business-slug</code> and confirm embed.js is reachable.
+                  Validate <code>data-business-slug</code> and confirm embed.js
+                  is reachable.
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3">
-                <p className="font-medium text-slate-900">Iframe blocked or blank</p>
+                <p className="font-medium text-slate-900">
+                  Iframe blocked or blank
+                </p>
                 <p className="mt-1 text-slate-600">
-                  Update CSP to allow <code>https://app.woice.it.com</code> in <code>script-src</code> and <code>frame-src</code>.
+                  Update CSP to allow <code>{PUBLIC_APP_BASE_URL}</code> in{" "}
+                  <code>script-src</code> and <code>frame-src</code>.
                 </p>
               </div>
               <div className="rounded-xl border border-slate-200/80 bg-slate-50 px-4 py-3">
                 <p className="font-medium text-slate-900">Height mismatch</p>
                 <p className="mt-1 text-slate-600">
-                  Keep <code>window.postMessage</code> unblocked and pass a stable <code>data-height</code> fallback.
+                  Keep <code>window.postMessage</code> unblocked and pass a
+                  stable <code>data-height</code> fallback.
                 </p>
               </div>
             </div>

@@ -4,6 +4,7 @@ import shareLink from "../../assets/landingPage/productPreview/Dashboard/shareLi
 import embed from "../../assets/landingPage/productPreview/Dashboard/embed.png";
 import testimonials from "../../assets/landingPage/productPreview/testimonials/testimonials.png";
 import feedback from "../../assets/landingPage/productPreview/feedback/feedback.png";
+import { PUBLIC_APP_BASE_URL } from "../../lib/publicUrl";
 
 const sections = [
   {
@@ -12,7 +13,7 @@ const sections = [
     label: "See everything in one place",
     description:
       "Track feedback, approvals, pending reviews, and recent activity from one clean dashboard.",
-    url: "app.woice.it.com/dashboard",
+    url: `${PUBLIC_APP_BASE_URL.replace(/^https?:\/\//, "")}/dashboard`,
     mainImage: previewImage,
     topRightImage: embed,
     bottomLeftImage: shareLink,
@@ -23,7 +24,7 @@ const sections = [
     label: "Approve the best, hide the rest",
     description:
       "Review incoming testimonials, publish the strongest ones, and move unsuitable responses out of public view.",
-    url: "app.woice.it.com/testimonials",
+    url: `${PUBLIC_APP_BASE_URL.replace(/^https?:\/\//, "")}/testimonials`,
     mainImage: testimonials,
     topRightImage: "",
     bottomLeftImage: "",
@@ -34,7 +35,7 @@ const sections = [
     label: "Protect your brand reputation",
     description:
       "Low-rated responses stay private so your team can follow up internally before anything reaches your website.",
-    url: "app.woice.it.com/feedback",
+    url: `${PUBLIC_APP_BASE_URL.replace(/^https?:\/\//, "")}/feedback`,
     mainImage: feedback,
     topRightImage: "",
     bottomLeftImage: "",
