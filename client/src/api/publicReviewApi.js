@@ -1,7 +1,8 @@
 import axios from "axios";
+import { getApiBaseUrl } from "../lib/apiUrl";
 
 const publicApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "",
+  baseURL: getApiBaseUrl(),
 });
 
 export const getBusinessBySlug = async (slug) => {

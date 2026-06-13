@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
+import { getApiBaseUrl } from "../lib/apiUrl";
 
 const DEFAULT_THEME = "light";
 const DEFAULT_LAYOUT = "grid";
@@ -90,7 +91,7 @@ function TestimonialCard({ item }) {
 }
 
 function getApiBase() {
-  return (import.meta.env.VITE_API_URL || "").replace(/\/+$/, "");
+  return getApiBaseUrl();
 }
 
 export default function WidgetPage() {
