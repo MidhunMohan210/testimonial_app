@@ -99,7 +99,7 @@ export const register = async (req, res) => {
               userId: user._id,
               businessName: businessName.trim(),
               slug: businessSlug,
-              whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+              // whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
             },
           ],
           { session }
