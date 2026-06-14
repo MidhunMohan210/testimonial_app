@@ -249,6 +249,20 @@
   }
 }
 
+[data-sonner-toaster][data-x-position="center"] {
+  left: 50% !important;
+  right: auto !important;
+  transform: translateX(-50%) !important;
+  width: min( calc(100vw - 24px), 420px ) !important;
+}
+
+[data-sonner-toaster][data-y-position="bottom"] {
+  bottom: max(16px, env(safe-area-inset-bottom)) !important;
+}
+
+[data-sonner-toaster] [data-sonner-toast] {
+  width: 100% !important;
+}
 
 .jelly-triangle {
   --uib-size: 2.8rem;

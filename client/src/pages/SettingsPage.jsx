@@ -357,7 +357,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6">
+    <div className="mx-auto max-w-7xl space-y-5 sm:space-y-6 px-3">
       <form id="settings-form" onSubmit={onSubmit}>
         {!activeSection ? (
           <SettingsOverview

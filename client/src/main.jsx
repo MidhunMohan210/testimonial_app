@@ -17,6 +17,8 @@ const queryClient = new QueryClient({
   },
 });
 
+const position = window.innerWidth < 768 ? "bottom-center" : "bottom-right";
+
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
@@ -26,7 +28,8 @@ ReactDOM.createRoot(document.getElementById("root")).render(
           <Toaster
             theme="dark"
             richColors
-            position="bottom-right"
+            position={position}
+            visibleToasts={1}
             toastOptions={{
               classNames: {
                 toast:
@@ -42,5 +45,5 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
-  </React.StrictMode>
+  </React.StrictMode>,
 );

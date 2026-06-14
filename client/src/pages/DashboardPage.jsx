@@ -556,6 +556,8 @@ export default function DashboardPage() {
             </div>
           </div>
 
+    
+
           {/* Gradient KPI Cards */}
           <div className="grid grid-cols-1 gap-4 sm:gap-5 md:col-span-3 md:grid-cols-2 lg:col-span-4 lg:grid-cols-4">
             {/* Total */}
