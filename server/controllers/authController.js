@@ -45,6 +45,7 @@ const createBusinessSlug = async (businessName, session) => {
 };
 
 export const register = async (req, res) => {
+  // throw createHttpError(400, "Registration is disabled");
   const session = await mongoose.startSession();
   return await (async () => {
     const { fullName, email, mobile, password, businessName } = req.body;
