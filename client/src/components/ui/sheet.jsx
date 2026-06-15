@@ -17,14 +17,14 @@ export function SheetContent({ className, children, side = "right", ...props }) 
       <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm" />
       <DialogPrimitive.Content
         className={cn(
-          "fixed z-50 bg-white p-6 shadow-xl",
+          "fixed z-50 bg-white p-4 shadow-xl sm:p-6",
           sideClassName,
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-4 top-4 rounded-full p-1 text-slate-500 transition hover:bg-slate-100">
+        <DialogPrimitive.Close className="absolute right-3 top-3 rounded-full p-1 text-slate-500 transition hover:bg-slate-100 sm:right-4 sm:top-4">
           <X className="h-4 w-4" />
         </DialogPrimitive.Close>
       </DialogPrimitive.Content>
@@ -33,13 +33,13 @@ export function SheetContent({ className, children, side = "right", ...props }) 
 }
 
 export function SheetHeader({ className, ...props }) {
-  return <div className={cn("mb-5 space-y-1", className)} {...props} />;
+  return <div className={cn("mb-4 space-y-1 sm:mb-5", className)} {...props} />;
 }
 
 export function SheetTitle({ className, ...props }) {
   return (
     <DialogPrimitive.Title
-      className={cn("text-xl font-semibold text-slate-950", className)}
+      className={cn("text-lg font-semibold text-slate-950 sm:text-xl", className)}
       {...props}
     />
   );
@@ -57,7 +57,7 @@ export function SheetDescription({ className, ...props }) {
 export function SheetFooter({ className, ...props }) {
   return (
     <div
-      className={cn("mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end", className)}
+      className={cn("mt-5 flex flex-col gap-2 sm:mt-6 sm:flex-row sm:justify-end", className)}
       {...props}
     />
   );

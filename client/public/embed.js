@@ -43,7 +43,7 @@
       var script = scripts[i];
       var src = script.src || "";
 
-      if (src.indexOf("/embed.js") !== -1 || src.indexOf("app.woice.it.com") !== -1) {
+      if (src.indexOf("/embed.js") !== -1 ) {
         if (script.getAttribute("data-base-url")) {
           return script.getAttribute("data-base-url").replace(/\/+$/, "");
         }

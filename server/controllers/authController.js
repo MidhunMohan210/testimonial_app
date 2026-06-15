@@ -45,6 +45,7 @@ const createBusinessSlug = async (businessName, session) => {
 };
 
 export const register = async (req, res) => {
+  // throw createHttpError(400, "Registration is disabled");
   const session = await mongoose.startSession();
   return await (async () => {
     const { fullName, email, mobile, password, businessName } = req.body;
@@ -99,7 +100,7 @@ export const register = async (req, res) => {
               userId: user._id,
               businessName: businessName.trim(),
               slug: businessSlug,
-              whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
+              // whatsappPhoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID || "",
             },
           ],
           { session }

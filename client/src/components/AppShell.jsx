@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
-import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
+  ArrowLeft,
   BookOpen,
   ChevronRight,
   Ellipsis,
@@ -155,7 +156,7 @@ function SidebarContent({
                 onClick={onNavigate}
                 className={({ isActive }) =>
                   cn(
-                    "group flex items-center gap-3 px-3 py-3 transition",
+                    "group flex items-center gap-2.5 px-3 py-2.5 transition",
                     isActive
                       ? "border-2 border-y-0 border-l-0 !border-r-yellow-500 text-white bg-slate-900"
                       : "text-slate-300 hover:bg-white/8 hover:text-white",
@@ -166,7 +167,7 @@ function SidebarContent({
                   <>
                     <div
                       className={cn(
-                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border transition",
+                        "flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border transition sm:h-11 sm:w-11",
                         isActive
                           ? "border-slate-200 bg-slate-100 text-slate-950"
                           : "border-white/10 bg-white/5 text-slate-200",
@@ -175,7 +176,7 @@ function SidebarContent({
                       <Icon className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold">
+                      <p className="truncate text-[13px] font-semibold sm:text-sm">
                         {item.label}
                       </p>
                       <p
@@ -202,7 +203,7 @@ function SidebarContent({
                       )}
                       <ChevronRight
                         className={cn(
-                          "h-4 w-4 transition",
+                          "h-3.5 w-3.5 transition sm:h-4 sm:w-4",
                           isActive
                             ? "text-slate-400"
                             : "text-slate-500 group-hover:text-slate-300",
@@ -232,41 +233,89 @@ function SidebarContent({
   );
 }
 
-// ── Mobile bottom tab bar ──────────────────────────────────────────────────────
-function BottomTabBar() {
+function MobileMenuContent({
+  onClose,
+  unreadCounts = { testimonials: 0, privateFeedback: 0 },
+}) {
+  const { logout } = useAuth();
+
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40 px-4 pb-[max(0.5rem,env(safe-area-inset-bottom))] lg:hidden">
-      <nav className="pointer-events-auto mx-auto flex h-14 max-w-[18.5rem] items-stretch rounded-[1.35rem] border border-slate-200/80 bg-white/92 p-1 shadow-[0_18px_40px_-24px_rgba(15,23,42,0.32)] backdrop-blur-xl">
-        {navigation.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                cn(
-                  "flex flex-1 flex-col items-center justify-center gap-0.5 rounded-[1rem] px-1.5 text-[10px] font-semibold transition-all duration-200",
-                  isActive
-                    ? "bg-slate-950 text-white shadow-[0_12px_24px_-18px_rgba(15,23,42,0.55)]"
-                    : "text-slate-500 hover:bg-slate-100/80 hover:text-slate-900",
-                )
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon
-                    className={cn(
-                      "h-4.5 w-4.5 transition-transform duration-200",
-                      isActive && "scale-105",
-                    )}
-                  />
-                  <span>{item.label}</span>
-                </>
-              )}
-            </NavLink>
-          );
-        })}
+    <div className="flex min-h-screen flex-col bg-white text-slate-950 animate-[mobile-menu-panel-in_340ms_cubic-bezier(0.16,1,0.3,1)_both]">
+      <div className="flex items-center justify-between px-5 pb-4 pt-5 [animation:mobile-menu-item-in_420ms_cubic-bezier(0.16,1,0.3,1)_80ms_both]">
+        <Link
+          to="/dashboard"
+          className="inline-flex items-center gap-2 rounded-full text-slate-950"
+          onClick={onClose}
+        >
+          <img src={logo} alt="Woice" className="h-5 w-auto" />
+          <span className="text-xs font-semibold uppercase tracking-[0.28em] text-slate-500">
+            Woice
+          </span>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="rounded-full text-slate-700 hover:bg-slate-100 hover:text-slate-950"
+          onClick={onClose}
+          aria-label="Close menu"
+        >
+          <X className="h-6 w-6" />
+        </Button>
+      </div>
+
+      <nav className="flex-1 overflow-y-auto px-6 pb-8 pt-2">
+        <div className="space-y-1">
+          {navigation.map((item, index) => {
+            const unreadCount =
+              item.to === "/testimonials"
+                ? unreadCounts.testimonials
+                : item.to === "/private-feedback"
+                  ? unreadCounts.privateFeedback
+                  : 0;
+            const hasUnread = unreadCount > 0;
+
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={onClose}
+                className={({ isActive }) =>
+                  cn(
+                    "flex items-center justify-between gap-4 rounded-2xl px-3 py-2.5 text-[1.1rem] font-medium tracking-tight transition",
+                    isActive
+                      ? "bg-slate-100 text-slate-950"
+                      : "text-slate-900 hover:bg-slate-50",
+                  )
+                }
+                style={{
+                  animation: `mobile-menu-item-in 420ms cubic-bezier(0.16, 1, 0.3, 1) ${120 + index * 36}ms both`,
+                }}
+              >
+                <span>{item.label}</span>
+                {hasUnread ? (
+                  <span className="inline-flex min-w-8 items-center justify-center rounded-full border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-600">
+                    {formatUnreadCount(unreadCount)}
+                  </span>
+                ) : null}
+              </NavLink>
+            );
+          })}
+        </div>
       </nav>
+
+      <div className="border-t border-slate-200 px-6 py-5">
+        <Button
+          variant="outline"
+          className="w-full justify-center gap-2 rounded-2xl border-slate-200 bg-white text-slate-900 hover:bg-slate-50 [animation:mobile-menu-item-in_420ms_cubic-bezier(0.16,1,0.3,1)_360ms_both]"
+          onClick={() => {
+            onClose();
+            logout();
+          }}
+        >
+          <Power className="h-4 w-4 text-red-500" />
+          Logout
+        </Button>
+      </div>
     </div>
   );
 }
@@ -274,6 +323,7 @@ function BottomTabBar() {
 // ── Main shell ─────────────────────────────────────────────────────────────────
 export default function AppShell() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { business, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const testimonialsUnreadQuery = useQuery({
@@ -306,6 +356,16 @@ export default function AppShell() {
     testimonials: testimonialsUnreadQuery.data?.unreadCount || 0,
     privateFeedback: privateFeedbackUnreadQuery.data?.unreadCount || 0,
   };
+  const showBackButton = location.pathname !== "/dashboard";
+
+  const handleGoBack = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+
+    navigate("/dashboard");
+  };
 
   return (
     <div className="min-h-screen bg-transparent text-slate-950">
@@ -315,11 +375,10 @@ export default function AppShell() {
           <SidebarContent unreadCounts={unreadCounts} />
         </aside>
 
-        {/* Content area — pb-16 reserves space for the mobile tab bar */}
-        <div className="flex min-h-screen min-w-0 flex-1 flex-col pb-24 lg:pb-0">
+        <div className="flex min-h-screen min-w-0 flex-1 flex-col">
           {/* Header */}
-          <header className="sticky top-0 z-30 border-b border-black/[0.06] bg-white/95 py-3 shadow-lg backdrop-blur">
-            <div className="flex items-center justify-between gap-3 px-4 py-2 sm:px-6 lg:px-8">
+          <header className="sticky top-0 z-30 border-b border-black/[0.06] bg-white/95 py-2 shadow-lg backdrop-blur sm:py-3">
+            <div className="flex items-center justify-between gap-3 px-3 py-1.5 sm:px-6 sm:py-2 lg:px-8">
               {/* Left — hamburger + page title */}
               <div className="flex min-w-0 items-center gap-3">
                 <Button
@@ -330,8 +389,19 @@ export default function AppShell() {
                 >
                   <Menu className="h-5 w-5" />
                 </Button>
+                {showBackButton ? (
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="shrink-0 rounded-xl border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    onClick={handleGoBack}
+                    aria-label="Go back"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                  </Button>
+                ) : null}
                 <div className="min-w-0">
-                  <h1 className="truncate text-base font-bold leading-tight tracking-wide text-slate-950 sm:text-xl">
+                  <h1 className="truncate text-[15px] font-bold leading-tight tracking-wide text-slate-950 sm:text-xl">
                     {meta.title}
                   </h1>
                   <p className="hidden text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400 sm:block">
@@ -364,45 +434,21 @@ export default function AppShell() {
             </div>
           </header>
 
-          <main className="min-w-0 flex-1  py-2 sm:px-6 sm:py-6 lg:px-8">
+          <main className="min-w-0 flex-1 py-2 sm:px-6 sm:py-6 lg:px-8">
             <Outlet />
           </main>
 
           <Footer className="mt-auto" />
         </div>
       </div>
-
-      {/* Mobile bottom tab bar */}
-      <BottomTabBar />
-
       {/* Mobile drawer (hamburger-triggered full sidebar) */}
       {sidebarOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          {/* Backdrop */}
-          <button
-            type="button"
-            aria-label="Close sidebar"
-            className="absolute inset-0 bg-slate-950/42 backdrop-blur-sm animate-[sidebar-overlay-in_220ms_ease-out]"
-            onClick={() => setSidebarOpen(false)}
-          />
-          {/* Drawer panel — slides in from left */}
-          <div className="absolute inset-y-0 left-0 flex w-[84vw] max-w-[312px] flex-col border-r border-white/10 bg-slate-950 shadow-2xl animate-[sidebar-drawer-in_260ms_cubic-bezier(0.22,1,0.36,1)]">
-            <div className="flex items-center justify-end px-4 py-4">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:bg-white/10 hover:text-white"
-                onClick={() => setSidebarOpen(false)}
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-            <div className="flex-1 overflow-y-auto">
-              <SidebarContent
-                onNavigate={() => setSidebarOpen(false)}
-                unreadCounts={unreadCounts}
-              />
-            </div>
+          <div className="absolute inset-0 animate-[sidebar-overlay-in_220ms_ease-out]">
+            <MobileMenuContent
+              onClose={() => setSidebarOpen(false)}
+              unreadCounts={unreadCounts}
+            />
           </div>
         </div>
       )}

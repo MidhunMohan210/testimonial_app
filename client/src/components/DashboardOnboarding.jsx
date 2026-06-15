@@ -32,29 +32,29 @@ function OnboardingStep({
   actionState = "idle",
 }) {
   return (
-    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-38px_rgba(15,23,42,0.28)] sm:p-6">
+    <div className="group relative overflow-hidden rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.35)] transition duration-300 hover:-translate-y-0.5 hover:shadow-[0_24px_60px_-38px_rgba(15,23,42,0.28)] sm:p-6">
       <div
         className={`absolute inset-x-0 top-0 h-1.5 ${accentClassName}`}
         aria-hidden="true"
       />
-      <div className="flex items-start justify-between gap-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm">
+      <div className="flex items-start justify-between gap-3 sm:gap-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-white shadow-sm sm:h-11 sm:w-11">
           <Icon className="h-5 w-5" />
         </div>
-        <div className="inline-flex h-9 min-w-9 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-3 text-sm font-bold text-slate-700">
+        <div className="inline-flex h-8 min-w-8 items-center justify-center rounded-full border border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-700 sm:h-9 sm:min-w-9 sm:px-3 sm:text-sm">
           {step}
         </div>
       </div>
-      <div className="mt-5">
-        <h3 className="text-lg font-semibold tracking-tight text-slate-950">
+      <div className="mt-4 sm:mt-5">
+        <h3 className="text-base font-semibold tracking-tight text-slate-950 sm:text-lg">
           {title}
         </h3>
-        <p className="mt-3 text-sm leading-7 text-slate-500">{description}</p>
+        <p className="mt-2 text-sm leading-6 text-slate-500 sm:mt-3 sm:leading-7">{description}</p>
         {actionLabel ? (
           <Button
             type="button"
             variant="outline"
-            className="mt-6 h-11 rounded-xl border-slate-200 bg-slate-50 px-4 font-semibold text-slate-800 hover:bg-slate-100"
+            className="mt-5 rounded-xl border-slate-200 bg-slate-50 px-4 font-semibold text-slate-800 hover:bg-slate-100 sm:mt-6"
             onClick={onAction}
             disabled={disabled}
           >
@@ -111,26 +111,26 @@ export default function DashboardOnboarding({
         setOpen(true);
       }}
     >
-      <DialogContent className="max-h-[min(90vh,56rem)] overflow-y-auto rounded-[2rem] border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-0 sm:max-w-5xl">
-        <div className="overflow-hidden rounded-[2rem]">
-          <div className="relative border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.14),transparent_30%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(135deg,#0f172a_0%,#1e293b_50%,#111827_100%)] px-5 py-6 text-white sm:px-8 sm:py-8">
+      <DialogContent className="max-h-[min(90vh,56rem)] overflow-y-auto rounded-[1.5rem] border-slate-200 bg-[linear-gradient(180deg,#ffffff_0%,#f8fafc_100%)] p-0 sm:max-w-5xl sm:rounded-[2rem]">
+        <div className="overflow-hidden rounded-[1.5rem] sm:rounded-[2rem]">
+          <div className="relative border-b border-slate-200 bg-[radial-gradient(circle_at_top_left,rgba(34,197,94,0.14),transparent_30%),radial-gradient(circle_at_top_right,rgba(59,130,246,0.16),transparent_30%),linear-gradient(135deg,#0f172a_0%,#1e293b_50%,#111827_100%)] px-4 py-5 text-white sm:px-8 sm:py-8">
             <div className="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.18)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.18)_1px,transparent_1px)] [background-size:24px_24px]" />
             <div className="relative">
               <div className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.24em] text-slate-200">
                 <Sparkles className="h-3.5 w-3.5 text-amber-300" />
                 First steps
               </div>
-              <DialogHeader className="mt-5 mb-0 max-w-3xl space-y-0">
-                <DialogTitle className="text-3xl font-bold tracking-tight text-white sm:text-4xl">
+              <DialogHeader className="mt-4 mb-0 max-w-3xl space-y-0 sm:mt-5">
+                <DialogTitle className="text-2xl font-bold tracking-tight text-white sm:text-4xl">
                   Start collecting testimonials 🚀
                 </DialogTitle>
-                <DialogDescription className="mt-3 text-base leading-7 text-slate-300 sm:text-lg">
+                <DialogDescription className="mt-3 text-sm leading-6 text-slate-300 sm:text-lg sm:leading-7">
                   Copy your review link, send it to customers, and approve
                   testimonials before showing them publicly.
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="mt-6 flex flex-wrap items-center gap-3 text-sm text-slate-300">
+              <div className="mt-5 flex flex-wrap items-center gap-2.5 text-sm text-slate-300 sm:mt-6 sm:gap-3">
                 <div className="rounded-full border border-white/10 bg-white/10 px-3 py-1.5">
                   3 quick steps
                 </div>
@@ -141,8 +141,8 @@ export default function DashboardOnboarding({
             </div>
           </div>
 
-          <div className="px-5 py-5 sm:px-8 sm:py-8">
-            <div className="grid gap-4 lg:grid-cols-3">
+          <div className="px-4 py-4 sm:px-8 sm:py-8">
+            <div className="grid gap-3 sm:gap-4 lg:grid-cols-3">
           <OnboardingStep
             step="1"
             icon={Link2}
@@ -170,7 +170,7 @@ export default function DashboardOnboarding({
           />
             </div>
 
-            <div className="mt-6 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] sm:px-5">
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-[0_18px_50px_-40px_rgba(15,23,42,0.18)] sm:mt-6 sm:px-5">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold text-slate-900">

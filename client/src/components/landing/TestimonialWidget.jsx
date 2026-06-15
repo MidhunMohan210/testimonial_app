@@ -1,14 +1,12 @@
 import { useEffect } from "react";
-import { getPublicAppUrl } from "../../lib/publicUrl";
+import { PUBLIC_APP_BASE_URL } from "../../lib/publicUrl";
 
 export default function TestimonialsWidget() {
   useEffect(() => {
-    const publicAppUrl = getPublicAppUrl();
     const script = document.createElement("script");
-    // script.src = `${publicAppUrl}/embed.js`;
-    script.src = `https://app.woice.it.com/embed.js`;
+    script.src = `${PUBLIC_APP_BASE_URL}/embed.js`;
     script.defer = true;
-    script.setAttribute("data-base-url", "https://app.woice.it.com");
+    script.setAttribute("data-base-url", PUBLIC_APP_BASE_URL);
     document.body.appendChild(script);
 
     return () => {

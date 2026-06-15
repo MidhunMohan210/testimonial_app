@@ -45,16 +45,16 @@ export default function TestimonialCard({
   return (
     <Card className="border-white/80 bg-white/95 shadow-[0_24px_60px_-38px_rgba(15,23,42,0.45)] transition hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-42px_rgba(15,23,42,0.5)]">
       <CardContent className="p-4 sm:p-6">
-        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
-          <div className="min-w-0 flex-1 space-y-5">
+        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 flex-1 space-y-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white sm:h-12 sm:w-12">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-slate-950 text-sm font-bold text-white sm:h-12 sm:w-12">
                   {customerInitial}
                 </div>
                 <div className="min-w-0 space-y-2">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-base font-semibold text-slate-950 sm:text-lg">
+                    <h3 className="text-[15px] font-semibold text-slate-950 sm:text-lg">
                       {customerName}
                     </h3>
                     <StatusBadge status={testimonial.status} />
@@ -84,8 +84,8 @@ export default function TestimonialCard({
               </div>
             </div>
 
-            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-4 sm:p-5">
-              <div className="mb-3 flex items-center gap-2 text-slate-400">
+            <div className="rounded-2xl border border-slate-200/80 bg-slate-50/80 p-3.5 sm:p-5">
+              <div className="mb-2.5 flex items-center gap-2 text-slate-400 sm:mb-3">
                 <Quote className="h-4 w-4" />
                 <span className="text-xs font-semibold uppercase tracking-[0.22em]">
                   Customer feedback
@@ -107,7 +107,7 @@ export default function TestimonialCard({
           </div>
 
           {!isReadOnly ? (
-            <div className="flex w-full flex-col gap-3 xl:w-[220px] xl:min-w-[220px] xl:shrink-0 xl:pl-4">
+            <div className="flex w-full flex-col gap-2.5 xl:w-[220px] xl:min-w-[220px] xl:shrink-0 xl:pl-4">
               <p className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-400">
                 Actions
               </p>

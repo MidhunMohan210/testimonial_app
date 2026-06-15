@@ -1,6 +1,5 @@
 import Business from "../models/Business.js";
 import {
-  assignBusinessSettings,
   getBusinessSettings as readBusinessSettings,
   toBusinessResponse,
 } from "../utils/businessSettings.js";
@@ -22,6 +21,7 @@ const formatSettingsResponse = (business) => {
     googleReviewEnabled: settings.googleReviewEnabled,
     isPublicEnabled: settings.isPublicEnabled,
     notificationsEnabled: settings.notificationsEnabled,
+    settings,
   };
 };
 
@@ -45,16 +45,10 @@ export const getMyBusiness = async (req, res) => {
 };
 
 export const updateMyBusiness = async (req, res) => {
-  const business = await Business.findById(req.user.businessId);
-
-  if (!business) {
-    throw createHttpError(404, "Business not found");
-  }
+  const updates = {};
 
   if (Object.prototype.hasOwnProperty.call(req.body, "googleReviewLink")) {
-    assignBusinessSettings(business, {
-      googleReviewLink: req.body.googleReviewLink?.trim() || "",
-    });
+    updates["settings.googleReviewLink"] = req.body.googleReviewLink?.trim() || "";
   }
 
   if (Object.prototype.hasOwnProperty.call(req.body, "slug")) {
@@ -73,10 +67,18 @@ export const updateMyBusiness = async (req, res) => {
       throw createHttpError(409, "Slug is already in use");
     }
 
-    business.slug = slug;
+    updates.slug = slug;
   }
 
-  await business.save();
+  const business = await Business.findByIdAndUpdate(
+    req.user.businessId,
+    Object.keys(updates).length > 0 ? { $set: updates } : {},
+    { new: true },
+  );
+
+  if (!business) {
+    throw createHttpError(404, "Business not found");
+  }
 
   return res.json(toBusinessResponse(business));
 };
@@ -118,22 +120,75 @@ export const updateBusinessSettings = async (req, res) => {
     throw createHttpError(404, "Business not found");
   }
 
-  business.businessName = name.trim();
-  assignBusinessSettings(business, {
+  const updateFields = {
+    businessName: name.trim(),
     ...(googleReviewLink !== undefined
-      ? { googleReviewLink: String(googleReviewLink).trim() }
+      ? { "settings.googleReviewLink": String(googleReviewLink).trim() }
       : {}),
     ...(googleReviewEnabled !== undefined
-      ? { googleReviewEnabled: Boolean(googleReviewEnabled) }
+      ? { "settings.googleReviewEnabled": Boolean(googleReviewEnabled) }
       : {}),
     ...(isPublicEnabled !== undefined
-      ? { isPublicEnabled: Boolean(isPublicEnabled) }
+      ? { "settings.isPublicEnabled": Boolean(isPublicEnabled) }
       : {}),
     ...(notificationsEnabled !== undefined
-      ? { notificationsEnabled: Boolean(notificationsEnabled) }
+      ? { "settings.notificationsEnabled": Boolean(notificationsEnabled) }
       : {}),
-  });
-  await business.save();
+  };
 
-  return res.json(formatSettingsResponse(business));
+  const updatedBusiness = await Business.findByIdAndUpdate(
+    req.user.businessId,
+    { $set: updateFields },
+    { new: true },
+  );
+
+  if (!updatedBusiness) {
+    throw createHttpError(404, "Business not found");
+  }
+
+  return res.json(formatSettingsResponse(updatedBusiness));
+};
+
+export const updateShareFeedbackSettings = async (req, res) => {
+  const { greetingMessage } = req.body;
+
+  if (typeof greetingMessage !== "string") {
+    throw createHttpError(400, "Greeting message must be a string");
+  }
+
+  const trimmedGreetingMessage = greetingMessage.trim();
+
+  if (trimmedGreetingMessage.length > 500) {
+    throw createHttpError(400, "Greeting message must be 500 characters or less");
+  }
+
+  const update =
+    trimmedGreetingMessage.length === 0
+      ? {
+          $unset: {
+            "settings.shareFeedback.greetingMessage": "",
+          },
+        }
+      : {
+          $set: {
+            "settings.shareFeedback.greetingMessage": trimmedGreetingMessage,
+          },
+        };
+
+  const business = await Business.findByIdAndUpdate(req.user.businessId, update, {
+    new: true,
+  });
+
+  if (!business) {
+    throw createHttpError(404, "Business not found");
+  }
+
+  return res.json({
+    message:
+      trimmedGreetingMessage.length === 0
+        ? "Greeting message reset to default"
+        : "Greeting message saved successfully",
+    business: toBusinessResponse(business),
+    settings: formatSettingsResponse(business),
+  });
 };
