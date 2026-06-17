@@ -14,7 +14,7 @@ import { Label } from "../components/ui/label";
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const {
@@ -43,7 +43,6 @@ export default function RegisterPage() {
       navigate("/dashboard");
     },
     onError: (error) => {
-      console.log(error);
       toast.error(
         error.response?.data?.message ||
           error.response?.data?.error ||
@@ -53,7 +52,7 @@ export default function RegisterPage() {
   });
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={user?.role === "admin" ? "/admin" : "/dashboard"} replace />;
   }
 
   const passwordValue = watch("password");

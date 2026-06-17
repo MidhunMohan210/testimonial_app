@@ -27,6 +27,19 @@ const businessSchema = new mongoose.Schema({
     lowercase: true,
     trim: true,
   },
+  accountStatus: {
+    type: String,
+    enum: ["active", "suspended"],
+    default: "active",
+  },
+  isBeta: {
+    type: Boolean,
+    default: true,
+  },
+  betaExpiresAt: {
+    type: Date,
+    default: null,
+  },
   settings: {
     googleReviewLink: {
       type: String,

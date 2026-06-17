@@ -14,7 +14,7 @@ import { Label } from "../components/ui/label";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, isAuthenticated } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const {
     register,
@@ -34,7 +34,7 @@ export default function LoginPage() {
     onSuccess: (data) => {
       login(data);
       toast.success("Welcome back to Woice");
-      navigate("/dashboard");
+      navigate(data.user?.role === "admin" ? "/admin" : "/dashboard");
     },
     onError: (error) => {
       toast.error(
@@ -46,7 +46,7 @@ export default function LoginPage() {
   });
 
   if (isAuthenticated) {
-    return <Navigate to="/dashboard" replace />;
+    return <Navigate to={user?.role === "admin" ? "/admin" : "/dashboard"} replace />;
   }
 
   return (

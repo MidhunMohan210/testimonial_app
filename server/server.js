@@ -8,6 +8,7 @@ import MongoStore from "connect-mongo";
 import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.js";
+import adminRoutes from "./routes/admin.js";
 import whatsappRoutes from "./routes/whatsapp.js";
 import whatsappCallbackRoutes from "./routes/whatsappCallback.js";
 import testimonialRoutes from "./routes/testimonial.js";
@@ -17,6 +18,8 @@ import publicReviewRouter from "./routes/publicReview.js";
 import publicTestimonialsRouter from "./routes/publicTestimonials.js";
 import whatsappWebhookRoutes from "./webhook/whatsappWebhook.js";
 import authMiddleware from "./middleware/authMiddleware.js";
+import adminOnlyMiddleware from "./middleware/adminOnlyMiddleware.js";
+import businessStatusMiddleware from "./middleware/businessStatusMiddleware.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 
 dotenv.config();
@@ -146,10 +149,11 @@ app.use("/api/r", publicReviewLimiter, publicReviewRouter);
 
 app.use("/api/auth", authRoutes);
 
-app.use("/api/business", authMiddleware, businessSettingsRouter);
-app.use("/api/feedback", authMiddleware, privateFeedbackRouter);
-app.use("/api/whatsapp", authMiddleware, whatsappRoutes);
-app.use("/api/testimonials", authMiddleware, testimonialRoutes);
+app.use("/api/admin", authMiddleware, adminOnlyMiddleware, adminRoutes);
+app.use("/api/business", authMiddleware, businessStatusMiddleware, businessSettingsRouter);
+app.use("/api/feedback", authMiddleware, businessStatusMiddleware, privateFeedbackRouter);
+app.use("/api/whatsapp", authMiddleware, businessStatusMiddleware, whatsappRoutes);
+app.use("/api/testimonials", authMiddleware, businessStatusMiddleware, testimonialRoutes);
 
 app.use(errorHandler);
 
