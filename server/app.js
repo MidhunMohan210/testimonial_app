@@ -4,7 +4,7 @@ import cors from "cors";
 import helmet from "helmet";
 import session from "express-session";
 import MongoStore from "connect-mongo";
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 import authRoutes from "./routes/auth.js";
 import adminRoutes from "./routes/admin.js";
@@ -180,7 +180,7 @@ const publicReviewLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) =>
-    `${req.ip}:${getBusinessKey(req)}`,
+    `${ipKeyGenerator(req.ip)}:${getBusinessKey(req)}`,
   message: {
     error:
       "Too many submissions in a short time. Please try again later.",
