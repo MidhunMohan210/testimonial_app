@@ -7,6 +7,7 @@ import {
 import { MongoMemoryServer } from "mongodb-memory-server";
 
 process.env.NODE_ENV = "test";
+process.env.JWT_SECRET = "woice-test-jwt-secret";
 
 let mongoServer;
 
