@@ -4,7 +4,7 @@ import {
   afterEach,
   beforeAll,
 } from "vitest";
-import { MongoMemoryServer } from "mongodb-memory-server";
+import { MongoMemoryReplSet } from "mongodb-memory-server";
 
 process.env.NODE_ENV = "test";
 process.env.JWT_SECRET = "woice-test-jwt-secret";
@@ -12,7 +12,12 @@ process.env.JWT_SECRET = "woice-test-jwt-secret";
 let mongoServer;
 
 beforeAll(async () => {
-  mongoServer = await MongoMemoryServer.create();
+  mongoServer = await MongoMemoryReplSet.create({
+    replSet: {
+      count: 1,
+      storageEngine: "wiredTiger",
+    },
+  });
 
   const mongoUri = mongoServer.getUri();
 
