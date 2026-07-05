@@ -114,22 +114,64 @@ describe("Private feedback submission", () => {
   });
 
   it("returns 404 when the business slug does not exist", async () => {
-  const response = await request(app)
-    .post("/api/r/unknown-business/feedback")
-    .send({
-      customerName: "Rahul",
-      rating: 2,
-      feedbackText: "The service was delayed",
+    const response = await request(app)
+      .post("/api/r/unknown-business/feedback")
+      .send({
+        customerName: "Rahul",
+        rating: 2,
+        feedbackText: "The service was delayed",
+      });
+
+    expect(response.status).toBe(404);
+    expect(response.body.message).toBe("Business not found");
+
+    const privateFeedbackCount = await PrivateFeedback.countDocuments();
+
+    expect(privateFeedbackCount).toBe(0);
+  });
+
+  it("returns duplicate true and does not create a second private feedback entry for the same submission within 30 seconds", async () => {
+    await Business.create({
+      userId: new mongoose.Types.ObjectId(),
+      businessName: "Test Business",
+      slug: "test-business",
     });
 
-  expect(response.status).toBe(404);
-  expect(response.body.message).toBe(
-    "Business not found"
-  );
+    const firstResponse = await request(app)
+      .post("/api/r/test-business/feedback")
+      .send({
+        customerName: "Rahul",
+        rating: 2,
+        feedbackText: "The service was delayed",
+        contactEmail: "rahul@example.com",
+        contactPhone: "9876543210",
+        allowFollowUp: true,
+      });
 
-  const privateFeedbackCount =
-    await PrivateFeedback.countDocuments();
+    expect(firstResponse.status).toBe(200);
+    expect(firstResponse.body).toEqual({
+      success: true,
+    });
 
-  expect(privateFeedbackCount).toBe(0);
-});
+    const duplicateResponse = await request(app)
+      .post("/api/r/test-business/feedback")
+      .send({
+        customerName: "Rahul",
+        rating: 2,
+        feedbackText: "The service was delayed",
+        contactEmail: "rahul@example.com",
+        contactPhone: "9876543210",
+        allowFollowUp: true,
+      });
+
+    expect(duplicateResponse.status).toBe(200);
+    expect(duplicateResponse.body).toEqual({
+      success: true,
+      duplicate: true,
+    });
+
+    const privateFeedbackCount = await PrivateFeedback.countDocuments();
+
+    expect(privateFeedbackCount).toBe(1);
+  });
 });

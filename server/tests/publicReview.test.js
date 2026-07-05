@@ -167,4 +167,43 @@ describe("Public review submission", () => {
     expect(testimonial.rating).toBe(4);
     expect(testimonial.status).toBe("pending");
   });
+
+  it("returns duplicate true and does not create a second testimonial for the same submission within 30 seconds", async () => {
+    await Business.create({
+      userId: new mongoose.Types.ObjectId(),
+      businessName: "Test Business",
+      slug: "test-business",
+    });
+
+    const firstResponse = await request(app)
+      .post("/api/r/test-business/submit")
+      .send({
+        customerName: "Rahul",
+        rating: 5,
+        reviewText: "Excellent service",
+      });
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstResponse.body).toEqual({
+      success: true,
+    });
+
+    const duplicateResponse = await request(app)
+      .post("/api/r/test-business/submit")
+      .send({
+        customerName: "Rahul",
+        rating: 5,
+        reviewText: "Excellent service",
+      });
+
+    expect(duplicateResponse.status).toBe(200);
+    expect(duplicateResponse.body).toEqual({
+      success: true,
+      duplicate: true,
+    });
+
+    const testimonialCount = await Testimonial.countDocuments();
+
+    expect(testimonialCount).toBe(1);
+  });
 });
