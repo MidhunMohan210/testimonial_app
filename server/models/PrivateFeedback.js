@@ -56,6 +56,10 @@ const privateFeedbackSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+        collectedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   { timestamps: true },
 );
