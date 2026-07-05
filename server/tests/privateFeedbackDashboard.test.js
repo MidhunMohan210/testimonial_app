@@ -258,4 +258,215 @@ describe("Private feedback dashboard", () => {
       },
     });
   });
+
+  it("supports private feedback filters, sorting, and pagination", async () => {
+    const { user, business } =
+      await createBusinessUserWithBusiness();
+
+    const firstMatch = await PrivateFeedback.create({
+      businessId: business._id,
+      customerName: "Asha",
+      rating: 1,
+      feedbackText: "billing issue took too long",
+      status: "resolved",
+      isRead: false,
+    });
+
+    await PrivateFeedback.collection.updateOne(
+      { _id: firstMatch._id },
+      { $set: { createdAt: new Date("2026-07-03T10:00:00.000Z") } },
+    );
+
+    const secondMatch = await PrivateFeedback.create({
+      businessId: business._id,
+      customerName: "Meera",
+      rating: 3,
+      feedbackText: "support team solved this well",
+      status: "resolved",
+      isRead: false,
+    });
+
+    await PrivateFeedback.collection.updateOne(
+      { _id: secondMatch._id },
+      { $set: { createdAt: new Date("2026-07-04T10:00:00.000Z") } },
+    );
+
+    await PrivateFeedback.create({
+      businessId: business._id,
+      customerName: "Closed",
+      rating: 2,
+      feedbackText: "closed feedback should not match",
+      status: "closed",
+      isRead: false,
+    });
+
+    const response = await request(app)
+      .get("/api/feedback?status=resolved&minWords=4&limit=1&page=1&ratingSort=high_to_low")
+      .set(createAuthHeader(user._id));
+
+    expect(response.status).toBe(200);
+    expect(response.body.total).toBe(2);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toEqual(
+      expect.objectContaining({
+        customerName: "Meera",
+        rating: 3,
+        status: "resolved",
+      }),
+    );
+    expect(response.body.summary).toEqual({
+      total: 3,
+      new: 0,
+      in_progress: 0,
+      resolved: 2,
+      closed: 1,
+    });
+  });
+
+  it("returns the unread private feedback count", async () => {
+    const { user, business } =
+      await createBusinessUserWithBusiness();
+
+    await PrivateFeedback.create([
+      {
+        businessId: business._id,
+        customerName: "Unread One",
+        rating: 1,
+        feedbackText: "Unread feedback one",
+        isRead: false,
+      },
+      {
+        businessId: business._id,
+        customerName: "Unread Two",
+        rating: 2,
+        feedbackText: "Unread feedback two",
+        isRead: false,
+      },
+      {
+        businessId: business._id,
+        customerName: "Read",
+        rating: 3,
+        feedbackText: "Already read feedback",
+        isRead: true,
+      },
+    ]);
+
+    const response = await request(app)
+      .get("/api/feedback/unread-count")
+      .set(createAuthHeader(user._id));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      unreadCount: 2,
+    });
+  });
+
+  it("marks all unread private feedback as read for the authenticated business", async () => {
+    const { user, business } =
+      await createBusinessUserWithBusiness();
+    const { business: otherBusiness } =
+      await createBusinessUserWithBusiness();
+
+    const unreadOne = await PrivateFeedback.create({
+      businessId: business._id,
+      customerName: "Unread One",
+      rating: 1,
+      feedbackText: "Unread feedback one",
+      isRead: false,
+    });
+    const unreadTwo = await PrivateFeedback.create({
+      businessId: business._id,
+      customerName: "Unread Two",
+      rating: 2,
+      feedbackText: "Unread feedback two",
+      isRead: false,
+    });
+    await PrivateFeedback.create({
+      businessId: business._id,
+      customerName: "Already Read",
+      rating: 3,
+      feedbackText: "Already read feedback",
+      isRead: true,
+    });
+    await PrivateFeedback.create({
+      businessId: otherBusiness._id,
+      customerName: "Other Business",
+      rating: 2,
+      feedbackText: "Other business unread feedback",
+      isRead: false,
+    });
+
+    const response = await request(app)
+      .post("/api/feedback/mark-read")
+      .set(createAuthHeader(user._id));
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      success: true,
+      modifiedCount: 2,
+    });
+
+    const updatedFeedback = await PrivateFeedback.find({
+      _id: { $in: [unreadOne._id, unreadTwo._id] },
+    }).lean();
+
+    expect(updatedFeedback.every((item) => item.isRead === true)).toBe(true);
+  });
+
+  it("returns 400 when updating an invalid private feedback id", async () => {
+    const { user } =
+      await createBusinessUserWithBusiness();
+
+    const response = await request(app)
+      .patch("/api/feedback/not-a-valid-id")
+      .set(createAuthHeader(user._id))
+      .send({
+        status: "resolved",
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({
+      message: "Invalid private feedback id",
+    });
+  });
+
+  it("clears resolvedAt when feedback moves out of resolved status", async () => {
+    const { user, business } =
+      await createBusinessUserWithBusiness();
+
+    const feedback = await PrivateFeedback.create({
+      businessId: business._id,
+      customerName: "Resolved Customer",
+      rating: 2,
+      feedbackText: "This issue was already resolved",
+      status: "resolved",
+      businessResponse: "We fixed the issue.",
+      respondedAt: new Date("2026-07-01T10:00:00.000Z"),
+      resolvedAt: new Date("2026-07-02T10:00:00.000Z"),
+    });
+
+    const response = await request(app)
+      .patch(`/api/feedback/${feedback._id}`)
+      .set(createAuthHeader(user._id))
+      .send({
+        status: "closed",
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual(
+      expect.objectContaining({
+        _id: String(feedback._id),
+        status: "closed",
+      }),
+    );
+    expect(response.body.respondedAt).toEqual(expect.any(String));
+    expect(response.body.resolvedAt).toBeNull();
+
+    const updatedFeedback = await PrivateFeedback.findById(
+      feedback._id,
+    ).lean();
+
+    expect(updatedFeedback?.resolvedAt).toBeNull();
+    expect(updatedFeedback?.respondedAt).not.toBeNull();
+  });
 });
