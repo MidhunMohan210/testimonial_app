@@ -40,14 +40,34 @@ export const submitPublicReview = async (req, res) => {
     throw createHttpError(404, "Business not found");
   }
 
+  const cleanedName = customerName?.trim() || "Anonymous";
+  const cleanedReview = reviewText.trim().replace(/\s+/g, " ");
+
+  const duplicateWindow = new Date(Date.now() - 5 * 60 * 1000); // last 5 minutes
+
+  const existingReview = await Testimonial.findOne({
+    businessId: business._id,
+    rating: numericRating,
+    customerName: cleanedName,
+    testimonialText: cleanedReview,
+    // ip: req.ip,
+    // createdAt: { $gte: duplicateWindow },
+  });
+
+  console.log("existing review",existingReview);
+  
+
+  if (existingReview) {
+    return res.json({ success: true, duplicate: true });
+  }
 
   await Testimonial.create({
     businessId: business._id,
-    customerName: customerName?.trim(),
+    customerName: cleanedName,
     customerPhone: `link-${Date.now()}`,
     ip: req.ip,
     rating: numericRating,
-    testimonialText: reviewText.trim(),
+    testimonialText: cleanedReview,
     status: "pending",
     source: "link",
   });
