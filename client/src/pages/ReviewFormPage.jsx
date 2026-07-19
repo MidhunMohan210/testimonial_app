@@ -704,8 +704,8 @@ export default function ReviewFormPage() {
                 ) : null}
                 <p className="text-sm leading-7 text-slate-500">
                   {submittedState === "review"
-                    ? "Your testimonial was submitted and may appear after approval."
-                    : "Your message has been shared privately with the team and will help us improve."}
+                    ? "Your testimonial was submitted."
+                    : "Your feedback has been shared privately with the team so they can review and improve."}
                 </p>
                 {submittedState === "review" ? (
                   <div className="space-y-3">

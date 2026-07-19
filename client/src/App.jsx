@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useSearchParams } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useSearchParams } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -15,15 +15,30 @@ import PublicTestimonialsPage from "./pages/PublicTestimonialsPage";
 import SliderWidgetPage from "./pages/SliderWidgetPage";
 import WidgetPage from "./pages/WidgetPage";
 import EmbedDocsPage from "./pages/EmbedDocsPage";
+import AccountSuspendedPage from "./pages/AccountSuspendedPage";
+import AdminOverviewPage from "./pages/admin/AdminOverviewPage";
+import AdminBusinessesPage from "./pages/admin/AdminBusinessesPage";
+import AdminBusinessDetailPage from "./pages/admin/AdminBusinessDetailPage";
 import { useAuth } from "./hooks/useAuth";
 import AppShell from "./components/AppShell";
 import PublicLayout from "./components/PublicLayout";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminProtectedRoute from "./components/admin/AdminProtectedRoute";
 
 function ProtectedRoute({ children }) {
-  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  const { business, isAuthenticated, user } = useAuth();
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (
+    user?.role !== "admin" &&
+    business?.accountStatus === "suspended" &&
+    location.pathname !== "/suspended"
+  ) {
+    return <Navigate to="/suspended" replace />;
   }
 
   return children;
@@ -57,6 +72,25 @@ export default function App() {
       <Route path="/p/:slug" element={<PublicTestimonialsPage />} />
       <Route path="/widget/:businessSlug" element={<WidgetPage />} />
       <Route path="/widget/slider/:slug" element={<SliderWidgetPage />} />
+      <Route
+        path="/suspended"
+        element={
+          <ProtectedRoute>
+            <AccountSuspendedPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        element={
+          <AdminProtectedRoute>
+            <AdminLayout />
+          </AdminProtectedRoute>
+        }
+      >
+        <Route path="/admin" element={<AdminOverviewPage />} />
+        <Route path="/admin/businesses" element={<AdminBusinessesPage />} />
+        <Route path="/admin/businesses/:businessId" element={<AdminBusinessDetailPage />} />
+      </Route>
       <Route
         element={
           <ProtectedRoute>

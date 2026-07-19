@@ -27,7 +27,7 @@ export default function Footer({ className = "" }) {
         </div>
 
         <p className="text-sm text-slate-400">
-          &copy; 2026 Woice. All rights reserved to Midhun Mohan.
+        © 2026 Woice. All rights reserved.
         </p>
       </div>
     </footer>

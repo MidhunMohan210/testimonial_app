@@ -1,28 +1,48 @@
 import { z } from "zod";
 
 export const submitReviewSchema = z.object({
-  rating: z.number().int().min(1).max(5),
-  customerName: z.string().trim().max(100, "Name is too long").optional().or(z.literal("")),
+  rating: z
+    .number()
+    .int()
+    .min(4, "Rating must be 4 or 5")
+    .max(5, "Rating must be 4 or 5"),
+  customerName: z
+    .string()
+    .trim()
+    .max(100, "Name is too long")
+    .optional()
+    .or(z.literal("")),
   reviewText: z
     .string()
     .trim()
-    .max(500, "Review must be 500 characters or less")  // ← tighter for public form
-    .optional(),
+    .min(1, "Review text is required")
+    .max(500, "Review must be 500 characters or less") // ← tighter for public form
 });
 
 export const manualAddSchema = z.object({
-  customerName: z.string().trim().min(1, "Name is required").max(100, "Name is too long"),
+  customerName: z
+    .string()
+    .trim()
+    .min(1, "Name is required")
+    .max(100, "Name is too long"),
   rating: z.number().int().min(1).max(5),
-  testimonialText: z.string().trim().min(5, "Review is too short").max(1000, "Review is too long"),
+  testimonialText: z
+    .string()
+    .trim()
+    .min(5, "Review is too short")
+    .max(1000, "Review is too long"),
   source: z.string().trim().max(100).optional(),
   date: z.string().datetime().optional(),
 });
 
-
 export const privateFeedbackSchema = z.object({
   customerName: z.string().trim().max(100, "Name is too long").optional(),
   rating: z.number().int().min(1).max(3),
-  feedbackText: z.string().trim().min(3, "Feedback is too short").max(500, "Feedback is too long"),
+  feedbackText: z
+    .string()
+    .trim()
+    .min(3, "Feedback is too short")
+    .max(500, "Feedback is too long"),
   contactEmail: z
     .string()
     .trim()
@@ -30,17 +50,27 @@ export const privateFeedbackSchema = z.object({
     .email("Please enter a valid email")
     .optional()
     .or(z.literal("")),
-  contactPhone: z.string().trim().max(30, "Phone is too long").optional().or(z.literal("")),
+  contactPhone: z
+    .string()
+    .trim()
+    .max(30, "Phone is too long")
+    .optional()
+    .or(z.literal("")),
   allowFollowUp: z.boolean().optional(),
 });
 
 export const updatePrivateFeedbackSchema = z
   .object({
     status: z.enum(["new", "in_progress", "resolved", "closed"]).optional(),
-    businessResponse: z.string().trim().max(2000, "Response must be 2000 characters or less").optional(),
+    businessResponse: z
+      .string()
+      .trim()
+      .max(2000, "Response must be 2000 characters or less")
+      .optional(),
   })
   .refine(
-    (payload) => payload.status !== undefined || payload.businessResponse !== undefined,
+    (payload) =>
+      payload.status !== undefined || payload.businessResponse !== undefined,
     {
       message: "At least one field is required",
       path: ["status"],

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -326,6 +326,8 @@ export default function AppShell() {
   const navigate = useNavigate();
   const { business, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
   const testimonialsUnreadQuery = useQuery({
     queryKey: ["unread-count", "testimonials"],
     queryFn: getUnreadTestimonialCount,
@@ -345,13 +347,8 @@ export default function AppShell() {
     [location.pathname],
   );
   const profileName = user?.name || "Workspace owner";
-  const profileInitials =
-    profileName
-      .split(" ")
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join("") || "W";
+  const profileEmail = user?.email || null;
+  const businessName = business?.businessName || "Woice workspace";
   const unreadCounts = {
     testimonials: testimonialsUnreadQuery.data?.unreadCount || 0,
     privateFeedback: privateFeedbackUnreadQuery.data?.unreadCount || 0,
@@ -366,6 +363,42 @@ export default function AppShell() {
 
     navigate("/dashboard");
   };
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === "Escape") {
+        setProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("keydown", handleEscape);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!profileMenuOpen) {
+      return undefined;
+    }
+
+    const handleOutsidePointerDown = (event) => {
+      if (profileMenuRef.current?.contains(event.target)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setProfileMenuOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handleOutsidePointerDown, true);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleOutsidePointerDown, true);
+    };
+  }, [profileMenuOpen]);
 
   return (
     <div className="min-h-screen bg-transparent text-slate-950">
@@ -410,31 +443,109 @@ export default function AppShell() {
                 </div>
               </div>
 
-              {/* Right — profile pill */}
-              <div className="hidden items-center gap-2.5 sm:flex">
-                {/* Avatar with status dot */}
-                <div className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-slate-500 text-xs font-bold tracking-wide text-white ring-2 ring-white ring-offset-1 ring-offset-transparent">
-                  {/* {profileInitials} */}
-                  <img src={userIcon} alt="" className="h-9 w-9" />
-                  <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white" />
-                </div>
-                {/* Name + workspace */}
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold leading-tight text-slate-900">
-                    {profileName}
-                  </p>
-                  <p
-                    className="max-w-[180px] truncate text-[11px] leading-tight text-slate-400 md:max-w-[220px] lg:max-w-[260px]"
-                    title={business?.businessName || "Woice workspace"}
-                  >
-                    {business?.businessName || "Woice workspace"}
-                  </p>
-                </div>
-              </div>
+         {/* Right — profile pill */}
+<div className="relative shrink-0" ref={profileMenuRef}>
+  <button
+    type="button"
+    className="group flex shrink-0 items-center gap-2 rounded-full border border-slate-200/70 bg-white/70 px-1.5 py-1 shadow-sm backdrop-blur-md transition-all duration-200 hover:border-slate-300 hover:bg-white hover:shadow-md active:scale-[0.98] sm:gap-2.5 sm:px-2"
+    aria-expanded={profileMenuOpen}
+    aria-haspopup="menu"
+    aria-label="Open profile details"
+    onClick={() => setProfileMenuOpen((open) => !open)}
+  >
+    {/* Avatar with status dot */}
+    <div className="relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-600 to-slate-400 text-xs font-bold tracking-wide text-white shadow-inner ring-2 ring-white transition-transform duration-200 group-hover:scale-105 sm:h-10 sm:w-10">
+      <img src={userIcon} alt="" className="h-8 w-8 sm:h-9 sm:w-9" />
+      <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full bg-emerald-400 ring-2 ring-white after:absolute after:inset-0 after:animate-ping after:rounded-full after:bg-emerald-400/60" />
+    </div>
+
+    {/* Name + workspace */}
+    <div className="hidden min-w-0 sm:block">
+      <p className="truncate text-sm font-semibold leading-tight text-slate-900">
+        {profileName}
+      </p>
+      <p
+        className="max-w-[180px] truncate text-[11px] leading-tight text-slate-400 md:max-w-[220px] lg:max-w-[260px]"
+        title={businessName}
+      >
+        {businessName}
+      </p>
+    </div>
+
+    {/* Chevron */}
+    <svg
+      className={`hidden h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 sm:block ${
+        profileMenuOpen ? "rotate-180" : ""
+      }`}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+    >
+      <path d="M6 9l6 6 6-6" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  </button>
+
+  {profileMenuOpen ? (
+    <>
+      <button
+        type="button"
+        aria-label="Close profile menu"
+        className="fixed inset-0 z-30 cursor-default bg-transparent"
+        onClick={() => setProfileMenuOpen(false)}
+      />
+      <div
+        className="absolute right-0 top-[calc(100%+0.6rem)] z-40 w-[min(19rem,calc(100vw-1.5rem))] origin-top-right animate-in fade-in slide-in-from-top-2 overflow-hidden rounded-3xl border border-slate-200/70 bg-white/95 shadow-2xl shadow-slate-900/10 backdrop-blur-xl duration-150"
+        role="menu"
+      >
+      {/* Header */}
+      <div className="relative bg-gradient-to-br from-slate-50 to-white px-5 py-5">
+        <div className="flex items-center gap-3">
+          <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-slate-600 to-slate-400 shadow-inner ring-2 ring-white">
+            <img src={userIcon} alt="" className="h-10 w-10" />
+            <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-400 ring-2 ring-white" />
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-slate-950">
+              {profileName}
+            </p>
+            <p className="truncate text-xs text-slate-500">
+              {profileEmail || "Signed in to Woice"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Divider */}
+      <div className="h-px bg-slate-100" />
+
+      {/* Details */}
+      <div className="space-y-2 px-4 py-4">
+        <div className="rounded-2xl bg-slate-50/80 px-3.5 py-3 transition-colors hover:bg-slate-100/80">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Name
+          </p>
+          <p className="mt-1 text-sm font-medium text-slate-950">
+            {profileName}
+          </p>
+        </div>
+        <div className="rounded-2xl bg-slate-50/80 px-3.5 py-3 transition-colors hover:bg-slate-100/80">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Business name
+          </p>
+          <p className="mt-1 text-sm font-medium text-slate-950">
+            {businessName}
+          </p>
+        </div>
+      </div>
+      </div>
+    </>
+  ) : null}
+</div>
             </div>
           </header>
 
-          <main className="min-w-0 flex-1 py-2 sm:px-6 sm:py-6 lg:px-8">
+          <main className="min-w-0 flex-1 px-3 py-2 sm:px-6 sm:py-6 lg:px-8">
             <Outlet />
           </main>
 

@@ -40,25 +40,30 @@ export const submitPublicReview = async (req, res) => {
     throw createHttpError(404, "Business not found");
   }
 
-  // const existingSubmission = await Testimonial.findOne({
-  //   businessId: business._id,
-  //   ip: req.ip,
-  //   collectedAt: {
-  //     $gt: new Date(Date.now() - 5 * 60 * 1000),
-  //   },
-  // });
+  const cleanedName = customerName?.trim() || "Anonymous";
+  const cleanedReview = reviewText.trim().replace(/\s+/g, " ");
 
-  // if (existingSubmission) {
-  //   throw createHttpError(429, "You have already submitted recently");
-  // }
+  const duplicateWindow = new Date(Date.now() - 30 * 1000);
+
+  const existingReview = await Testimonial.findOne({
+    businessId: business._id,
+    rating: numericRating,
+    customerName: cleanedName,
+    testimonialText: cleanedReview,
+    createdAt: { $gte: duplicateWindow },
+  });
+
+  if (existingReview) {
+    return res.json({ success: true, duplicate: true });
+  }
 
   await Testimonial.create({
     businessId: business._id,
-    customerName: customerName?.trim(),
+    customerName: cleanedName,
     customerPhone: `link-${Date.now()}`,
     ip: req.ip,
     rating: numericRating,
-    testimonialText: reviewText.trim(),
+    testimonialText: cleanedReview,
     status: "pending",
     source: "link",
   });
@@ -67,7 +72,14 @@ export const submitPublicReview = async (req, res) => {
 };
 
 export const submitPrivateFeedback = async (req, res) => {
-  const { customerName, rating, feedbackText, contactEmail, contactPhone, allowFollowUp } = req.body;
+  const {
+    customerName,
+    rating,
+    feedbackText,
+    contactEmail,
+    contactPhone,
+    allowFollowUp,
+  } = req.body;
   const numericRating = Number(rating);
 
   if (![1, 2, 3].includes(numericRating)) {
@@ -84,13 +96,37 @@ export const submitPrivateFeedback = async (req, res) => {
     throw createHttpError(404, "Business not found");
   }
 
+  const cleanedName = customerName?.trim() || "";
+  const cleanedFeedback = feedbackText.trim().replace(/\s+/g, " ");
+  const cleanedEmail = contactEmail?.trim() || undefined;
+  const cleanedPhone = contactPhone?.trim() || undefined;
+
+  const duplicateWindow = new Date(Date.now() - 30 * 1000);
+
+  const existingFeedback = await PrivateFeedback.findOne({
+    businessId: business._id,
+    rating: numericRating,
+    feedbackText: cleanedFeedback,
+    customerName: cleanedName,
+    contactEmail: cleanedEmail,
+    contactPhone: cleanedPhone,
+    createdAt: { $gte: duplicateWindow },
+  });
+
+  if (existingFeedback) {
+    return res.json({
+      success: true,
+      duplicate: true,
+    });
+  }
+
   await PrivateFeedback.create({
     businessId: business._id,
-    customerName: customerName?.trim(),
+    customerName: cleanedName,
     rating: numericRating,
-    feedbackText: feedbackText.trim(),
-    contactEmail: contactEmail?.trim() || undefined,
-    contactPhone: contactPhone?.trim() || undefined,
+    feedbackText: cleanedFeedback,
+    contactEmail: cleanedEmail,
+    contactPhone: cleanedPhone,
     allowFollowUp: Boolean(allowFollowUp),
   });
 

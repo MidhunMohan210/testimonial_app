@@ -28,6 +28,25 @@ api.interceptors.response.use(
       }
     }
 
+    if (error.response?.status === 403 && error.response?.data?.code === "ACCOUNT_SUSPENDED") {
+      const rawBusiness = localStorage.getItem("testiflow_business");
+      if (rawBusiness) {
+        try {
+          const business = JSON.parse(rawBusiness);
+          localStorage.setItem(
+            "testiflow_business",
+            JSON.stringify({ ...(business || {}), accountStatus: "suspended" }),
+          );
+        } catch {
+          localStorage.removeItem("testiflow_business");
+        }
+      }
+
+      if (window.location.pathname !== "/suspended") {
+        window.location.href = "/suspended";
+      }
+    }
+
     return Promise.reject(error);
   },
 );
